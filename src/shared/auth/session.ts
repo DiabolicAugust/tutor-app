@@ -6,10 +6,12 @@
 
 /**
  * Who the signed-in person is inside a tenant. Drives navigation and
- * permissions later: a tutor sees their own lessons, a school admin sees every
- * tutor's.
+ * permissions: a tutor sees their own lessons, an admin sees every tutor's.
+ *
+ * Two roles, matching the backend's `UserRole` enum lowercased. Students are
+ * records a tutor owns, not accounts that sign in, so they are not a role.
  */
-export type UserRole = 'tutor' | 'school-admin' | 'student';
+export type UserRole = 'tutor' | 'admin';
 
 export type AuthUser = {
   id: string;
@@ -28,7 +30,7 @@ export type Session = {
   issuedAt: string;
 };
 
-const roles: readonly UserRole[] = ['tutor', 'school-admin', 'student'];
+const roles: readonly UserRole[] = ['tutor', 'admin'];
 
 /**
  * Validates a session restored from storage. Required by
