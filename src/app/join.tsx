@@ -36,7 +36,7 @@ export default function JoinScreen() {
             <Text variant="caption" color="textSecondary">
               {t('join.openBody')}
             </Text>
-            <Link href="/join/school" asChild>
+            <Link href="/join-school" asChild>
               <Button label={t('join.openAction')} fullWidth />
             </Link>
           </Card>
@@ -49,7 +49,7 @@ export default function JoinScreen() {
             <Text variant="caption" color="textSecondary">
               {t('join.existingBody')}
             </Text>
-            <Link href="/join/existing" asChild>
+            <Link href="/join-existing" asChild>
               <Button label={t('join.existingAction')} variant="secondary" fullWidth />
             </Link>
           </Card>

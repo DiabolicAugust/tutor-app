@@ -33,8 +33,8 @@ function RootNavigator() {
               who have no session yet — including the school setup, which ends by
               creating one. */}
           <Stack.Screen name="join" />
-          <Stack.Screen name="join/existing" />
-          <Stack.Screen name="join/school" />
+          <Stack.Screen name="join-existing" />
+          <Stack.Screen name="join-school" />
           {/* Opened by the emailed link (foxacademy://invite/<token>). Grouped
               with sign-in because an invitation is for someone who has no
               account yet — a signed-in user must sign out to use one. */}
