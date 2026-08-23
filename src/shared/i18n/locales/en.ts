@@ -256,6 +256,9 @@ export const en = {
     lessonEmpty: 'Nothing noted for this lesson yet.',
   },
   files: {
+    open: 'Open {{name}}',
+    openFailed: 'Could not open that file.',
+    openUnavailable: 'Files are not stored in a test build — only their names are.',
     title: 'Files',
     empty: 'No files yet. Agreements, reports, worksheets — anything worth keeping.',
     add: 'Add a file',
@@ -277,6 +280,21 @@ export const en = {
     },
     notFound: 'That student is no longer on your list.',
     openLesson: 'Notes for this lesson',
+  },
+  time: {
+    justNow: 'Just now',
+    minutesAgo: {
+      one: '{{count}} minute ago',
+      other: '{{count}} minutes ago',
+    },
+    hoursAgo: {
+      one: '{{count}} hour ago',
+      other: '{{count}} hours ago',
+    },
+    daysAgo: {
+      one: 'Yesterday',
+      other: '{{count}} days ago',
+    },
   },
   tabs: {
     calendar: 'Calendar',

@@ -48,7 +48,8 @@
           ],
           "defaultChannel": "lesson-reminders"
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,

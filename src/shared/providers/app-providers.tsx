@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SessionProvider } from '@/shared/auth';
 import { I18nProvider } from '@/shared/i18n';
@@ -24,22 +25,30 @@ import { ThemeProvider } from '@/shared/theme';
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <I18nProvider>
-      <ThemeProvider>
-        <SessionProvider>
-          <UserConfigProvider>
-            <SchoolProvider>
-              <StudentsProvider>
-                <LessonsProvider>
-                  <NotificationsProvider>
-                    <TabPreferencesProvider>{children}</TabPreferencesProvider>
-                  </NotificationsProvider>
-                </LessonsProvider>
-              </StudentsProvider>
-            </SchoolProvider>
-          </UserConfigProvider>
-        </SessionProvider>
-      </ThemeProvider>
-    </I18nProvider>
+    // Required by react-native-gesture-handler, and easy to miss: expo-router
+    // wraps its own stack but not the app, so without this every gesture below
+    // silently does nothing on Android — no warning, no error.
+    <GestureHandlerRootView style={fill}>
+      <I18nProvider>
+        <ThemeProvider>
+          <SessionProvider>
+            <UserConfigProvider>
+              <SchoolProvider>
+                <StudentsProvider>
+                  <LessonsProvider>
+                    <NotificationsProvider>
+                      <TabPreferencesProvider>{children}</TabPreferencesProvider>
+                    </NotificationsProvider>
+                  </LessonsProvider>
+                </StudentsProvider>
+              </SchoolProvider>
+            </UserConfigProvider>
+          </SessionProvider>
+        </ThemeProvider>
+      </I18nProvider>
+    </GestureHandlerRootView>
   );
 }
+
+/** Declared once rather than inline, which would be a new object each render. */
+const fill = { flex: 1 } as const;

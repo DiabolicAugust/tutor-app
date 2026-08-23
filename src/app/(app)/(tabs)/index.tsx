@@ -19,7 +19,7 @@ import { useLessons } from '@/shared/lessons';
 import { addDays, isToday, startOfDay } from '@/shared/lib/date';
 import { createStyles } from '@/shared/theme';
 import { useTutorialAnchor } from '@/shared/tutorial';
-import { Fab, IconButton, Text, icons, motion } from '@/shared/ui';
+import { Fab, IconButton, SwipePager, Text, icons, motion } from '@/shared/ui';
 
 /**
  * The calendar tab.
@@ -143,7 +143,11 @@ function CalendarScreen() {
             }}
           />
         ) : (
-          <TimeGridView days={days} lessons={lessons} visibleCalendarIds={visibleCalendarIds} />
+          /* Only the day views: a month grid is scrolled vertically and paged by
+             its own header, and a horizontal swipe there would be ambiguous. */
+          <SwipePager onNext={() => shift(1)} onPrevious={() => shift(-1)}>
+            <TimeGridView days={days} lessons={lessons} visibleCalendarIds={visibleCalendarIds} />
+          </SwipePager>
         )}
       </Animated.View>
 

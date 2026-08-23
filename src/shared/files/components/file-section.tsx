@@ -1,15 +1,18 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { hasApi } from '@/shared/api/api-config';
 import { useCurrentUser } from '@/shared/auth';
 import { useFormat, useT } from '@/shared/i18n';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, Icon, IconButton, Text, icons, motion } from '@/shared/ui';
 
+import { isPreviewable, openFileExternally } from '../open-file';
 import { pickFile } from '../pick-file';
-import { formatFileSize } from '../student-file';
+import { formatFileSize, type StudentFile } from '../student-file';
 import { useStudentFiles } from '../use-student-files';
+import { FilePreviewSheet } from './file-preview-sheet';
 
 export type FileSectionProps = {
   studentId: string | null;
@@ -18,10 +21,11 @@ export type FileSectionProps = {
 /**
  * Documents kept against a student.
  *
- * There is no "open" action yet: showing a stored file needs a download to the
- * cache and a viewer to hand it to, and a button that half works would be worse
- * than its absence. What this does is the part that was asked for — put a file
- * somewhere it will still be next month, and take it away again.
+ * Tapping one opens it. Images are shown here — a photo of homework is the common
+ * case and bouncing out to another app to look at one is worse than showing it.
+ * Everything else goes to the OS through the share sheet, because these are
+ * contracts and spreadsheets and this app has no business rendering a `.docx`
+ * when the device already knows which app does.
  */
 export function FileSection({ studentId }: FileSectionProps) {
   const { t } = useT();
@@ -31,6 +35,31 @@ export function FileSection({ studentId }: FileSectionProps) {
   const { files, isLoading, isUploading, hasError, upload, remove } = useStudentFiles(studentId);
 
   const [pickerFailed, setPickerFailed] = useState(false);
+  const [preview, setPreview] = useState<StudentFile | null>(null);
+  const [openFailed, setOpenFailed] = useState<'unavailable' | 'failed' | null>(null);
+
+  const open = async (file: StudentFile) => {
+    setOpenFailed(null);
+
+    // No server, no bytes. The mock records what was picked so the list behaves,
+    // but there is nothing to fetch — saying so beats a spinner that ends in an
+    // error nobody can act on.
+    if (!hasApi) {
+      setOpenFailed('unavailable');
+      return;
+    }
+
+    if (isPreviewable(file)) {
+      setPreview(file);
+      return;
+    }
+
+    try {
+      await openFileExternally(file);
+    } catch {
+      setOpenFailed('failed');
+    }
+  };
 
   const choose = async () => {
     setPickerFailed(false);
@@ -59,18 +88,25 @@ export function FileSection({ studentId }: FileSectionProps) {
             exiting={motion.listResolve()}
             layout={motion.listReflow()}
           >
-            <Icon name={icons.document} size={18} color="textSecondary" />
-            <View style={styles.details}>
-              <Text variant="bodySm" numberOfLines={1}>
-                {file.originalName}
-              </Text>
-              <Text variant="caption" color="textMuted">
-                {t('files.meta', {
-                  size: formatFileSize(file.sizeBytes),
-                  when: format.dayTitle(new Date(file.createdAt)),
-                })}
-              </Text>
-            </View>
+            <Pressable
+              style={styles.open}
+              onPress={() => void open(file)}
+              accessibilityRole="button"
+              accessibilityLabel={t('files.open', { name: file.originalName })}
+            >
+              <Icon name={icons.document} size={18} color="textSecondary" />
+              <View style={styles.details}>
+                <Text variant="bodySm" numberOfLines={1}>
+                  {file.originalName}
+                </Text>
+                <Text variant="caption" color="textMuted">
+                  {t('files.meta', {
+                    size: formatFileSize(file.sizeBytes),
+                    when: format.dayTitle(new Date(file.createdAt)),
+                  })}
+                </Text>
+              </View>
+            </Pressable>
             {/* Only what you added: the server refuses anything else, and an
                 action that fails is worse than one that is not offered. */}
             {file.uploadedById === user.id ? (
@@ -99,6 +135,16 @@ export function FileSection({ studentId }: FileSectionProps) {
           </Text>
         </Animated.View>
       ) : null}
+
+      {openFailed ? (
+        <Animated.View entering={motion.messageEnter()}>
+          <Text variant="caption" color={openFailed === 'unavailable' ? 'warning' : 'danger'}>
+            {t(openFailed === 'unavailable' ? 'files.openUnavailable' : 'files.openFailed')}
+          </Text>
+        </Animated.View>
+      ) : null}
+
+      <FilePreviewSheet file={preview} onClose={() => setPreview(null)} />
     </Card>
   );
 }
@@ -112,5 +158,6 @@ const useStyles = createStyles((t) => ({
     borderBottomWidth: 1,
     borderBottomColor: t.colors.border,
   },
+  open: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
   details: { flex: 1, gap: 2 },
 }));

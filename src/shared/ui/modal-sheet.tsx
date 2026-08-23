@@ -1,4 +1,5 @@
 import { Modal, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 
 import { useT } from '@/shared/i18n';
 import { createStyles } from '@/shared/theme';
@@ -18,9 +19,12 @@ export type ModalSheetProps = {
 };
 
 const useStyles = createStyles((t) => ({
+  fill: { flex: 1 },
   backdrop: {
     flex: 1,
     backgroundColor: t.colors.overlay,
+    // The sheet sits at the bottom, so padding the backdrop is what lifts it
+    // clear of the keyboard — no repositioning, no measuring the sheet.
     justifyContent: 'flex-end',
   },
   sheet: {
@@ -71,6 +75,18 @@ export function ModalSheet({
   const { t } = useT();
   const styles = useStyles();
 
+  /**
+   * Reanimated's keyboard tracking rather than `KeyboardAvoidingView`.
+   *
+   * A `Modal` is its own window on Android, so `windowSoftInputMode` does not
+   * reach it and `KeyboardAvoidingView` has nothing to react to — which is how a
+   * sheet with a text field in it ended up entirely behind the keyboard. This
+   * follows the keyboard's actual height on both platforms, and follows it *as it
+   * moves*, so the sheet travels with it instead of jumping when it settles.
+   */
+  const keyboard = useAnimatedKeyboard();
+  const lift = useAnimatedStyle(() => ({ paddingBottom: keyboard.height.get() }));
+
   return (
     <Modal
       visible={visible}
@@ -79,22 +95,33 @@ export function ModalSheet({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={t('common.close')}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
-          <View style={styles.header}>
-            <Text variant="titleSm">{title}</Text>
-            <IconButton
-              name={icons.close}
-              accessibilityLabel={t('common.close')}
-              onPress={onClose}
-            />
-          </View>
+      <Animated.View style={[styles.fill, lift]}>
+        <Pressable
+          style={styles.backdrop}
+          onPress={onClose}
+          accessibilityLabel={t('common.close')}
+        >
+          <Pressable style={styles.sheet} onPress={() => {}}>
+            <View style={styles.header}>
+              <Text variant="titleSm">{title}</Text>
+              <IconButton
+                name={icons.close}
+                accessibilityLabel={t('common.close')}
+                onPress={onClose}
+              />
+            </View>
 
-          <ScrollView contentContainerStyle={[styles.body, contentStyle]}>{children}</ScrollView>
+            <ScrollView
+              contentContainerStyle={[styles.body, contentStyle]}
+              keyboardShouldPersistTaps="handled"
+            >
+              {children}
+            </ScrollView>
 
-          {footer ? <View style={styles.footer}>{footer}</View> : null}
+            {footer ? <View style={styles.footer}>{footer}</View> : null}
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </Animated.View>
     </Modal>
   );
 }

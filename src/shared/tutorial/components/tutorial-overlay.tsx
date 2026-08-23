@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
@@ -25,12 +26,32 @@ export function TutorialOverlay() {
   const { t } = useT();
   const styles = useStyles();
   const { height: screenHeight } = useWindowDimensions();
-  const { step, position, total, isLast, next, back, finish, anchorRect } = useTutorial();
+  const { step, position, total, isLast, next, back, finish, anchorRect, setOverlayOrigin } =
+    useTutorial();
+
+  const root = useRef<View>(null);
+
+  /**
+   * Reports where this overlay sits in the window.
+   *
+   * Anchors can only measure themselves against the window, so without this their
+   * coordinates are read as if the overlay filled it. On Android it does not
+   * unless the app draws edge to edge, and every highlight came out low by
+   * exactly the status bar.
+   */
+  const [height, setHeight] = useState(0);
+
+  const measureSelf = useCallback(() => {
+    root.current?.measureInWindow((x, y, _width, measuredHeight) => {
+      setOverlayOrigin({ x, y });
+      setHeight(measuredHeight);
+    });
+  }, [setOverlayOrigin]);
 
   if (!step) return null;
 
   return (
-    <View style={styles.container} pointerEvents="box-none">
+    <View style={styles.container} pointerEvents="box-none" ref={root} onLayout={measureSelf}>
       {/* Fades in rather than appearing: the screen going dark instantly reads
           as something breaking. */}
       <Animated.View
@@ -45,7 +66,11 @@ export function TutorialOverlay() {
       {/* Moves between positions instead of jumping, so it stays the same card
           walking around the app rather than five different ones. */}
       <Animated.View
-        style={[styles.card, cardPosition(anchorRect, step.placement, screenHeight)]}
+        style={[
+          styles.card,
+          // The overlay's own height once it is known; the window's until then.
+          cardPosition(anchorRect, step.placement, height || screenHeight),
+        ]}
         layout={LinearTransition.duration(durations.normal)}
         entering={FadeIn.duration(durations.normal)}
       >

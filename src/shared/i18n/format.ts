@@ -55,8 +55,6 @@ export type Formatters = {
   monthYear: (value: DateLike) => string;
   /** "Sunday, 23 August" / "Неділя, 23 серпня" — a day heading, capitalised. */
   dayTitle: (value: DateLike) => string;
-  /** `(-2, 'day')` → "2 days ago". Falls back to a plain number if unsupported. */
-  relativeTime: (value: number, unit: Intl.RelativeTimeFormatUnit) => string;
   /** `['Anna', 'Ben', 'Cleo']` → "Anna, Ben and Cleo" */
   list: (values: readonly string[], type?: 'conjunction' | 'disjunction') => string;
 };
@@ -116,15 +114,6 @@ export function createFormatters(languageTag: string): Formatters {
           toDate(value).toDateString(),
         languageTag,
       ),
-
-    relativeTime: (value, unit) => {
-      const formatter = cached(`r:${languageTag}`, () =>
-        typeof Intl.RelativeTimeFormat === 'function'
-          ? new Intl.RelativeTimeFormat(languageTag, { numeric: 'auto' })
-          : null,
-      );
-      return formatter?.format(value, unit) ?? `${value} ${unit}`;
-    },
 
     list: (values, type = 'conjunction') => {
       const formatter = cached(`l:${languageTag}:${type}`, () =>

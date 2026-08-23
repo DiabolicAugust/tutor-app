@@ -17,17 +17,28 @@ import { createStyles, durations } from '@/shared/theme';
 
 import { Text } from './text';
 
+const DOT_COUNT = 3;
+/** Offset between dots, so the row reads as a wave rather than a blink. */
+const DOT_STAGGER_MS = 90;
+/** One pulse is up then down, so a full cycle is twice this. */
+const DOT_HALF_CYCLE_MS = durations.fast;
+
 /**
  * How long the loader stays up at minimum.
  *
- * Every provider in this app hydrates synchronously, so on a fast device the
- * app is ready before the first frame. Without a floor the loader would flash
- * for one frame — worse than not having one. This is a legibility floor, not
- * padding: slower devices and cold starts exceed it on their own.
+ * Every provider in this app hydrates synchronously, so on a fast device the app
+ * is ready before the first frame. Without a floor the loader would flash for one
+ * frame — worse than not having one.
+ *
+ * **Derived rather than chosen.** It is exactly how long the last dot needs to
+ * complete one pulse. A hand-picked number drifted from the animation it was
+ * supposed to accommodate: at 420ms the third dot began its first cycle at 260ms
+ * and needed 480ms, so the loader started fading out with every dot caught
+ * mid-pulse — a loop whose whole message is "work is happening", visibly cut
+ * before it had said anything. Deriving it means shortening the floor and
+ * breaking that again are the same edit.
  */
-const MIN_VISIBLE_MS = 420;
-
-const DOT_COUNT = 3;
+const MIN_VISIBLE_MS = (DOT_COUNT - 1) * DOT_STAGGER_MS + DOT_HALF_CYCLE_MS * 2;
 
 const useStyles = createStyles((t) => ({
   overlay: {
@@ -71,7 +82,7 @@ export function AppSplash() {
   useEffect(() => {
     markScale.set(
       withTiming(1, {
-        duration: durations.slow,
+        duration: durations.normal,
         easing: Easing.out(Easing.back(1.4)),
       }),
     );
@@ -122,11 +133,11 @@ function LoadingDot({ index }: { index: number }) {
   useEffect(() => {
     progress.set(
       withDelay(
-        index * 130,
+        index * DOT_STAGGER_MS,
         withRepeat(
           withSequence(
-            withTiming(1, { duration: durations.normal }),
-            withTiming(0.35, { duration: durations.normal }),
+            withTiming(1, { duration: DOT_HALF_CYCLE_MS }),
+            withTiming(0.35, { duration: DOT_HALF_CYCLE_MS }),
           ),
           -1,
           false,

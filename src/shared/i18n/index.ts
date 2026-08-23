@@ -9,6 +9,7 @@ export {
   type TranslationParams,
 } from './dictionary';
 export { createFormatters, useFormat, type Formatters } from './format';
+export { describeTimeAgo, type TimeAgo } from './relative-time';
 export type { I18nValue, LocaleController } from './i18n-context';
 export { I18nProvider, type I18nProviderProps } from './i18n-provider';
 export {
