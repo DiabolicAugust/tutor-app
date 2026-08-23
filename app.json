@@ -44,7 +44,7 @@
           "icon": "./assets/images/notification-icon.png",
           "color": "#E86B1F",
           "sounds": [
-            "./assets/sounds/lesson-reminder.wav"
+            "./assets/sounds/lesson_reminder.wav"
           ],
           "defaultChannel": "lesson-reminders"
         }

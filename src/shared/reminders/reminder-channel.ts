@@ -17,7 +17,7 @@ import { basePalettes } from '@/shared/theme';
  */
 export const REMINDER_CHANNEL_ID = 'lesson-reminders';
 
-export const REMINDER_SOUND = 'lesson-reminder.wav';
+export const REMINDER_SOUND = 'lesson_reminder.wav';
 
 /**
  * Creates the channel. Safe to call repeatedly; a no-op off Android.

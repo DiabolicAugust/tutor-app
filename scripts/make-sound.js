@@ -69,6 +69,8 @@ function wav(data) {
   return Buffer.concat([header, data]);
 }
 
-const out = path.join(process.argv[2] ?? '.', 'lesson-reminder.wav');
+// Underscored, not hyphenated: the file lands in Android res/raw, whose
+// resource names reject hyphens and fail prebuild.
+const out = path.join(process.argv[2] ?? '.', 'lesson_reminder.wav');
 fs.writeFileSync(out, wav(pcm));
 console.log(`${out}: ${(totalSamples / SAMPLE_RATE).toFixed(2)}s, ${pcm.length + 44} bytes`);
