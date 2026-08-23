@@ -1,8 +1,10 @@
 import { fixtureColleagues } from './colleagues';
 import { fixturesEnabled } from './enabled';
 import { fixtureLessons } from './lessons';
+import { fixtureNotes, fixtureOwnName } from './notes';
 import { fixtureNotifications } from './notifications';
 import { fixtureInvitations, fixtureMembers, fixtureSchoolName } from './school';
+import { fixtureStudentFiles } from './student-files';
 import { fixtureStudents } from './students';
 
 export { fixturesEnabled };
@@ -24,5 +26,9 @@ export const fixtures = {
   students: fixturesEnabled ? fixtureStudents : [],
   schoolMembers: fixturesEnabled ? fixtureMembers : [],
   invitations: fixturesEnabled ? fixtureInvitations : [],
+  notes: fixturesEnabled ? fixtureNotes : [],
+  studentFiles: fixturesEnabled ? fixtureStudentFiles : [],
   schoolName: fixturesEnabled ? fixtureSchoolName : '',
+  /** The signed-in tutor's display name, for anything a fixture attributes. */
+  ownName: fixturesEnabled ? fixtureOwnName : '',
 } as const;

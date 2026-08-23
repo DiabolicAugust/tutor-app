@@ -5,6 +5,7 @@ export {
   lessonsForDay,
   type Lesson,
   type LessonStatus,
+  type StudentLesson,
 } from './lesson';
 export {
   LessonsProvider,

@@ -20,6 +20,14 @@ export type Lesson = {
   status: LessonStatus;
 };
 
+/**
+ * A lesson as a student's history shows it.
+ *
+ * The note count comes with the row because the list needs it and fetching notes
+ * per lesson to count them would be one request per row.
+ */
+export type StudentLesson = Lesson & { noteCount: number };
+
 export function lessonStart(lesson: Lesson): Date {
   return new Date(lesson.startsAt);
 }

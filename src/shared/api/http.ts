@@ -6,7 +6,11 @@ type Query = Record<string, string | number | boolean | undefined | null>;
 
 export type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  /** Serialised as JSON. Omit for GET and DELETE. */
+  /**
+   * Serialised as JSON, unless it is `FormData` — then it is passed straight to
+   * `fetch`, which is the only way a multipart boundary gets set correctly.
+   * Omit for GET and DELETE.
+   */
   body?: unknown;
   query?: Query;
   /** Public endpoints — sign-in, invitation links — skip the auth header. */
@@ -56,8 +60,13 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), requestTimeoutMs);
 
+  const isMultipart = typeof FormData !== 'undefined' && body instanceof FormData;
+
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  // Deliberately not set for multipart: `fetch` generates a boundary and writes
+  // the header itself, and setting it by hand produces a body the server cannot
+  // parse — with no error until it tries.
+  if (body !== undefined && !isMultipart) headers['Content-Type'] = 'application/json';
 
   if (!anonymous) {
     const token = getAccessToken();
@@ -69,7 +78,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     response = await fetch(buildUrl(path, query), {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isMultipart ? body : JSON.stringify(body),
       signal: controller.signal,
     });
   } catch (cause) {
@@ -107,4 +116,6 @@ export const http = {
     request<T>(path, { method: 'POST', body, anonymous }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  /** Multipart upload. The caller builds the form; this adds auth and the rest. */
+  upload: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', body: form }),
 };

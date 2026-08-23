@@ -1,10 +1,20 @@
 import { httpAuthClient } from '@/shared/auth/http-auth-client';
 import { mockAuthClient, unavailableAuthClient, type AuthClient } from '@/shared/auth/auth-client';
 import {
+  httpFilesClient,
+  mockFilesClient,
+  type FilesClient,
+} from '@/shared/files/files-client';
+import {
   httpLessonsClient,
   mockLessonsClient,
   type LessonsClient,
 } from '@/shared/lessons/lessons-client';
+import {
+  httpNotesClient,
+  mockNotesClient,
+  type NotesClient,
+} from '@/shared/notes/notes-client';
 import {
   httpNotificationsClient,
   mockNotificationsClient,
@@ -37,6 +47,8 @@ export type ApiClients = {
   lessons: LessonsClient;
   students: StudentsClient;
   notifications: NotificationsClient;
+  notes: NotesClient;
+  files: FilesClient;
   userConfig: UserConfigClient;
   support: SupportClient;
 };
@@ -60,6 +72,8 @@ export const apiClients: ApiClients = useMockClients
       lessons: mockLessonsClient,
       students: mockStudentsClient,
       notifications: mockNotificationsClient,
+      notes: mockNotesClient,
+      files: mockFilesClient,
       userConfig: mockUserConfigClient,
       support: mockSupportClient,
     }
@@ -70,6 +84,8 @@ export const apiClients: ApiClients = useMockClients
         lessons: httpLessonsClient,
         students: httpStudentsClient,
         notifications: httpNotificationsClient,
+        notes: httpNotesClient,
+        files: httpFilesClient,
         userConfig: httpUserConfigClient,
         support: httpSupportClient,
       }
@@ -79,6 +95,8 @@ export const apiClients: ApiClients = useMockClients
         lessons: mockLessonsClient,
         students: mockStudentsClient,
         notifications: mockNotificationsClient,
+        notes: mockNotesClient,
+        files: mockFilesClient,
         userConfig: mockUserConfigClient,
         support: mockSupportClient,
       };

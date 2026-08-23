@@ -63,4 +63,7 @@ export const icons = {
   school: { ios: 'building.columns', android: 'school' },
   people: { ios: 'person.2', android: 'group' },
   mail: { ios: 'envelope', android: 'mail' },
+  document: { ios: 'doc', android: 'description' },
+  students: { ios: 'person.2.fill', android: 'groups' },
+  note: { ios: 'square.and.pencil', android: 'edit_note' },
 } as const satisfies Record<string, IconName>;

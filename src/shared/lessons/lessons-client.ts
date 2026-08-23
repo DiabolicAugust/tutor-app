@@ -1,7 +1,7 @@
 import { http } from '@/shared/api/http';
 import { fixtures } from '@/shared/fixtures';
 
-import type { Lesson, LessonStatus } from './lesson';
+import type { Lesson, LessonStatus, StudentLesson } from './lesson';
 
 export type NewLessonInput = {
   studentId: string;
@@ -22,6 +22,14 @@ export type LessonRange = {
 
 export type LessonsClient = {
   list: (range: LessonRange) => Promise<Lesson[]>;
+  /**
+   * One student's lessons, newest first.
+   *
+   * Not a variation of `list`: the calendar asks what is in a date window, this
+   * asks what has happened, and the two want opposite orderings and opposite
+   * defaults.
+   */
+  listForStudent: (studentId: string) => Promise<StudentLesson[]>;
   create: (input: NewLessonInput) => Promise<Lesson>;
   setStatus: (id: string, status: LessonStatus) => Promise<Lesson>;
 };
@@ -43,6 +51,8 @@ type WireLesson = {
   startsAt: string;
   durationMinutes: number;
   status: WireStatus;
+  /** Prisma's shape for an aggregate; flattened on the way in. */
+  _count?: { notes: number };
 };
 
 const toDomainStatus = (status: WireStatus): LessonStatus =>
@@ -64,6 +74,14 @@ function toDomain(lesson: WireLesson): Lesson {
 }
 
 export const httpLessonsClient: LessonsClient = {
+  async listForStudent(studentId) {
+    const wire = await http.get<WireLesson[]>(`/students/${studentId}/lessons`);
+    return wire.map((lesson) => ({
+      ...toDomain(lesson),
+      noteCount: lesson._count?.notes ?? 0,
+    }));
+  },
+
   async list({ from, to, tutorIds }) {
     const wire = await http.get<WireLesson[]>('/lessons', {
       from,
@@ -90,6 +108,16 @@ let localId = 0;
 export const mockLessonsClient: LessonsClient = {
   async list() {
     return [...fixtures.lessons];
+  },
+
+  async listForStudent(studentId) {
+    return fixtures.lessons
+      .filter((lesson) => lesson.studentId === studentId)
+      .map((lesson) => ({
+        ...lesson,
+        noteCount: fixtures.notes.filter((note) => note.lessonId === lesson.id).length,
+      }))
+      .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
   },
 
   async create(input) {

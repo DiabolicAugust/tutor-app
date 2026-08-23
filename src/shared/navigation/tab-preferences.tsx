@@ -36,13 +36,27 @@ const TabPreferencesContext = createContext<TabPreferences | null>(null);
  * Reconciles a stored order with the tabs that exist now.
  *
  * A build that adds or removes a tab must not strand the stored value: unknown
- * keys are dropped and new ones appended, so an upgrade shows the new tab
- * instead of hiding it or crashing.
+ * keys are dropped, and new ones appear at the position this build intended
+ * rather than at the end.
+ *
+ * That last part matters more than it sounds. Appending would have put a new tab
+ * *after* "More", which is conventionally last — so everybody upgrading would see
+ * it in a place no fresh install ever shows it. Inserting at the default index
+ * respects the arrangement somebody chose for the tabs they know about, while
+ * putting the one they have never seen where it was meant to go.
  */
 function reconcileOrder(stored: readonly TabKey[] | null): TabKey[] {
   const known = stored?.filter(isTabKey) ?? [];
-  const missing = defaultTabOrder.filter((key) => !known.includes(key));
-  return [...known, ...missing];
+  if (known.length === 0) return [...defaultTabOrder];
+
+  const order = [...known];
+
+  for (const [defaultIndex, key] of defaultTabOrder.entries()) {
+    if (order.includes(key)) continue;
+    order.splice(Math.min(defaultIndex, order.length), 0, key);
+  }
+
+  return order;
 }
 
 /**

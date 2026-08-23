@@ -2,12 +2,12 @@ import type { AppDictionary, TranslationKey } from '@/shared/i18n';
 import { icons, type IconName } from '@/shared/ui';
 
 /** Route name inside `app/(app)/(tabs)/`. */
-export type TabKey = 'index' | 'news' | 'more';
+export type TabKey = 'index' | 'students' | 'news' | 'more';
 
 export type TabDefinition = {
   key: TabKey;
   /** Path the web bar navigates to. */
-  href: '/' | '/news' | '/more';
+  href: '/' | '/students' | '/news' | '/more';
   labelKey: TranslationKey<AppDictionary>;
   icon: IconName;
   /**
@@ -28,6 +28,9 @@ export type TabDefinition = {
  */
 export const tabDefinitions: readonly TabDefinition[] = [
   { key: 'index', href: '/', labelKey: 'tabs.calendar', icon: icons.today },
+  // Second, next to the calendar: the two are read together — a lesson leads to
+  // a student and a student to their lessons.
+  { key: 'students', href: '/students', labelKey: 'tabs.students', icon: icons.students },
   { key: 'news', href: '/news', labelKey: 'tabs.news', icon: icons.news },
   { key: 'more', href: '/more', labelKey: 'tabs.more', icon: icons.more, alwaysVisible: true },
 ];
