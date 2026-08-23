@@ -21,5 +21,6 @@ export {
   type AppLocale,
   type LocaleMeta,
 } from './locales';
+export { selectPluralCategory, type PluralCategory } from './plural-rules';
 export { useDeviceLocale } from './use-device-locale';
 export { useLocaleController, useT } from './use-translation';

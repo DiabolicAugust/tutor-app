@@ -4,9 +4,11 @@
  * from services, notifications and tests.
  */
 
+import { selectPluralCategory } from './plural-rules';
+
 /**
  * A pluralized entry. Only `other` is required; which of the remaining
- * categories a language actually needs is decided by `Intl.PluralRules`
+ * categories a language actually needs is decided by `selectPluralCategory`
  * (English uses one/other, Ukrainian uses one/few/many/other).
  *
  * `zero` is a convenience that wins for `count === 0` when present, so
@@ -56,20 +58,6 @@ export type Translate<T> = (key: TranslationKey<T>, params?: TranslationParams) 
 
 const PLACEHOLDER = /\{\{\s*(\w+)\s*\}\}/g;
 
-const pluralRulesCache = new Map<string, Intl.PluralRules | null>();
-
-function getPluralRules(languageTag: string): Intl.PluralRules | null {
-  if (!pluralRulesCache.has(languageTag)) {
-    try {
-      pluralRulesCache.set(languageTag, new Intl.PluralRules(languageTag));
-    } catch {
-      // Hermes may ship without full ICU on some platforms.
-      pluralRulesCache.set(languageTag, null);
-    }
-  }
-  return pluralRulesCache.get(languageTag) ?? null;
-}
-
 function isPluralForms(node: DictionaryNode): node is PluralForms {
   return typeof node === 'object' && typeof (node as PluralForms).other === 'string';
 }
@@ -85,7 +73,7 @@ function lookup(tree: DictionaryTree | undefined, path: readonly string[]): Dict
 
 function selectPluralForm(forms: PluralForms, count: number, languageTag: string): string {
   if (count === 0 && forms.zero !== undefined) return forms.zero;
-  const category = getPluralRules(languageTag)?.select(count) ?? (count === 1 ? 'one' : 'other');
+  const category = selectPluralCategory(languageTag, count);
   return forms[category] ?? forms.other;
 }
 

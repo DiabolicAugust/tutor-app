@@ -57,7 +57,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const format = useFormat();
   const styles = useStyles();
   const { addLesson } = useLessons();
-  const { students, find, addStudent } = useStudents();
+  const { ownStudents, find, addStudent } = useStudents();
 
   const [studentId, setStudentId] = useState<string | null>(null);
   const [addingStudent, setAddingStudent] = useState(false);
@@ -180,7 +180,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           />
         ) : (
           <View style={styles.students}>
-            {students.map((student) => (
+            {ownStudents.map((student) => (
               <ListRow
                 key={student.id}
                 label={student.name}

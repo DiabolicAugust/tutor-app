@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 
+import { capitalizeFirst } from '@/shared/lib/text';
+
 import { useT } from './use-translation';
 
 /**
@@ -47,8 +49,12 @@ export type Formatters = {
   time: (value: DateLike, options?: Intl.DateTimeFormatOptions) => string;
   /** Date and time together — lesson slots, audit logs. */
   dateTime: (value: DateLike, options?: Intl.DateTimeFormatOptions) => string;
-  /** Standalone weekday name, for schedule grids. */
+  /** Standalone weekday name, for schedule grids. Capitalised as a label. */
   weekday: (value: DateLike, width?: 'long' | 'short' | 'narrow') => string;
+  /** "August 2026" / "Серпень 2026" — a month heading, capitalised. */
+  monthYear: (value: DateLike) => string;
+  /** "Sunday, 23 August" / "Неділя, 23 серпня" — a day heading, capitalised. */
+  dayTitle: (value: DateLike) => string;
   /** `(-2, 'day')` → "2 days ago". Falls back to a plain number if unsupported. */
   relativeTime: (value: number, unit: Intl.RelativeTimeFormatUnit) => string;
   /** `['Anna', 'Ben', 'Cleo']` → "Anna, Ben and Cleo" */
@@ -89,8 +95,27 @@ export function createFormatters(languageTag: string): Formatters {
       dateFormat(options ?? { dateStyle: 'medium', timeStyle: 'short' })?.format(toDate(value)) ??
       toDate(value).toISOString(),
 
+    // Month and weekday names arrive lowercase in several languages, which is
+    // right mid-sentence and wrong for a heading.
     weekday: (value, width = 'short') =>
-      dateFormat({ weekday: width })?.format(toDate(value)) ?? toDate(value).toDateString(),
+      capitalizeFirst(
+        dateFormat({ weekday: width })?.format(toDate(value)) ?? toDate(value).toDateString(),
+        languageTag,
+      ),
+
+    monthYear: (value) =>
+      capitalizeFirst(
+        dateFormat({ month: 'long', year: 'numeric' })?.format(toDate(value)) ??
+          toDate(value).toDateString(),
+        languageTag,
+      ),
+
+    dayTitle: (value) =>
+      capitalizeFirst(
+        dateFormat({ weekday: 'long', day: 'numeric', month: 'long' })?.format(toDate(value)) ??
+          toDate(value).toDateString(),
+        languageTag,
+      ),
 
     relativeTime: (value, unit) => {
       const formatter = cached(`r:${languageTag}`, () =>

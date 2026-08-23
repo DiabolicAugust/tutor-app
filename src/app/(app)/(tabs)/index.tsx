@@ -71,10 +71,7 @@ function CalendarScreen() {
     });
   };
 
-  const title =
-    viewMode === 'month'
-      ? format.date(selectedDay, { month: 'long', year: 'numeric' })
-      : format.date(selectedDay, { weekday: 'long', day: 'numeric', month: 'long' });
+  const title = viewMode === 'month' ? format.monthYear(selectedDay) : format.dayTitle(selectedDay);
 
   const openEventForm = (day: Date) => {
     setEventDay(day);
@@ -143,11 +140,16 @@ function CalendarScreen() {
         )}
       </Animated.View>
 
-      <Fab
-        name={icons.add}
-        accessibilityLabel={t('event.add')}
-        onPress={() => openEventForm(selectedDay)}
-      />
+      {/* Not in the month view: a floating button there covers the last row of
+          dates. Booking from the month view goes through a date's agenda sheet,
+          which has its own "add" action. */}
+      {viewMode !== 'month' ? (
+        <Fab
+          name={icons.add}
+          accessibilityLabel={t('event.add')}
+          onPress={() => openEventForm(selectedDay)}
+        />
+      ) : null}
 
       <CalendarFiltersSheet visible={sheet === 'filters'} onClose={() => setSheet('none')} />
       <CalendarSettingsSheet visible={sheet === 'settings'} onClose={() => setSheet('none')} />

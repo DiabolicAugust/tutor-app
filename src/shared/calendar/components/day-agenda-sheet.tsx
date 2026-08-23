@@ -45,7 +45,7 @@ export function DayAgendaSheet({
     <ModalSheet
       visible={day !== null}
       onClose={onClose}
-      title={day ? format.date(day, { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
+      title={day ? format.dayTitle(day) : ''}
       footer={
         day ? (
           <Button label={t('event.add')} fullWidth onPress={() => onAddEvent(day)} />

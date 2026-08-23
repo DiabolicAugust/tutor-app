@@ -7,6 +7,11 @@
  */
 export type Student = {
   id: string;
+  /**
+   * The tutor who teaches them. A school's roster holds everyone's students, but
+   * a tutor books lessons only for their own — see `ownStudents`.
+   */
+  tutorId: string;
   name: string;
   /** What they usually study; prefills the subject when booking. */
   subject: string;

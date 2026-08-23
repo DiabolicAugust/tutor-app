@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useCurrentUser, useSession } from '@/shared/auth';
 import { useT } from '@/shared/i18n';
@@ -19,31 +20,34 @@ export default function MoreScreen() {
   const styles = useStyles();
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text variant="titleLg">{t('more.title')}</Text>
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <Text variant="titleLg">{t('more.title')}</Text>
 
-      <Card title={t('more.account')}>
-        <Text variant="titleSm">{user.name}</Text>
-        <Text variant="bodySm" color="textSecondary">
-          {user.email}
-        </Text>
-      </Card>
+        <Card title={t('more.account')}>
+          <Text variant="titleSm">{user.name}</Text>
+          <Text variant="bodySm" color="textSecondary">
+            {user.email}
+          </Text>
+        </Card>
 
-      <Card>
-        <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
-      </Card>
+        <Card>
+          <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
+        </Card>
 
-      <Button
-        label={t('auth.signOut')}
-        variant="secondary"
-        fullWidth
-        onPress={() => void signOut()}
-      />
-    </ScrollView>
+        <Button
+          label={t('auth.signOut')}
+          variant="secondary"
+          fullWidth
+          onPress={() => void signOut()}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const useStyles = createStyles((t) => ({
+  screen: { flex: 1, backgroundColor: t.colors.background },
   content: {
     gap: t.spacing.lg,
     padding: t.spacing.lg,

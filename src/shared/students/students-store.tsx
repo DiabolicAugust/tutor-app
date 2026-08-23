@@ -1,11 +1,18 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { fixtures } from '@/shared/fixtures';
+import { ownCalendarId } from '@/shared/tutors';
 
 import { byName, type Student } from './student';
 
 export type StudentsStore = {
+  /** Everyone on the roster, including colleagues' students. */
   students: readonly Student[];
+  /**
+   * Only the signed-in tutor's own students — what a lesson can be booked for.
+   * The full roster still exists so a colleague's lesson resolves to a name.
+   */
+  ownStudents: readonly Student[];
   find: (id: string) => Student | undefined;
   /** Resolves a name for display; falls back to the id so nothing renders blank. */
   nameOf: (id: string) => string;
@@ -30,6 +37,7 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
     localId += 1;
     const created: Student = {
       id: `local-student-${localId}`,
+      tutorId: ownCalendarId,
       name: name.trim(),
       subject: subject.trim(),
       paidLessonsLeft: 0,
@@ -42,6 +50,7 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
     const byId = new Map(students.map((student) => [student.id, student]));
     return {
       students,
+      ownStudents: students.filter((student) => student.tutorId === ownCalendarId),
       find: (id) => byId.get(id),
       nameOf: (id) => byId.get(id)?.name ?? id,
       addStudent,
