@@ -1,56 +1,227 @@
-# Welcome to your Expo app 👋
+# Fox Academy
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A SaaS for private tutors and tutoring schools, built with Expo (SDK 57) and Expo Router.
 
-## Get started
+Current scope: a schedule you can read at a glance, a news feed of everything needing
+attention, and per-account appearance and language preferences. **There is no backend
+yet** — see [Mocked, on purpose](#mocked-on-purpose) for exactly what is fake and where
+the seams are.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started
 
 ```bash
-npm run reset-project
+npm install
+npm start          # then press i / a / w, or scan the QR code
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+| Command | What it does |
+| --- | --- |
+| `npm start` | Expo dev server |
+| `npm run ios` / `npm run android` / `npm run web` | Start on one platform |
+| `npx tsc --noEmit` | Typecheck — the main gate, since there is no test suite yet |
+| `npx expo export --platform web` | Bundle + prerender every route; catches render failures |
 
-### Other setup steps
+Expo SDK 57 changed a lot: read the versioned docs at
+<https://docs.expo.dev/versions/v57.0.0/> before writing code, not the latest ones.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Conventions
 
-## Learn more
+**Anything potentially reusable lives in `src/shared/`.** Route files stay thin — they
+compose providers and shared components and hold screen-local state, nothing more. If a
+component, hook, type or helper could plausibly serve a second screen, it belongs in
+`shared/`, not next to the screen that happened to need it first.
 
-To learn more about developing your project with Expo, look at the following resources:
+Two rules follow from that and are worth stating explicitly:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- **No raw values in components.** Colors, spacing, radii, durations and text styles come
+  from the theme; user-visible strings come from the dictionary. A hex code or an English
+  literal inside a component is a bug.
+- **Prefer a registry over a switch.** Where behaviour varies by kind — notification
+  types, palette variants, calendar view modes — the variants are declared in one typed
+  table and the renderer stays generic.
 
-## Join the community
+## Layout
 
-Join our community of developers creating universal apps.
+```
+src/
+  app/                        # expo-router routes only
+    _layout.tsx               # providers + auth guards
+    sign-in.tsx
+    (app)/                    # everything behind authentication
+      _layout.tsx             # stack: tabs + pushed detail screens
+      settings.tsx
+      (tabs)/                 # calendar - news - more
+  shared/
+    auth/                     # session, AuthClient seam
+    calendar/                 # view modes, grid geometry, month grid, sheets
+    i18n/                     # typed dictionaries, provider, Intl formatters
+    lessons/                  # Lesson domain type + in-memory store
+    lib/                      # date helpers, sync key/value storage
+    navigation/               # tab bar (native + web variants)
+    notifications/            # news feed: model, kind registry, derivation
+    providers/                # AppProviders - every app-wide singleton
+    theme/                    # tokens, provider, createStyles
+    tutors/                   # calendar owners
+    ui/                       # Text, Button, TextField, Card, ModalSheet, motion
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## How the pieces work
+
+### Theme
+
+Two independent axes: **mode** (light / dark / follow the OS) and **palette variant** (the
+accent family). Both persist and are read synchronously on first render, so a returning
+user never sees a flash of the wrong theme.
+
+Styles are declared as a function of the theme:
+
+```tsx
+const useStyles = createStyles((t) => ({
+  card: { backgroundColor: t.colors.surface, borderRadius: t.radius.lg },
+  title: { ...t.typography.titleMd, color: t.colors.text },
+}));
+```
+
+The factory runs at most once per distinct theme for the whole app — the cache is keyed by
+`theme.id`, not by component instance — so switching theme costs one stylesheet build, not
+one per mounted component. Inline `style={{ color: theme.colors.text }}` is the thing this
+exists to avoid.
+
+Adding a color means adding it to **both** palettes in `theme/tokens.ts`; `Palette` is
+derived from the light one, so a missing dark value is a compile error. Accent variants
+only override what differs.
+
+### i18n
+
+`locales/en.ts` is the source of truth **and the key type**. `t('lessons.ttile')` and
+`t('lessons')` (a namespace, not a leaf) are compile errors. Other locales are partials:
+any key they omit falls back to English per key, and any key they invent fails to compile.
+
+Plurals go through `Intl.PluralRules`, so Ukrainian's one/few/many works without special
+casing. Dates, times, money and relative times come from `useFormat()`, bound to the
+active locale — a formatted date is a translation, so it lives with i18n and reformats on
+a language switch.
+
+With no explicit choice, the app follows the device language live.
+
+### Auth
+
+Screens never talk to an auth backend, only to the `AuthClient` interface. Route
+protection uses `<Stack.Protected guard={...}>`, so **nothing calls `router.replace` after
+signing in or out** — flipping the session makes the other route group unreachable and the
+router moves the user, deep links included.
+
+### Calendar
+
+Defaults to today. Day and 3-day views share one hour grid; concurrent lessons are
+clustered by real overlap and split into columns, and today's column carries a "now" line.
+The month view shows density as identity-colored dots and hands a tapped date to an agenda
+sheet.
+
+Event colors mean **whose calendar** a lesson is on, not what subject it is — that is what
+makes several overlaid schedules readable, and it makes the filter list double as the
+grid's legend.
+
+### News
+
+A notification is data (`kind`, `createdAt`, a small `data` bag); how a kind *looks* is a
+`notificationRegistry` entry (icon, tone, translation keys, optional inline actions). The
+feed maps over notifications without knowing what kinds exist, so **adding a kind is a
+registry entry plus a dictionary block** — no component changes.
+
+Items come from two places: what a server would push, and what is *derived* from the
+schedule (a lesson that ended unconfirmed, a lesson starting soon). Derived items cannot
+go stale — confirm a lesson and its reminder is gone on the next render, no message to
+retract. Actions name an intent (`markHeld`); the store decides what that means.
+
+### Bottom navigation
+
+Which tabs appear and in what order is a user preference, persisted and read by both tab
+bars from one registry (`navigation/tab-definitions.ts`). Adding a tab is a route plus an
+entry there.
+
+`more` is marked `alwaysVisible`, because it is the way back to settings — hiding it would
+lock the user out of the screen that could restore it. The constraint lives in the tab
+definition, not in the settings UI, so every consumer respects it. A stored order is
+reconciled against the tabs that exist now, so a build that adds or removes one does not
+strand the preference.
+
+### Launch
+
+`AppSplash` covers the first frames with the app's own animated loader and fades out. It
+holds for a short floor (~420 ms) because every provider hydrates synchronously — without
+it the loader would flash for a single frame, which is worse than not having one.
+
+### Motion
+
+Every animation comes from `shared/ui/motion.ts`, so durations stay consistent and there
+is one place to audit whether a movement earns its keep. The rule: animate only when
+something changes state in a way the user needs to follow — an item leaving a list,
+content replacing content, a control acknowledging a press. Nothing loops, nothing
+decorates.
+
+## Test data
+
+All test data lives in `src/shared/fixtures/` behind a single flag:
+
+```ts
+export const fixturesEnabled = __DEV__ || process.env.EXPO_PUBLIC_FIXTURES === '1';
+```
+
+- **Development** — always on, so the app is explorable out of the box.
+- **Test build** — set `EXPO_PUBLIC_FIXTURES=1`:
+
+  ```bash
+  EXPO_PUBLIC_FIXTURES=1 npx expo export --platform web        # bash
+  ```
+
+  ```powershell
+  $env:EXPO_PUBLIC_FIXTURES=1; npx expo export --platform web  # PowerShell
+  ```
+
+  For EAS, put the variable in the build profile's `env` block.
+- **Production** — off, so no invented students, lessons or announcements ship, and
+  sign-in fails loudly (`unavailableAuthClient`) instead of faking a session.
+
+`EXPO_PUBLIC_*` values are inlined at bundle time, so with the flag off the fixture
+modules are dropped from the bundle rather than merely unused.
+
+### Keeping fixtures current
+
+**A test build must always demonstrate everything the app can do.** So:
+
+- adding a feature means adding fixtures for it, in the same change;
+- changing a feature means updating the fixtures that cover it.
+
+`fixtureLessons` is built relative to *now* on every launch — a lesson that has already
+ended but is unconfirmed, one starting within the hour, two at the same time, plus
+cancelled and completed ones. That is deliberate: it guarantees every notification kind
+and every calendar state is visible whenever the build is opened, rather than only on the
+day the data happened to be written.
+
+| Area | Fixture | Where the real thing plugs in |
+| --- | --- | --- |
+| Sign-in | Any email/password succeeds; the user is built from the email | Implement `AuthClient`, pass it as `<SessionProvider client={...}>` |
+| Schedule | `fixtureLessons`, in memory, lost on reload | `LessonsProvider` exposes a list plus mutations — the shape a data layer will have |
+| News | `fixtureNotifications` for server-pushed kinds | `NotificationsProvider`; derived kinds keep working as-is |
+| Colleagues | `fixtureColleagues` | `shared/tutors` — the own calendar is always real |
+
+A yellow notice on the sign-in screen says the backend is missing; it appears only when
+fixtures are on. The backend itself is undecided (TypeORM / Prisma / Drizzle) — nothing
+above depends on that choice.
+
+## Verifying changes
+
+There is no test suite yet, so:
+
+1. `npx tsc --noEmit` — the dictionaries, theme tokens and notification registry are typed
+   such that most mistakes land here.
+2. `npx expo export --platform web` — prerenders every route. **An empty page means SSR
+   threw**: grep the output HTML for `<!--$!-->`, React's marker for a Suspense boundary
+   that failed and fell back to client rendering. The build still exits 0 and prints no
+   error.
+3. Screens behind the auth guard prerender as the sign-in screen. To see them, temporarily
+   pass `initialSession` to `SessionProvider` — then revert it.
+4. `Modal` content is **not** prerendered (react-native-web renders it as a portal), so
+   the sheets — filters, calendar settings, day agenda, new lesson — need a real browser or
+   a device.
