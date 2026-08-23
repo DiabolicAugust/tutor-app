@@ -1,3 +1,4 @@
+import type { AddonKey } from '@/shared/addons';
 import { mockAuthClient } from '@/shared/auth';
 import { fixtures } from '@/shared/fixtures';
 
@@ -22,9 +23,26 @@ function inviteToken(id: string): string {
 
 const TTL_HOURS = 72;
 
+/** Grant overrides made during this session, keyed by member id. */
+const grantOverrides = new Map<string, AddonKey[]>();
+
 export const mockSchoolClient: SchoolClient = {
   async listTutors() {
-    return [...fixtures.schoolMembers];
+    return fixtures.schoolMembers.map((member) => ({
+      ...member,
+      addons: grantOverrides.get(member.id) ?? member.addons,
+    }));
+  },
+
+  async setMemberAddons(userId, addons) {
+    const next = [...new Set(addons)];
+    grantOverrides.set(userId, next);
+    return next;
+  },
+
+  async announce() {
+    // Nothing to deliver without a server; the count is what the UI reports.
+    return { recipients: fixtures.schoolMembers.length };
   },
 
   async listInvitations() {

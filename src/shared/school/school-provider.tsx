@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import type { AddonKey } from '@/shared/addons';
 import { apiClients } from '@/shared/api';
 
 import type { SchoolClient } from './school-client';
@@ -10,9 +11,13 @@ export type SchoolStore = {
   invitations: readonly Invitation[];
   isLoading: boolean;
   /** Translation key of the last failure, or `null`. */
-  errorKey: 'school.inviteFailed' | null;
+  errorKey: 'school.inviteFailed' | 'announcement.failed' | null;
   inviteTutor: (email: string) => Promise<boolean>;
   revokeInvitation: (id: string) => Promise<void>;
+  /** Replaces a member's capabilities with exactly this set. */
+  setMemberAddons: (userId: string, addons: readonly AddonKey[]) => Promise<void>;
+  /** Resolves with the recipient count, or `null` if it failed. */
+  announce: (text: string) => Promise<number | null>;
   clearError: () => void;
 };
 
@@ -79,6 +84,30 @@ export function SchoolProvider({
     [client],
   );
 
+  const setMemberAddons = useCallback(
+    async (userId: string, addons: readonly AddonKey[]) => {
+      const next = await client.setMemberAddons(userId, addons);
+      setTutors((current) =>
+        current.map((tutor) => (tutor.id === userId ? { ...tutor, addons: next } : tutor)),
+      );
+    },
+    [client],
+  );
+
+  const announce = useCallback(
+    async (text: string) => {
+      setErrorKey(null);
+      try {
+        const { recipients } = await client.announce(text);
+        return recipients;
+      } catch {
+        setErrorKey('announcement.failed');
+        return null;
+      }
+    },
+    [client],
+  );
+
   const value = useMemo<SchoolStore>(
     () => ({
       tutors,
@@ -87,9 +116,20 @@ export function SchoolProvider({
       errorKey,
       inviteTutor,
       revokeInvitation,
+      setMemberAddons,
+      announce,
       clearError: () => setErrorKey(null),
     }),
-    [tutors, invitations, isLoading, errorKey, inviteTutor, revokeInvitation],
+    [
+      tutors,
+      invitations,
+      isLoading,
+      errorKey,
+      inviteTutor,
+      revokeInvitation,
+      setMemberAddons,
+      announce,
+    ],
   );
 
   return <SchoolContext.Provider value={value}>{children}</SchoolContext.Provider>;

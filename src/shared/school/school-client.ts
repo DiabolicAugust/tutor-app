@@ -1,5 +1,7 @@
 import type { Session } from '@/shared/auth';
 
+import type { AddonKey } from '@/shared/addons';
+
 import type {
   AcceptInvitationInput,
   Invitation,
@@ -20,6 +22,16 @@ export type SchoolClient = {
   /** Sends the email. Resending to the same address replaces the invitation. */
   inviteTutor: (email: string) => Promise<Invitation>;
   revokeInvitation: (id: string) => Promise<void>;
+
+  /**
+   * Replaces a member's capabilities with exactly this set. A replace rather
+   * than add/remove: the UI shows toggles and submits what it wants to be true,
+   * which is idempotent and cannot half-apply.
+   */
+  setMemberAddons: (userId: string, addons: readonly AddonKey[]) => Promise<AddonKey[]>;
+
+  /** Sends an announcement to every member. Resolves with how many got it. */
+  announce: (text: string) => Promise<{ recipients: number }>;
 
   /** Public, keyed by the token from the emailed link. */
   describeInvitation: (token: string) => Promise<InvitationDetails>;

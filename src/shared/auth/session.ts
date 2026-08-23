@@ -1,3 +1,5 @@
+import { isAddonKey, type AddonKey } from '@/shared/addons';
+
 /**
  * Session shape. Deliberately independent of any backend: TypeORM/Prisma/Drizzle
  * will each produce their own row shape, and mapping that to `AuthUser` is the
@@ -20,6 +22,15 @@ export type AuthUser = {
   role: UserRole;
   /** The tenant this user belongs to; `null` for an independent tutor. */
   schoolId: string | null;
+  /**
+   * Capabilities granted to this account, delivered with the user's first
+   * payload — see `shared/addons`.
+   *
+   * In the session rather than fetched per screen: the app needs them to decide
+   * what to render on its first frame, and a permission that arrives late means
+   * UI appearing after the fact.
+   */
+  addons: AddonKey[];
 };
 
 export type Session = {
@@ -51,6 +62,9 @@ export function isSession(value: unknown): value is Session {
     typeof user.email === 'string' &&
     typeof user.name === 'string' &&
     roles.includes(user.role as UserRole) &&
-    (user.schoolId === null || typeof user.schoolId === 'string')
+    (user.schoolId === null || typeof user.schoolId === 'string') &&
+    // Tolerated when absent: a session persisted by a build that predates addons
+    // must still load rather than logging the user out on upgrade.
+    (user.addons === undefined || (Array.isArray(user.addons) && user.addons.every(isAddonKey)))
   );
 }

@@ -21,6 +21,29 @@ export const en = {
     empty: 'Nothing here yet',
     error: 'Something went wrong',
   },
+  addons: {
+    title: 'Capabilities',
+    hint: 'Extra things this person can do, beyond teaching.',
+    none: 'No extra capabilities',
+    inviteTutors: {
+      title: 'Invite tutors',
+      description: 'Can invite new tutors to the school by email.',
+    },
+    broadcastAnnouncements: {
+      title: 'Announcements',
+      description: 'Can send a message to everyone in the school.',
+    },
+  },
+  announcement: {
+    compose: 'Write an announcement',
+    message: 'Message',
+    placeholder: 'What should everyone know?',
+    send: 'Send to everyone',
+    tooShort: 'Write at least a few words.',
+    failed: 'Could not send the announcement. Please try again.',
+    sent: 'Announcement sent to {{count}} people.',
+    explanation: 'This appears in the News tab for every member of the school.',
+  },
   school: {
     title: 'School management',
     tutors: 'Tutors',

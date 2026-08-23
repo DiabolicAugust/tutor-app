@@ -1,3 +1,4 @@
+import type { AddonKey } from '@/shared/addons';
 import { http } from '@/shared/api/http';
 import type { Session } from '@/shared/auth';
 
@@ -9,6 +10,7 @@ type WireMember = {
   name: string;
   email: string;
   role: 'TUTOR' | 'ADMIN';
+  addons: AddonKey[];
 };
 
 type WireInvitation = {
@@ -24,6 +26,8 @@ const toMember = (member: WireMember): SchoolMember => ({
   name: member.name,
   email: member.email,
   role: member.role.toLowerCase() as SchoolMember['role'],
+  // Addon keys are identifiers, not copy, so they cross the wire unchanged.
+  addons: member.addons ?? [],
 });
 
 export const httpSchoolClient: SchoolClient = {
@@ -42,6 +46,11 @@ export const httpSchoolClient: SchoolClient = {
 
   // Both invitation-by-token routes are public: holding the token is the
   // authorisation, and the recipient has no session yet.
+  setMemberAddons: (userId, addons) =>
+    http.patch<AddonKey[]>(`/schools/current/members/${userId}/addons`, { addons }),
+
+  announce: (text) => http.post<{ recipients: number }>('/notifications/announcements', { text }),
+
   describeInvitation: (token) =>
     http.get<InvitationDetails>(`/invitations/token/${token}`, undefined, true),
 

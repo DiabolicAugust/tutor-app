@@ -165,6 +165,35 @@ invite link is redirected into the app and has to sign out first.
 To try it with fixtures, sign in with an address starting `admin` — the mock client hands
 back the admin role for those.
 
+### Capabilities (addons)
+
+Roles say what job someone does; **addons** say what they are allowed to do, and those are
+different questions. A school may want one senior tutor who can invite colleagues without
+making them an admin, which roles alone cannot express.
+
+`shared/addons/addon.ts` is the registry — one entry per capability, with its copy keys, its
+icon, and a `surface` saying where its behaviour lives (`app`, `api`, or `both`). That last
+field is not decoration: a `both` addon the app gates but the server does not is a lock on a
+door with no wall, so the mismatch is at least visible. Adding a capability is one enum
+value, one registry entry, its copy, and — for `api`/`both` — the matching `@RequiresAddon`
+on the backend.
+
+**Addons live in the session**, delivered with the user's first payload alongside the role.
+Gating UI therefore costs no request and nothing flickers into existence a moment after the
+screen appears. `useAddons()` reads them; **an admin implicitly holds every addon**, since
+they are the person who grants them — the backend states the same rule in
+`AddonsService.resolveFor`, because both sides must agree and neither can ask the other.
+
+Two gates operate on the School management screen, and the difference is deliberate:
+
+- **The screen** opens for admins, and for anyone holding a capability — otherwise a grant
+  would be unreachable.
+- **Each action** is gated on its own capability, so the invite button appears for anyone
+  with `INVITE_TUTORS` while only `BROADCAST_ANNOUNCEMENTS` reveals the announcement
+  composer.
+- **Handing out capabilities** is admin-only by role, never by addon. That is the one thing
+  which must not be delegable, or the boundary means nothing.
+
 ### Launch
 
 `AppSplash` covers the first frames with the app's own animated loader and fades out. It

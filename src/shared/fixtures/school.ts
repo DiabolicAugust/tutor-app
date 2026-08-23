@@ -13,11 +13,40 @@ function hoursFromNow(hours: number): string {
 
 export const fixtureSchoolName = 'Fox Academy Demo';
 
+/**
+ * Grants are deliberately uneven: one member with both capabilities, one with
+ * one, two with none. A screen of toggles that are all off tells you nothing
+ * about whether it works.
+ */
 export const fixtureMembers: SchoolMember[] = [
-  { id: 'me', name: 'My calendar', email: 'anna.koval@school.com', role: 'tutor' },
-  { id: 'tutor-2', name: 'Olena Hrytsenko', email: 'olena.hrytsenko@school.com', role: 'tutor' },
-  { id: 'tutor-3', name: 'Taras Lysenko', email: 'taras.lysenko@school.com', role: 'tutor' },
-  { id: 'tutor-4', name: 'Yulia Danylchenko', email: 'yulia.d@school.com', role: 'tutor' },
+  {
+    id: 'me',
+    name: 'My calendar',
+    email: 'anna.koval@school.com',
+    role: 'tutor',
+    addons: ['INVITE_TUTORS'],
+  },
+  {
+    id: 'tutor-2',
+    name: 'Olena Hrytsenko',
+    email: 'olena.hrytsenko@school.com',
+    role: 'tutor',
+    addons: ['INVITE_TUTORS', 'BROADCAST_ANNOUNCEMENTS'],
+  },
+  {
+    id: 'tutor-3',
+    name: 'Taras Lysenko',
+    email: 'taras.lysenko@school.com',
+    role: 'tutor',
+    addons: [],
+  },
+  {
+    id: 'tutor-4',
+    name: 'Yulia Danylchenko',
+    email: 'yulia.d@school.com',
+    role: 'tutor',
+    addons: [],
+  },
 ];
 
 export const fixtureInvitations: Invitation[] = [

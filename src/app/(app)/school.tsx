@@ -2,63 +2,118 @@ import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { allAddons, describeAddon, useAddons, type AddonKey } from '@/shared/addons';
 import { useCurrentUser } from '@/shared/auth';
 import { useFormat, useT } from '@/shared/i18n';
-import { useSchool } from '@/shared/school';
+import { useSchool, type SchoolMember } from '@/shared/school';
 import { createStyles } from '@/shared/theme';
-import {
-  Button,
-  Card,
-  ListRow,
-  ModalSheet,
-  Text,
-  TextField,
-  motion,
-} from '@/shared/ui';
+import { Button, Card, Icon, ListRow, ModalSheet, Text, TextField, motion } from '@/shared/ui';
+
+/** Which transient surface is open. Only one at a time. */
+type Sheet = 'none' | 'invite' | 'announce' | 'member';
 
 /**
- * School management, for admins.
+ * School management.
  *
- * Reached from the More tab, which only shows the entry when the session's role
- * is `admin` — the role arrives with the session at sign-in, so no extra request
- * is needed to know what to render.
+ * Two different gates are at work here, and the difference matters:
+ * - **The screen itself** is for admins — it is where capabilities are handed
+ *   out, and that is the one thing which must not be delegable.
+ * - **The actions on it** are gated on capabilities, so the invite button
+ *   appears for anyone holding `INVITE_TUTORS`, admin or not.
+ *
+ * Both read from the session, which already carries role and addons, so nothing
+ * here waits on a request to decide what to render.
  */
 export default function SchoolScreen() {
   const { t } = useT();
   const format = useFormat();
   const styles = useStyles();
   const user = useCurrentUser();
-  const { tutors, invitations, isLoading, errorKey, inviteTutor, clearError } = useSchool();
+  const { has } = useAddons();
+  const {
+    tutors,
+    invitations,
+    isLoading,
+    errorKey,
+    inviteTutor,
+    setMemberAddons,
+    announce,
+    clearError,
+  } = useSchool();
 
-  const [isInviting, setIsInviting] = useState(false);
+  const [sheet, setSheet] = useState<Sheet>('none');
+  const [member, setMember] = useState<SchoolMember | null>(null);
   const [email, setEmail] = useState('');
-  const [showEmailError, setShowEmailError] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [message, setMessage] = useState('');
+  const [validationKey, setValidationKey] = useState<'school.invalidEmail' | 'announcement.tooShort' | null>(null);
+  const [isBusy, setIsBusy] = useState(false);
+  const [sentTo, setSentTo] = useState<number | null>(null);
+
+  const canInvite = has('INVITE_TUTORS');
+  const canAnnounce = has('BROADCAST_ANNOUNCEMENTS');
+  const isAdmin = user.role === 'admin';
 
   const closeSheet = () => {
-    setIsInviting(false);
+    setSheet('none');
+    setMember(null);
     setEmail('');
-    setShowEmailError(false);
+    setMessage('');
+    setValidationKey(null);
     clearError();
   };
 
   const handleInvite = async () => {
-    // Deliberately lenient: the server is the authority on what a valid address
-    // is, and a regex here would only reject addresses that actually work.
+    // Deliberately lenient: the server decides what a valid address is, and a
+    // regex here would only reject addresses that actually work.
     if (!email.includes('@') || email.trim().length < 5) {
-      setShowEmailError(true);
+      setValidationKey('school.invalidEmail');
       return;
     }
 
-    setIsSending(true);
+    setIsBusy(true);
     const sent = await inviteTutor(email);
-    setIsSending(false);
+    setIsBusy(false);
     if (sent) closeSheet();
+  };
+
+  const handleAnnounce = async () => {
+    if (message.trim().length < 4) {
+      setValidationKey('announcement.tooShort');
+      return;
+    }
+
+    setIsBusy(true);
+    const recipients = await announce(message);
+    setIsBusy(false);
+
+    if (recipients !== null) {
+      setSentTo(recipients);
+      closeSheet();
+    }
+  };
+
+  const toggleAddon = (target: SchoolMember, addon: AddonKey) => {
+    const next = target.addons.includes(addon)
+      ? target.addons.filter((key) => key !== addon)
+      : [...target.addons, addon];
+
+    setMember({ ...target, addons: next });
+    void setMemberAddons(target.id, next);
   };
 
   return (
     <>
       <ScrollView contentContainerStyle={styles.content}>
+        {sentTo !== null ? (
+          <Animated.View entering={motion.listEnter()} exiting={motion.messageExit()}>
+            <Card style={styles.confirmation}>
+              <Text variant="bodySm" color="success">
+                {t('announcement.sent', { count: sentTo })}
+              </Text>
+            </Card>
+          </Animated.View>
+        ) : null}
+
         <Card title={t('school.tutors')}>
           {isLoading ? (
             <Text color="textSecondary">{t('common.loading')}</Text>
@@ -68,6 +123,19 @@ export default function SchoolScreen() {
                 key={tutor.id}
                 label={tutor.id === user.id ? t('school.you', { name: tutor.name }) : tutor.name}
                 description={tutor.email}
+                value={
+                  tutor.addons.length > 0 ? String(tutor.addons.length) : undefined
+                }
+                // Only an admin can change grants, so only an admin gets a row
+                // that opens.
+                onPress={
+                  isAdmin
+                    ? () => {
+                        setMember(tutor);
+                        setSheet('member');
+                      }
+                    : undefined
+                }
               />
             ))
           )}
@@ -82,7 +150,11 @@ export default function SchoolScreen() {
             <Text color="textSecondary">{t('school.noInvitations')}</Text>
           ) : (
             invitations.map((invitation) => (
-              <Animated.View key={invitation.id} entering={motion.listEnter()} layout={motion.listReflow()}>
+              <Animated.View
+                key={invitation.id}
+                entering={motion.listEnter()}
+                layout={motion.listReflow()}
+              >
                 <ListRow
                   label={invitation.email}
                   description={format.date(invitation.createdAt, {
@@ -96,11 +168,23 @@ export default function SchoolScreen() {
           )}
         </Card>
 
-        <Button label={t('school.inviteTutor')} fullWidth onPress={() => setIsInviting(true)} />
+        {/* Each action appears only for the capability that permits it. */}
+        {canInvite ? (
+          <Button label={t('school.inviteTutor')} fullWidth onPress={() => setSheet('invite')} />
+        ) : null}
+
+        {canAnnounce ? (
+          <Button
+            label={t('announcement.compose')}
+            variant="secondary"
+            fullWidth
+            onPress={() => setSheet('announce')}
+          />
+        ) : null}
       </ScrollView>
 
       <ModalSheet
-        visible={isInviting}
+        visible={sheet === 'invite'}
         onClose={closeSheet}
         title={t('school.inviteTutor')}
         footer={
@@ -108,7 +192,7 @@ export default function SchoolScreen() {
             label={t('school.sendInvite')}
             fullWidth
             size="lg"
-            loading={isSending}
+            loading={isBusy}
             onPress={() => void handleInvite()}
           />
         }
@@ -122,21 +206,85 @@ export default function SchoolScreen() {
           value={email}
           onChangeText={(value) => {
             setEmail(value);
-            if (showEmailError) setShowEmailError(false);
+            setValidationKey(null);
           }}
           placeholder={t('auth.emailPlaceholder')}
-          error={
-            showEmailError
-              ? t('school.invalidEmail')
-              : errorKey
-                ? t(errorKey)
-                : undefined
-          }
+          error={validationKey ? t(validationKey) : errorKey ? t(errorKey) : undefined}
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
           autoFocus
         />
+      </ModalSheet>
+
+      <ModalSheet
+        visible={sheet === 'announce'}
+        onClose={closeSheet}
+        title={t('announcement.compose')}
+        footer={
+          <Button
+            label={t('announcement.send')}
+            fullWidth
+            size="lg"
+            loading={isBusy}
+            onPress={() => void handleAnnounce()}
+          />
+        }
+      >
+        <Text variant="bodySm" color="textSecondary">
+          {t('announcement.explanation')}
+        </Text>
+
+        <TextField
+          label={t('announcement.message')}
+          value={message}
+          onChangeText={(value) => {
+            setMessage(value);
+            setValidationKey(null);
+          }}
+          placeholder={t('announcement.placeholder')}
+          error={validationKey ? t(validationKey) : errorKey ? t(errorKey) : undefined}
+          multiline
+          numberOfLines={4}
+          maxLength={500}
+          autoFocus
+        />
+      </ModalSheet>
+
+      <ModalSheet
+        visible={sheet === 'member' && member !== null}
+        onClose={closeSheet}
+        title={member?.name ?? ''}
+      >
+        <Text variant="label" color="textSecondary">
+          {t('addons.title')}
+        </Text>
+        <Text variant="caption" color="textMuted">
+          {t('addons.hint')}
+        </Text>
+
+        {member
+          ? allAddons.map((key) => {
+              const descriptor = describeAddon(key);
+              return (
+                <View key={key} style={styles.addonRow}>
+                  <Icon
+                    name={descriptor.icon}
+                    size={18}
+                    color={member.addons.includes(key) ? 'brand' : 'textMuted'}
+                  />
+                  <ListRow
+                    label={t(descriptor.titleKey)}
+                    description={t(descriptor.descriptionKey)}
+                    selectable
+                    selected={member.addons.includes(key)}
+                    onPress={() => toggleAddon(member, key)}
+                    style={styles.addonListRow}
+                  />
+                </View>
+              );
+            })
+          : null}
       </ModalSheet>
     </>
   );
@@ -150,4 +298,7 @@ const useStyles = createStyles((t) => ({
     width: '100%',
     maxWidth: t.layout.maxContentWidth,
   },
+  confirmation: { backgroundColor: t.colors.successSoft, borderColor: 'transparent' },
+  addonRow: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.sm },
+  addonListRow: { flex: 1 },
 }));

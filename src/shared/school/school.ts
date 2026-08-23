@@ -1,3 +1,4 @@
+import type { AddonKey } from '@/shared/addons';
 import type { UserRole } from '@/shared/auth';
 
 /**
@@ -14,6 +15,8 @@ export type SchoolMember = {
   name: string;
   email: string;
   role: UserRole;
+  /** Capabilities this member holds — see `shared/addons`. */
+  addons: AddonKey[];
 };
 
 /**

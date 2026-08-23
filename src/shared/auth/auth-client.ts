@@ -1,3 +1,4 @@
+import { allAddons } from '@/shared/addons';
 import { fixturesEnabled } from '@/shared/fixtures';
 
 import type { AuthUser, Session } from './session';
@@ -42,6 +43,8 @@ function nameFromEmail(email: string): string {
 export const mockAuthClient: AuthClient = {
   async signIn({ email }) {
     const trimmedEmail = email.trim();
+    const isAdmin = trimmedEmail.toLowerCase().startsWith('admin');
+
     const user: AuthUser = {
       // `me` rather than a timestamp: fixture lessons and the school roster
       // reference the signed-in tutor by that id.
@@ -50,8 +53,12 @@ export const mockAuthClient: AuthClient = {
       name: nameFromEmail(trimmedEmail),
       // Sign in with an address starting "admin" to get the admin role, which is
       // the only way to reach school management in a test build.
-      role: trimmedEmail.toLowerCase().startsWith('admin') ? 'admin' : 'tutor',
+      role: isAdmin ? 'admin' : 'tutor',
       schoolId: 'demo-school',
+      // An admin holds everything. A tutor starts with the invite capability so
+      // a test build shows a member who can invite without being an admin —
+      // which is the whole point of addons.
+      addons: isAdmin ? [...allAddons] : ['INVITE_TUTORS'],
     };
 
     return {

@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAddons } from '@/shared/addons';
 import { useCurrentUser, useSession } from '@/shared/auth';
 import { useT } from '@/shared/i18n';
 import { createStyles } from '@/shared/theme';
@@ -17,6 +18,7 @@ export default function MoreScreen() {
   // Safe to assume a user here: this screen lives behind the root layout's guard.
   const user = useCurrentUser();
   const { signOut } = useSession();
+  const { granted } = useAddons();
   const styles = useStyles();
 
   return (
@@ -32,9 +34,10 @@ export default function MoreScreen() {
         </Card>
 
         <Card>
-          {/* The role arrives with the session at sign-in, so gating on it costs
-              no extra request. */}
-          {user.role === 'admin' ? (
+          {/* Admins manage the school; anyone holding a capability needs the
+              screen too, or the grant would be unreachable. Both role and addons
+              arrive with the session, so this costs no request. */}
+          {user.role === 'admin' || granted.length > 0 ? (
             <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
           ) : null}
           <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
