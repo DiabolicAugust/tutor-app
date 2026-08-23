@@ -210,6 +210,44 @@ A yellow notice on the sign-in screen says the backend is missing; it appears on
 fixtures are on. The backend itself is undecided (TypeORM / Prisma / Drizzle) — nothing
 above depends on that choice.
 
+## Android builds (Windows)
+
+The Android C++ build **cannot run from this repository's normal location**. Ninja, as
+shipped with the Android SDK, is not long-path aware: a prefab config file it depends on
+lands at exactly 250 characters under
+`C:\Users\...\Documents\Programming\ReactNative\foxacademy\`, ninja fails to stat it,
+treats the edge as permanently dirty and re-runs CMake until it gives up with
+`ninja: error: manifest 'build.ninja' still dirty after 100 tries`. The failing task is
+always `:react-native-reanimated:buildCMakeRelWithDebInfo`.
+
+Build from a short path instead:
+
+```powershell
+$src = 'C:\Users\User\Documents\Programming\ReactNative\foxacademy'
+robocopy $src C:\fa /E /XD "$src\.git" "$src\dist" "$src\.expo" "$src\builds" ".cxx" `
+  "$src\android\build" "$src\android\app\build" "$src\android\.gradle"
+
+Set-Location C:\fa\android
+$env:EXPO_PUBLIC_FIXTURES = '1'
+.\gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a
+```
+
+The APK lands in `C:\fa\android\app\build\outputs\apk\release\app-release.apk`. The
+`release` build type is signed with the debug keystore, which is what makes it installable
+for testing with no keystore setup — it is **not** publishable as-is.
+
+Notes from getting this working, so the dead ends are not re-walked:
+
+- A junction (`mklink /J C:\fa <project>`) does **not** help: Gradle resolves it back to
+  the canonical long path and the C++ build still uses that. A real copy or a move is
+  required.
+- Editing `CONFIGURE_DEPENDS` out of reanimated's or worklets' `CMakeLists.txt` is **not**
+  needed — verified by building with it restored. Do not patch `node_modules`.
+- Restricting to one ABI is a speed choice, not a fix; all four ABIs fail equally from a
+  long path.
+- `expo prebuild` needs `android.package` and `ios.bundleIdentifier` in `app.json`; both
+  are set. `android/` and `ios/` stay gitignored, being build artifacts.
+
 ## Verifying changes
 
 There is no test suite yet, so:
