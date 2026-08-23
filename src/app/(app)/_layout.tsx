@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { useT } from '@/shared/i18n';
+import { useLessonReminders } from '@/shared/reminders';
 import { useTheme } from '@/shared/theme';
 
 /**
@@ -15,6 +16,11 @@ import { useTheme } from '@/shared/theme';
 export default function AppLayout() {
   const { t } = useT();
   const { colors } = useTheme();
+
+  // Mounted once, here: reminders follow from the schedule and the user's
+  // preference, not from anyone looking at a particular screen. Inside the
+  // authenticated group, because there is no schedule before sign-in.
+  useLessonReminders();
 
   return (
     <Stack

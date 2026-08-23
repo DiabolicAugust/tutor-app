@@ -160,3 +160,4 @@ write('android-icon-foreground.png', render(1024, { background: 'none', scale: 0
 write('android-icon-background.png', render(1024, { background: 'gradient', scale: 0 }));
 write('android-icon-monochrome.png', render(1024, { background: 'none', scale: 0.62, silhouette: [255, 255, 255] }));
 write('splash-icon.png', render(512, { background: 'none', scale: 0.92 }));
+write('notification-icon.png', render(96, { background: 'none', scale: 0.94, silhouette: [255, 255, 255] }));

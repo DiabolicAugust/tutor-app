@@ -54,6 +54,7 @@ export const en = {
       other: '{{count}} min',
     },
     saveFailed: 'Could not save. Your change was reverted.',
+    unsupported: 'Lesson reminders are available in the mobile app.',
   },
   support: {
     title: 'Support',
@@ -65,6 +66,11 @@ export const en = {
     tooShort: 'Please describe the problem in a little more detail.',
     failed: 'Could not send your message. Please try again.',
     sent: 'Thanks — we have your message and will get back to you.',
+  },
+  reminders: {
+    title: 'Lesson with {{name}}',
+    body: 'Starts at {{time}} · {{subject}}',
+    permissionDenied: 'Notifications are turned off for this app. Enable them in system settings to get reminders.',
   },
   school: {
     title: 'School management',
