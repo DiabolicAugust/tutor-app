@@ -184,6 +184,13 @@ screen appears. `useAddons()` reads them; **an admin implicitly holds every addo
 they are the person who grants them — the backend states the same rule in
 `AddonsService.resolveFor`, because both sides must agree and neither can ask the other.
 
+`MANAGE_STUDENTS` shows the difference between the two questions a permission system has
+to answer. The **capability** decides whether someone may edit students at all; the
+**server** decides whose — a tutor their own, an admin the whole school, enforced in
+`StudentsService.findOne` so one function owns that rule. The roster still lists students
+the caller cannot edit, because the calendar shows their lessons and hiding half the names
+would be more confusing than a row that does not open.
+
 Two gates operate on the School management screen, and the difference is deliberate:
 
 - **The screen** opens for admins, and for anyone holding a capability — otherwise a grant

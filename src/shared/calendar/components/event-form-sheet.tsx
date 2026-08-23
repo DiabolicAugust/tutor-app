@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
+import { useAddons } from '@/shared/addons';
 import { useFormat, useT } from '@/shared/i18n';
 import { useLessons, type NewLesson } from '@/shared/lessons';
 import { addDays, startOfDay } from '@/shared/lib/date';
@@ -58,6 +59,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const styles = useStyles();
   const { addLesson } = useLessons();
   const { ownStudents, find, addStudent } = useStudents();
+  const { has } = useAddons();
 
   const [studentId, setStudentId] = useState<string | null>(null);
   const [addingStudent, setAddingStudent] = useState(false);
@@ -209,14 +211,18 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           </View>
         )}
 
-        <Button
-          label={addingStudent ? t('event.pickExisting') : t('event.newStudent')}
-          variant="ghost"
-          onPress={() => {
-            setAddingStudent(!addingStudent);
-            setShowError(false);
-          }}
-        />
+        {/* Adding a student here is the same capability as adding one on the
+            students screen, so it is gated the same way. */}
+        {has('MANAGE_STUDENTS') ? (
+          <Button
+            label={addingStudent ? t('event.pickExisting') : t('event.newStudent')}
+            variant="ghost"
+            onPress={() => {
+              setAddingStudent(!addingStudent);
+              setShowError(false);
+            }}
+          />
+        ) : null}
       </View>
 
       <TextField

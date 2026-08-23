@@ -20,7 +20,7 @@ export default function MoreScreen() {
   // Safe to assume a user here: this screen lives behind the root layout's guard.
   const user = useCurrentUser();
   const { signOut } = useSession();
-  const { granted } = useAddons();
+  const { granted, has } = useAddons();
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const styles = useStyles();
 
@@ -42,6 +42,11 @@ export default function MoreScreen() {
               arrive with the session, so this costs no request. */}
           {user.role === 'admin' || granted.length > 0 ? (
             <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
+          ) : null}
+          {/* Gated on the capability, not the role: a tutor granted it manages
+              their own students, an admin the whole school. */}
+          {has('MANAGE_STUDENTS') ? (
+            <ListRow label={t('more.students')} onPress={() => router.push('/students')} />
           ) : null}
           <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
           <ListRow label={t('more.support')} onPress={() => setIsSupportOpen(true)} />

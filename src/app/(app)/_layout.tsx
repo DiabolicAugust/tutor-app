@@ -40,6 +40,10 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('more.settings') }} />
       <Stack.Screen name="school" options={{ headerShown: true, title: t('more.school') }} />
+      <Stack.Screen
+        name="students"
+        options={{ headerShown: true, title: t('studentsAdmin.title') }}
+      />
     </Stack>
   );
 }

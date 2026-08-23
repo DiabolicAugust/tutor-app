@@ -13,7 +13,7 @@ import { icons, type IconName } from '@/shared/ui';
  * wire mappings in this app, translating them would buy nothing: an addon key is
  * an identifier, not copy.
  */
-export type AddonKey = 'INVITE_TUTORS' | 'BROADCAST_ANNOUNCEMENTS';
+export type AddonKey = 'INVITE_TUTORS' | 'BROADCAST_ANNOUNCEMENTS' | 'MANAGE_STUDENTS';
 
 /**
  * Where an addon's behaviour lives.
@@ -58,6 +58,13 @@ export const addonRegistry: Record<AddonKey, AddonDescriptor> = {
     icon: icons.megaphone,
     titleKey: 'addons.broadcastAnnouncements.title',
     descriptionKey: 'addons.broadcastAnnouncements.description',
+  },
+  MANAGE_STUDENTS: {
+    key: 'MANAGE_STUDENTS',
+    surface: 'both',
+    icon: icons.person,
+    titleKey: 'addons.manageStudents.title',
+    descriptionKey: 'addons.manageStudents.description',
   },
 };
 

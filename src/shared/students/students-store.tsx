@@ -11,7 +11,7 @@ import {
 import { apiClients } from '@/shared/api';
 import { ownCalendarId } from '@/shared/tutors';
 
-import type { StudentsClient } from './students-client';
+import type { StudentPatch, StudentsClient } from './students-client';
 
 import { byName, type Student } from './student';
 
@@ -28,6 +28,13 @@ export type StudentsStore = {
   nameOf: (id: string) => string;
   /** Registers a student met for the first time while booking a lesson. */
   addStudent: (name: string, subject: string) => Promise<Student>;
+  /**
+   * Edits a student. Whether the caller may edit *this* student is the server's
+   * decision — a tutor their own, an admin the whole school — so a rejection
+   * surfaces as a thrown error rather than being pre-judged here.
+   */
+  updateStudent: (id: string, patch: StudentPatch) => Promise<void>;
+  removeStudent: (id: string) => Promise<void>;
   isLoading: boolean;
 };
 
@@ -76,6 +83,24 @@ export function StudentsProvider({
     [client],
   );
 
+  const updateStudent = useCallback(
+    async (id: string, patch: StudentPatch) => {
+      const updated = await client.update(id, patch);
+      setStudents((current) =>
+        current.map((student) => (student.id === id ? updated : student)).sort(byName),
+      );
+    },
+    [client],
+  );
+
+  const removeStudent = useCallback(
+    async (id: string) => {
+      await client.remove(id);
+      setStudents((current) => current.filter((student) => student.id !== id));
+    },
+    [client],
+  );
+
   const value = useMemo<StudentsStore>(() => {
     const byId = new Map(students.map((student) => [student.id, student]));
     return {
@@ -84,9 +109,11 @@ export function StudentsProvider({
       find: (id) => byId.get(id),
       nameOf: (id) => byId.get(id)?.name ?? id,
       addStudent,
+      updateStudent,
+      removeStudent,
       isLoading,
     };
-  }, [students, addStudent, isLoading]);
+  }, [students, addStudent, updateStudent, removeStudent, isLoading]);
 
   return <StudentsContext.Provider value={value}>{children}</StudentsContext.Provider>;
 }
