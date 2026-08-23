@@ -7,6 +7,12 @@ import { Text } from './text';
 export type SegmentedOption<T extends string> = {
   value: T;
   label: string;
+  /**
+   * Spoken label, when the visible one is abbreviated to fit. Segments are
+   * narrow, so a short label is often the right visual choice and the wrong
+   * thing to read aloud.
+   */
+  accessibilityLabel?: string;
 };
 
 export type SegmentedControlProps<T extends string> = {
@@ -32,9 +38,14 @@ const useStyles = createStyles((t) => ({
     minHeight: t.layout.minTouchSize - 8,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: t.spacing.md,
+    // Tight horizontally, generous vertically: three segments in a phone-width
+    // column leave little room sideways, so a long label needs somewhere to go
+    // other than into its own edges.
+    paddingHorizontal: t.spacing.xs,
+    paddingVertical: t.spacing.xs,
     borderRadius: t.radius.full,
   },
+  label: { textAlign: 'center' },
   segmentSelected: {
     backgroundColor: t.colors.brand,
   },
@@ -72,14 +83,19 @@ export function SegmentedControl<T extends string>({
             onPress={() => onChange(option.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            accessibilityLabel={option.label}
+            accessibilityLabel={option.accessibilityLabel ?? option.label}
             style={({ pressed }) => [
               styles.segment,
               selected && styles.segmentSelected,
               pressed && !selected && styles.segmentPressed,
             ]}
           >
-            <Text variant="label" color={selected ? 'textOnAccent' : 'textSecondary'}>
+            <Text
+              variant="label"
+              color={selected ? 'textOnAccent' : 'textSecondary'}
+              style={styles.label}
+              numberOfLines={2}
+            >
               {option.label}
             </Text>
           </Pressable>

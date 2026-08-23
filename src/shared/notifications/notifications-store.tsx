@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 import { fixtures } from '@/shared/fixtures';
 import { useLessons } from '@/shared/lessons';
+import { useStudents } from '@/shared/students';
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
 
 import { deriveNotifications } from './derive';
@@ -33,15 +34,20 @@ const NotificationsContext = createContext<NotificationsStore | null>(null);
  * from the items themselves, which is what lets derived notifications come and
  * go without losing what the user has already seen.
  *
- * Depends on `LessonsProvider`, so it must be mounted inside it.
+ * Depends on `LessonsProvider` and `StudentsProvider`, so it must be mounted
+ * inside both.
  */
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { lessons, setLessonStatus } = useLessons();
+  const { nameOf } = useStudents();
   const [readIds, setReadIds] = useState<string[]>(() => readIdsStore.read() ?? []);
 
   const notifications = useMemo(
-    () => [...fixtures.notifications, ...deriveNotifications(lessons, new Date())].sort(byNewest),
-    [lessons],
+    () =>
+      [...fixtures.notifications, ...deriveNotifications(lessons, new Date(), nameOf)].sort(
+        byNewest,
+      ),
+    [lessons, nameOf],
   );
 
   const persistRead = useCallback((next: string[]) => {

@@ -31,7 +31,7 @@ function onDay(dayOffset: number, hour: number, minute = 0): string {
 let sequence = 0;
 function lesson(
   tutorId: string,
-  studentName: string,
+  studentId: string,
   subject: string,
   startsAt: string,
   durationMinutes: number,
@@ -41,7 +41,7 @@ function lesson(
   return {
     id: `fixture-${sequence}`,
     tutorId,
-    studentName,
+    studentId,
     subject,
     startsAt,
     durationMinutes,
@@ -51,29 +51,29 @@ function lesson(
 
 export const fixtureLessons: Lesson[] = [
   // Relative to now: these drive the news feed, so they must always exist.
-  lesson(ownCalendarId, 'Anna Koval', 'Mathematics', hoursFromNow(-3), 60),
-  lesson(ownCalendarId, 'Petro Melnyk', 'Algebra', hoursFromNow(-1, -30), 45),
-  lesson(ownCalendarId, 'Sofia Bondar', 'Geometry', hoursFromNow(1), 90),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', hoursFromNow(-3), 60),
+  lesson(ownCalendarId, 'student-petro', 'Algebra', hoursFromNow(-1, -30), 45),
+  lesson(ownCalendarId, 'student-sofia', 'Geometry', hoursFromNow(1), 90),
 
   // Same slot as the one above, on a colleague's calendar: overlap + filters.
-  lesson('tutor-2', 'Daria Sydorenko', 'English', hoursFromNow(1), 60),
-  lesson('tutor-3', 'Ihor Palii', 'Physics', hoursFromNow(4), 60),
+  lesson('tutor-2', 'student-daria', 'English', hoursFromNow(1), 60),
+  lesson('tutor-3', 'student-ihor', 'Physics', hoursFromNow(4), 60),
 
   // Every status has a look.
-  lesson(ownCalendarId, 'Maksym Zhuk', 'Mathematics', hoursFromNow(7), 60, 'cancelled'),
-  lesson(ownCalendarId, 'Mariia Tkachenko', 'Mathematics', onDay(-1, 13), 60, 'completed'),
-  lesson(ownCalendarId, 'Anna Koval', 'Mathematics', onDay(-2, 10), 60, 'completed'),
+  lesson(ownCalendarId, 'student-maksym', 'Mathematics', hoursFromNow(7), 60, 'cancelled'),
+  lesson(ownCalendarId, 'student-mariia', 'Mathematics', onDay(-1, 13), 60, 'completed'),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-2, 10), 60, 'completed'),
 
   // Fixed days, for the three-day and month views.
-  lesson(ownCalendarId, 'Ivan Shevchenko', 'Mathematics', onDay(1, 9, 30), 60),
-  lesson(ownCalendarId, 'Anna Koval', 'Mathematics', onDay(1, 15), 60),
-  lesson('tutor-2', 'Kateryna Lymar', 'English', onDay(1, 10), 45),
-  lesson('tutor-4', 'Oleh Kravets', 'Chemistry', onDay(1, 13), 60),
-  lesson(ownCalendarId, 'Sofia Bondar', 'Geometry', onDay(2, 11), 60),
-  lesson('tutor-3', 'Ihor Palii', 'Physics', onDay(2, 17), 90),
-  lesson(ownCalendarId, 'Petro Melnyk', 'Algebra', onDay(4, 12), 45),
-  lesson(ownCalendarId, 'Anna Koval', 'Mathematics', onDay(7, 9), 60),
-  lesson('tutor-2', 'Daria Sydorenko', 'English', onDay(8, 14), 60),
-  lesson(ownCalendarId, 'Sofia Bondar', 'Geometry', onDay(-6, 16), 60, 'completed'),
-  lesson(ownCalendarId, 'Yaroslav Bilyk', 'Mathematics', onDay(12, 10, 30), 60),
+  lesson(ownCalendarId, 'student-ivan', 'Mathematics', onDay(1, 9, 30), 60),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(1, 15), 60),
+  lesson('tutor-2', 'student-kateryna', 'English', onDay(1, 10), 45),
+  lesson('tutor-4', 'student-oleh', 'Chemistry', onDay(1, 13), 60),
+  lesson(ownCalendarId, 'student-sofia', 'Geometry', onDay(2, 11), 60),
+  lesson('tutor-3', 'student-ihor', 'Physics', onDay(2, 17), 90),
+  lesson(ownCalendarId, 'student-petro', 'Algebra', onDay(4, 12), 45),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(7, 9), 60),
+  lesson('tutor-2', 'student-daria', 'English', onDay(8, 14), 60),
+  lesson(ownCalendarId, 'student-sofia', 'Geometry', onDay(-6, 16), 60, 'completed'),
+  lesson(ownCalendarId, 'student-yaroslav', 'Mathematics', onDay(12, 10, 30), 60),
 ];

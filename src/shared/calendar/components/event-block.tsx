@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { useFormat } from '@/shared/i18n';
 import { lessonStart, type Lesson } from '@/shared/lessons';
+import { useStudents } from '@/shared/students';
 import { createStyles, useTheme } from '@/shared/theme';
 import { tutorColorIndex } from '@/shared/tutors';
 import { Text } from '@/shared/ui';
@@ -37,6 +38,9 @@ export function EventBlock({ lesson, compact = false, onPress }: EventBlockProps
   const styles = useStyles();
   const { eventColors, colors } = useTheme();
   const format = useFormat();
+  const { nameOf } = useStudents();
+
+  const studentName = nameOf(lesson.studentId);
 
   const cancelled = lesson.status === 'cancelled';
   const palette = eventColors[tutorColorIndex(lesson.tutorId) % eventColors.length];
@@ -49,7 +53,7 @@ export function EventBlock({ lesson, compact = false, onPress }: EventBlockProps
       style={[styles.block, { backgroundColor: background }]}
       onPress={onPress ? () => onPress(lesson) : undefined}
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`${format.time(lessonStart(lesson))} ${lesson.studentName} ${lesson.subject}`}
+      accessibilityLabel={`${format.time(lessonStart(lesson))} ${studentName} ${lesson.subject}`}
     >
       <View style={[styles.accent, { backgroundColor: accent }]} />
       <View style={styles.body}>
@@ -59,7 +63,7 @@ export function EventBlock({ lesson, compact = false, onPress }: EventBlockProps
           numberOfLines={1}
           style={cancelled ? styles.cancelled : undefined}
         >
-          {lesson.studentName}
+          {studentName}
         </Text>
         {!compact ? (
           <Text variant="caption" color="textMuted" numberOfLines={1}>

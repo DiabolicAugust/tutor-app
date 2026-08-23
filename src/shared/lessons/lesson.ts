@@ -11,7 +11,8 @@ export type Lesson = {
   id: string;
   /** Whose calendar this belongs to — see `shared/tutors`. */
   tutorId: string;
-  studentName: string;
+  /** The student taught — see `shared/students`. */
+  studentId: string;
   subject: string;
   /** ISO 8601 — the wire format, parsed at the edges. */
   startsAt: string;

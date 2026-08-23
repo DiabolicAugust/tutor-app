@@ -5,6 +5,7 @@ import { I18nProvider } from '@/shared/i18n';
 import { LessonsProvider } from '@/shared/lessons';
 import { TabPreferencesProvider } from '@/shared/navigation';
 import { NotificationsProvider } from '@/shared/notifications';
+import { StudentsProvider } from '@/shared/students';
 import { ThemeProvider } from '@/shared/theme';
 
 /**
@@ -16,18 +17,21 @@ import { ThemeProvider } from '@/shared/theme';
  * (a themed empty-state needs `t()`), while nothing in i18n needs the theme.
  * Order matters twice more: the session sits inside theme and i18n because it
  * may need both to render errors, and the notification feed sits inside the
- * schedule because it derives half its items from it.
+ * schedule because it derives half its items from it. Students sit outside both:
+ * a lesson refers to a student, and the feed needs their names.
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <I18nProvider>
       <ThemeProvider>
         <SessionProvider>
-          <LessonsProvider>
-            <NotificationsProvider>
-              <TabPreferencesProvider>{children}</TabPreferencesProvider>
-            </NotificationsProvider>
-          </LessonsProvider>
+          <StudentsProvider>
+            <LessonsProvider>
+              <NotificationsProvider>
+                <TabPreferencesProvider>{children}</TabPreferencesProvider>
+              </NotificationsProvider>
+            </LessonsProvider>
+          </StudentsProvider>
         </SessionProvider>
       </ThemeProvider>
     </I18nProvider>

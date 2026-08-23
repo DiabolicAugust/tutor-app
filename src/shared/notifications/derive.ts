@@ -18,7 +18,12 @@ const CONFIRMATION_WINDOW = 7 * 24 * HOUR;
  * retract and no read-state to reconcile. Only the tutor's own calendar
  * produces them — a colleague's unconfirmed lesson is not the user's chore.
  */
-export function deriveNotifications(lessons: readonly Lesson[], now: Date): Notification[] {
+export function deriveNotifications(
+  lessons: readonly Lesson[],
+  now: Date,
+  /** Resolves a student id to a display name. */
+  nameOf: (studentId: string) => string,
+): Notification[] {
   const result: Notification[] = [];
   const nowMs = now.getTime();
 
@@ -34,7 +39,7 @@ export function deriveNotifications(lessons: readonly Lesson[], now: Date): Noti
         kind: 'lessonNeedsConfirmation',
         // Sorted as of when the lesson ended, so the feed reads chronologically.
         createdAt: new Date(endMs).toISOString(),
-        data: { studentName: lesson.studentName, at: lesson.startsAt },
+        data: { studentName: nameOf(lesson.studentId), at: lesson.startsAt },
         lessonId: lesson.id,
         derived: true,
       });
@@ -46,7 +51,7 @@ export function deriveNotifications(lessons: readonly Lesson[], now: Date): Noti
         id: `derived-soon-${lesson.id}`,
         kind: 'lessonStartingSoon',
         createdAt: now.toISOString(),
-        data: { studentName: lesson.studentName, at: lesson.startsAt },
+        data: { studentName: nameOf(lesson.studentId), at: lesson.startsAt },
         lessonId: lesson.id,
         derived: true,
       });

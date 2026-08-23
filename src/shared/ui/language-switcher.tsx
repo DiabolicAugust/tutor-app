@@ -14,7 +14,13 @@ export function LanguageSwitcher() {
   const { override, setLocale, availableLocales } = useLocaleController();
 
   const options = [
-    { value: 'system' as const, label: t('settings.language.system') },
+    {
+      value: 'system' as const,
+      // Abbreviated on purpose: this segment sits next to language names in a
+      // narrow column. The full wording is what screen readers announce.
+      label: t('settings.language.systemShort'),
+      accessibilityLabel: t('settings.language.system'),
+    },
     ...availableLocales.map((locale) => ({
       value: locale,
       label: localeMeta[locale].nativeName,

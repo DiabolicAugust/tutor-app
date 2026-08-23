@@ -42,6 +42,7 @@ export const en = {
       title: 'Language',
       /** `null` override — follow the device language. */
       system: 'Device language',
+      systemShort: 'Auto',
     },
   },
   auth: {
@@ -122,13 +123,21 @@ export const en = {
   event: {
     add: 'New lesson',
     student: 'Student',
+    newStudent: 'Add a new student',
+    pickExisting: 'Pick from my students',
+    newStudentName: 'Student name',
+    lessonsLeft: {
+      zero: 'no lessons left',
+      one: '{{count}} lesson left',
+      other: '{{count}} lessons left',
+    },
+    ownCalendarNote: 'Lessons are added to your own calendar.',
     studentPlaceholder: 'Who is the lesson with?',
     subject: 'Subject',
     subjectPlaceholder: 'Mathematics',
     date: 'Date',
     startTime: 'Starts at',
     duration: 'Duration',
-    calendar: 'Calendar',
     minutes: '{{count}} min',
     create: 'Add lesson',
     missingStudent: 'Enter a student name.',

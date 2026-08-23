@@ -43,6 +43,7 @@ export const uk = {
     language: {
       title: 'Мова',
       system: 'Мова пристрою',
+      systemShort: 'Авто',
     },
   },
   auth: {
@@ -129,13 +130,23 @@ export const uk = {
   event: {
     add: 'Нове заняття',
     student: 'Учень',
+    newStudent: 'Додати нового учня',
+    pickExisting: 'Вибрати з моїх учнів',
+    newStudentName: 'Імʼя учня',
+    lessonsLeft: {
+      zero: 'занять не залишилось',
+      one: 'залишилось {{count}} заняття',
+      few: 'залишилось {{count}} заняття',
+      many: 'залишилось {{count}} занять',
+      other: 'залишилось {{count}} заняття',
+    },
+    ownCalendarNote: 'Заняття додаються у ваш власний календар.',
     studentPlaceholder: 'З ким заняття?',
     subject: 'Предмет',
     subjectPlaceholder: 'Математика',
     date: 'Дата',
     startTime: 'Початок',
     duration: 'Тривалість',
-    calendar: 'Календар',
     minutes: '{{count}} хв',
     create: 'Додати заняття',
     missingStudent: 'Вкажіть імʼя учня.',
