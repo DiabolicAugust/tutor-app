@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAddons } from '@/shared/addons';
 import { useCurrentUser, useSession } from '@/shared/auth';
 import { useT } from '@/shared/i18n';
+import { SupportSheet } from '@/shared/support';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, ListRow, Text } from '@/shared/ui';
 
@@ -19,6 +21,7 @@ export default function MoreScreen() {
   const user = useCurrentUser();
   const { signOut } = useSession();
   const { granted } = useAddons();
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
   const styles = useStyles();
 
   return (
@@ -41,6 +44,7 @@ export default function MoreScreen() {
             <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
           ) : null}
           <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
+          <ListRow label={t('more.support')} onPress={() => setIsSupportOpen(true)} />
         </Card>
 
         <Button
@@ -50,6 +54,8 @@ export default function MoreScreen() {
           onPress={() => void signOut()}
         />
       </ScrollView>
+
+      <SupportSheet visible={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
     </SafeAreaView>
   );
 }

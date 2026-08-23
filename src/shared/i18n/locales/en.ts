@@ -44,6 +44,28 @@ export const en = {
     sent: 'Announcement sent to {{count}} people.',
     explanation: 'This appears in the News tab for every member of the school.',
   },
+  notificationSettings: {
+    title: 'Notifications',
+    lessonReminders: 'Remind me before a lesson',
+    lessonRemindersHint: 'An automatic notification before each scheduled lesson.',
+    leadTime: 'How long before',
+    minutesShort: {
+      one: '{{count}} min',
+      other: '{{count}} min',
+    },
+    saveFailed: 'Could not save. Your change was reverted.',
+  },
+  support: {
+    title: 'Support',
+    compose: 'Contact support',
+    message: 'Message',
+    placeholder: 'What went wrong, or what do you need?',
+    explanation: 'Your message is sent to us along with your account details.',
+    send: 'Send',
+    tooShort: 'Please describe the problem in a little more detail.',
+    failed: 'Could not send your message. Please try again.',
+    sent: 'Thanks — we have your message and will get back to you.',
+  },
   school: {
     title: 'School management',
     tutors: 'Tutors',
@@ -207,6 +229,7 @@ export const en = {
   more: {
     title: 'More',
     school: 'School management',
+    support: 'Support',
     settings: 'Settings',
     preferences: 'Preferences',
     account: 'Account',

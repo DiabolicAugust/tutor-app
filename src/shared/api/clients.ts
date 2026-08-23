@@ -18,6 +18,16 @@ import {
   mockStudentsClient,
   type StudentsClient,
 } from '@/shared/students/students-client';
+import {
+  httpSupportClient,
+  mockSupportClient,
+  type SupportClient,
+} from '@/shared/support/support-client';
+import {
+  httpUserConfigClient,
+  mockUserConfigClient,
+  type UserConfigClient,
+} from '@/shared/user-config/user-config-client';
 
 import { hasApi, useMockClients } from './api-config';
 
@@ -27,6 +37,8 @@ export type ApiClients = {
   lessons: LessonsClient;
   students: StudentsClient;
   notifications: NotificationsClient;
+  userConfig: UserConfigClient;
+  support: SupportClient;
 };
 
 /**
@@ -48,6 +60,8 @@ export const apiClients: ApiClients = useMockClients
       lessons: mockLessonsClient,
       students: mockStudentsClient,
       notifications: mockNotificationsClient,
+      userConfig: mockUserConfigClient,
+      support: mockSupportClient,
     }
   : hasApi
     ? {
@@ -56,6 +70,8 @@ export const apiClients: ApiClients = useMockClients
         lessons: httpLessonsClient,
         students: httpStudentsClient,
         notifications: httpNotificationsClient,
+        userConfig: httpUserConfigClient,
+        support: httpSupportClient,
       }
     : {
         auth: unavailableAuthClient,
@@ -63,4 +79,6 @@ export const apiClients: ApiClients = useMockClients
         lessons: mockLessonsClient,
         students: mockStudentsClient,
         notifications: mockNotificationsClient,
+        userConfig: mockUserConfigClient,
+        support: mockSupportClient,
       };

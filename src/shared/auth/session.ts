@@ -1,4 +1,5 @@
 import { isAddonKey, type AddonKey } from '@/shared/addons';
+import type { UserConfig } from '@/shared/user-config/user-config';
 
 /**
  * Session shape. Deliberately independent of any backend: TypeORM/Prisma/Drizzle
@@ -31,6 +32,12 @@ export type AuthUser = {
    * UI appearing after the fact.
    */
   addons: AddonKey[];
+  /**
+   * Account preferences, delivered with the same first payload as the addons —
+   * see `shared/user-config`. Absent on sessions persisted by older builds,
+   * which `withConfigDefaults` handles.
+   */
+  config?: UserConfig;
 };
 
 export type Session = {

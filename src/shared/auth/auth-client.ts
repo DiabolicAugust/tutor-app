@@ -59,6 +59,9 @@ export const mockAuthClient: AuthClient = {
       // a test build shows a member who can invite without being an admin —
       // which is the whole point of addons.
       addons: isAdmin ? [...allAddons] : ['INVITE_TUTORS'],
+      // Reminders on, so a test build shows the preference in use rather than
+      // every account sitting on defaults.
+      config: { lessonReminders: true, lessonReminderMinutes: 60 },
     };
 
     return {

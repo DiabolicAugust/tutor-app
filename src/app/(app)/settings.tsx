@@ -2,6 +2,7 @@ import { ScrollView, View } from 'react-native';
 
 import { useT } from '@/shared/i18n';
 import { TabSettings } from '@/shared/navigation';
+import { NotificationSettings } from '@/shared/user-config';
 import { createStyles } from '@/shared/theme';
 import { Card, LanguageSwitcher, PaletteVariantSwitcher, Text, ThemeModeSwitcher } from '@/shared/ui';
 
@@ -29,6 +30,10 @@ export default function SettingsScreen() {
 
       <Card title={t('settings.language.title')}>
         <LanguageSwitcher />
+      </Card>
+
+      <Card title={t('notificationSettings.title')}>
+        <NotificationSettings />
       </Card>
 
       <Card title={t('settings.navigation.title')}>

@@ -194,6 +194,39 @@ Two gates operate on the School management screen, and the difference is deliber
 - **Handing out capabilities** is admin-only by role, never by addon. That is the one thing
   which must not be delegable, or the boundary means nothing.
 
+### Account preferences vs device preferences
+
+Two kinds of settings live in different places, and the rule is one question: **would
+losing this on reinstall be wrong?**
+
+- **Device** — theme, accent, language, tab order. Kept in `shared/lib/storage`, because
+  they describe how this phone should look.
+- **Account** — lesson reminders and their lead time. Kept on the server in a `config`
+  column on the user, because they follow the person to a new phone.
+
+Account preferences ride in the session with the addons, so the settings screen renders its
+real state on the first frame instead of showing defaults and correcting itself. Writes go
+through `PATCH /users/me/config` and the server's response replaces local state — it is the
+authority on what was stored, including anything it clamped. Changes apply optimistically
+and revert on failure: a toggle that waits for a round trip feels broken, and one that stays
+moved after a failed save lies.
+
+The lead-time row is hidden while reminders are off. An interval for notifications that are
+not sent is a control with no effect.
+
+### Support
+
+The More tab has a **Support** entry that opens a message form. It posts to `POST /support`,
+which **writes the row before trying to email anyone** — email can fail and a provider can
+be unconfigured, so the row is the commitment and the mail is a notification about it. The
+app can therefore say "we have your message" and mean it.
+
+Deliberately not a `mailto:` link. A message that only existed in someone's mail client is
+one nobody can look up, count, or answer twice.
+
+With no mail provider configured the notification goes to the log and `notifiedAt` stays
+null, so undelivered requests remain findable.
+
 ### Launch
 
 `AppSplash` covers the first frames with the app's own animated loader and fades out. It
