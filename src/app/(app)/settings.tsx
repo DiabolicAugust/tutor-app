@@ -4,7 +4,15 @@ import { useT } from '@/shared/i18n';
 import { TabSettings } from '@/shared/navigation';
 import { NotificationSettings } from '@/shared/user-config';
 import { createStyles } from '@/shared/theme';
-import { Card, LanguageSwitcher, PaletteVariantSwitcher, Text, ThemeModeSwitcher } from '@/shared/ui';
+import { useTutorial } from '@/shared/tutorial';
+import {
+  Button,
+  Card,
+  LanguageSwitcher,
+  PaletteVariantSwitcher,
+  Text,
+  ThemeModeSwitcher,
+} from '@/shared/ui';
 
 /**
  * Account-level settings: appearance and language.
@@ -15,6 +23,7 @@ import { Card, LanguageSwitcher, PaletteVariantSwitcher, Text, ThemeModeSwitcher
 export default function SettingsScreen() {
   const { t } = useT();
   const styles = useStyles();
+  const { start } = useTutorial();
 
   return (
     <ScrollView contentContainerStyle={styles.content}>
@@ -38,6 +47,16 @@ export default function SettingsScreen() {
 
       <Card title={t('settings.navigation.title')}>
         <TabSettings />
+      </Card>
+
+      {/* The tour otherwise happens once, to one person, on the day they open a
+          school — which leaves it unreachable both for a tutor who joined by
+          invitation and for anybody trying to check it still works. */}
+      <Card title={t('settings.tour.title')}>
+        <Text variant="caption" color="textSecondary">
+          {t('settings.tour.hint')}
+        </Text>
+        <Button label={t('settings.tour.action')} variant="secondary" fullWidth onPress={start} />
       </Card>
     </ScrollView>
   );

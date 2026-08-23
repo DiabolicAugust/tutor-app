@@ -33,42 +33,56 @@ function nameFromEmail(email: string): string {
 }
 
 /**
+ * Builds a fixture session.
+ *
+ * Exported because more than one mock hands one back — signing in, accepting an
+ * invitation, opening a school — and a session assembled slightly differently in
+ * each place is how "works when you sign in, broken when you register" happens.
+ */
+export function mockSession(options: {
+  email: string;
+  /** Overrides the name derived from the address. */
+  name?: string;
+  /** Defaults to admin for an address starting "admin", as sign-in does. */
+  role?: AuthUser['role'];
+}): Session {
+  const email = options.email.trim();
+  const role = options.role ?? (email.toLowerCase().startsWith('admin') ? 'admin' : 'tutor');
+
+  const user: AuthUser = {
+    // `me` rather than a timestamp: fixture lessons and the school roster
+    // reference the signed-in tutor by that id.
+    id: 'me',
+    email: email || 'tutor@foxacademy.dev',
+    name: options.name?.trim() || nameFromEmail(email),
+    role,
+    schoolId: 'demo-school',
+    // An admin holds everything. A tutor starts with the invite capability so
+    // a test build shows a member who can invite without being an admin —
+    // which is the whole point of addons.
+    addons: role === 'admin' ? [...allAddons] : ['INVITE_TUTORS'],
+    // Reminders on, so a test build shows the preference in use rather than
+    // every account sitting on defaults.
+    config: { lessonReminders: true, lessonReminderMinutes: 60 },
+  };
+
+  return { user, token: 'mock-token', issuedAt: new Date().toISOString() };
+}
+
+/**
  * Stand-in until a backend exists: **any** credentials succeed, and the user is
  * fabricated from whatever email was typed (or a placeholder if none was).
  *
  * It is async on purpose even though nothing awaits — the pending/error states
  * in the provider and the sign-in screen are therefore real code paths that a
  * network client will exercise unchanged, instead of being added later.
+ *
+ * Sign in with an address starting "admin" to get the admin role, which is the
+ * only way to reach school management in a test build.
  */
 export const mockAuthClient: AuthClient = {
   async signIn({ email }) {
-    const trimmedEmail = email.trim();
-    const isAdmin = trimmedEmail.toLowerCase().startsWith('admin');
-
-    const user: AuthUser = {
-      // `me` rather than a timestamp: fixture lessons and the school roster
-      // reference the signed-in tutor by that id.
-      id: 'me',
-      email: trimmedEmail || 'tutor@foxacademy.dev',
-      name: nameFromEmail(trimmedEmail),
-      // Sign in with an address starting "admin" to get the admin role, which is
-      // the only way to reach school management in a test build.
-      role: isAdmin ? 'admin' : 'tutor',
-      schoolId: 'demo-school',
-      // An admin holds everything. A tutor starts with the invite capability so
-      // a test build shows a member who can invite without being an admin —
-      // which is the whole point of addons.
-      addons: isAdmin ? [...allAddons] : ['INVITE_TUTORS'],
-      // Reminders on, so a test build shows the preference in use rather than
-      // every account sitting on defaults.
-      config: { lessonReminders: true, lessonReminderMinutes: 60 },
-    };
-
-    return {
-      user,
-      token: 'mock-token',
-      issuedAt: new Date().toISOString(),
-    };
+    return mockSession({ email });
   },
 
   async signOut() {

@@ -1,5 +1,5 @@
 import type { AddonKey } from '@/shared/addons';
-import { mockAuthClient } from '@/shared/auth';
+import { mockSession } from '@/shared/auth';
 import { fixtures } from '@/shared/fixtures';
 
 import type { SchoolClient } from './school-client';
@@ -27,6 +27,16 @@ const TTL_HOURS = 72;
 const grantOverrides = new Map<string, AddonKey[]>();
 
 export const mockSchoolClient: SchoolClient = {
+  async registerSchool(input) {
+    // Admin, explicitly: whoever opens a school runs it, and that must not
+    // depend on what their email happens to start with.
+    return mockSession({
+      email: input.adminEmail,
+      name: input.adminName,
+      role: 'admin',
+    });
+  },
+
   async listTutors() {
     return fixtures.schoolMembers.map((member) => ({
       ...member,
@@ -85,10 +95,9 @@ export const mockSchoolClient: SchoolClient = {
 
   async acceptInvitation(token, input) {
     const details = await this.describeInvitation(token);
-    // Reuses the auth mock so the resulting session is identical in shape to a
-    // normal sign-in — the app must not be able to tell the difference.
-    const session = await mockAuthClient.signIn({ email: details.email, password: input.password });
 
-    return { ...session, user: { ...session.user, name: input.name.trim() } };
+    // A tutor, explicitly: an invitation is how somebody joins a school that
+    // already has an admin.
+    return mockSession({ email: details.email, name: input.name, role: 'tutor' });
   },
 };

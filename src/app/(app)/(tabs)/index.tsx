@@ -18,6 +18,7 @@ import { useFormat, useT } from '@/shared/i18n';
 import { useLessons } from '@/shared/lessons';
 import { addDays, isToday, startOfDay } from '@/shared/lib/date';
 import { createStyles } from '@/shared/theme';
+import { useTutorialAnchor } from '@/shared/tutorial';
 import { Fab, IconButton, Text, icons, motion } from '@/shared/ui';
 
 /**
@@ -44,6 +45,12 @@ function CalendarScreen() {
   const styles = useStyles();
   const { lessons } = useLessons();
   const { viewMode, visibleCalendarIds } = useCalendarPreferences();
+
+  // Anchors for the interface tour. They measure only while a tour is running,
+  // so a screen carrying them costs nothing the rest of the time.
+  const titleAnchor = useTutorialAnchor('calendar.title');
+  const viewsAnchor = useTutorialAnchor('calendar.views');
+  const addAnchor = useTutorialAnchor('calendar.add');
 
   // Defaults to today, as a calendar should.
   const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
@@ -81,7 +88,7 @@ function CalendarScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <View style={styles.titleRow}>
+        <View style={styles.titleRow} {...titleAnchor}>
           <Text variant="titleMd" numberOfLines={1} style={styles.title}>
             {title}
           </Text>
@@ -97,7 +104,7 @@ function CalendarScreen() {
           />
         </View>
 
-        <View style={styles.navRow}>
+        <View style={styles.navRow} {...viewsAnchor}>
           <IconButton
             name={icons.chevronLeft}
             accessibilityLabel={t('calendar.previous')}
@@ -148,6 +155,7 @@ function CalendarScreen() {
           name={icons.add}
           accessibilityLabel={t('event.add')}
           onPress={() => openEventForm(selectedDay)}
+          {...addAnchor}
         />
       ) : null}
 

@@ -15,6 +15,7 @@ export {
   type SegmentedControlProps,
   type SegmentedOption,
 } from './segmented-control';
+export { StepDots, type StepDotsProps } from './step-dots';
 export { Text, type TextColor, type TextProps, type TextVariant } from './text';
 export { TextField, type TextFieldProps } from './text-field';
 export { ThemeModeSwitcher } from './theme-mode-switcher';

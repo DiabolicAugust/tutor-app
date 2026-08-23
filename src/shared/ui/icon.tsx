@@ -60,4 +60,7 @@ export const icons = {
   arrowDown: { ios: 'arrow.down', android: 'arrow_downward' },
   eyeOff: { ios: 'eye.slash', android: 'visibility_off' },
   lock: { ios: 'lock', android: 'lock' },
+  school: { ios: 'building.columns', android: 'school' },
+  people: { ios: 'person.2', android: 'group' },
+  mail: { ios: 'envelope', android: 'mail' },
 } as const satisfies Record<string, IconName>;

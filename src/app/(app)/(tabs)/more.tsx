@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAddons } from '@/shared/addons';
@@ -8,6 +8,7 @@ import { useCurrentUser, useSession } from '@/shared/auth';
 import { useT } from '@/shared/i18n';
 import { SupportSheet } from '@/shared/support';
 import { createStyles } from '@/shared/theme';
+import { useTutorialAnchor } from '@/shared/tutorial';
 import { Button, Card, ListRow, Text } from '@/shared/ui';
 
 /**
@@ -23,6 +24,7 @@ export default function MoreScreen() {
   const { granted, has } = useAddons();
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const styles = useStyles();
+  const settingsAnchor = useTutorialAnchor('more.settings');
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -48,7 +50,9 @@ export default function MoreScreen() {
           {has('MANAGE_STUDENTS') ? (
             <ListRow label={t('more.students')} onPress={() => router.push('/students')} />
           ) : null}
-          <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
+          <View {...settingsAnchor}>
+            <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
+          </View>
           <ListRow label={t('more.support')} onPress={() => setIsSupportOpen(true)} />
         </Card>
 

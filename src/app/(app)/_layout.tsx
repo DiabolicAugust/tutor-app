@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { useT } from '@/shared/i18n';
 import { useLessonReminders } from '@/shared/reminders';
 import { useTheme } from '@/shared/theme';
+import { TutorialOverlay, TutorialProvider } from '@/shared/tutorial';
 
 /**
  * Everything behind authentication. Reachable only while the root layout's
@@ -14,6 +15,17 @@ import { useTheme } from '@/shared/theme';
  * becoming tabs of their own.
  */
 export default function AppLayout() {
+  return (
+    <TutorialProvider>
+      <AppStack />
+      {/* After the stack, not before: later siblings paint on top, and a tour
+          underneath the app it is explaining explains nothing. */}
+      <TutorialOverlay />
+    </TutorialProvider>
+  );
+}
+
+function AppStack() {
   const { t } = useT();
   const { colors } = useTheme();
 

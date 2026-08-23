@@ -2,6 +2,7 @@ import { Pressable, View } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import { useFormat, useT } from '@/shared/i18n';
+import { useNow } from '@/shared/lib/use-now';
 import { createStyles, durations, useTheme, type Palette } from '@/shared/theme';
 import { Button, Icon, Text, motion } from '@/shared/ui';
 
@@ -70,6 +71,7 @@ export function NotificationCard({
   const format = useFormat();
   const styles = useStyles();
   const { colors } = useTheme();
+  const now = useNow();
 
   const descriptor = describeNotification(notification.kind);
   const tone = toneColors[descriptor.tone];
@@ -82,7 +84,11 @@ export function NotificationCard({
     time: notification.data.at ? format.time(new Date(notification.data.at)) : '',
   };
 
-  const hoursAgo = Math.round((new Date(notification.createdAt).getTime() - Date.now()) / HOUR_MS);
+  // `now` comes from a hook rather than `Date.now()` inline: reading the clock
+  // during render makes the same props produce a different result each time, and
+  // a relative timestamp computed that way freezes at whatever the clock said
+  // when the card last happened to re-render.
+  const hoursAgo = Math.round((new Date(notification.createdAt).getTime() - now) / HOUR_MS);
 
   // Read items stay legible but stop competing for attention. Faded rather than
   // switched, so tapping a card visibly acknowledges the tap.

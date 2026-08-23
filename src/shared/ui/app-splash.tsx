@@ -69,10 +69,12 @@ export function AppSplash() {
   const markScale = useSharedValue(0.86);
 
   useEffect(() => {
-    markScale.value = withTiming(1, {
-      duration: durations.slow,
-      easing: Easing.out(Easing.back(1.4)),
-    });
+    markScale.set(
+      withTiming(1, {
+        duration: durations.slow,
+        easing: Easing.out(Easing.back(1.4)),
+      }),
+    );
 
     // Hand the native splash over to this one, then dismiss on our own clock.
     SplashScreen.hideAsync().catch(() => {
@@ -83,7 +85,7 @@ export function AppSplash() {
     return () => clearTimeout(timer);
   }, [markScale]);
 
-  const markStyle = useAnimatedStyle(() => ({ transform: [{ scale: markScale.value }] }));
+  const markStyle = useAnimatedStyle(() => ({ transform: [{ scale: markScale.get() }] }));
 
   if (!visible) return null;
 
@@ -118,22 +120,24 @@ function LoadingDot({ index }: { index: number }) {
   const progress = useSharedValue(0.35);
 
   useEffect(() => {
-    progress.value = withDelay(
-      index * 130,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: durations.normal }),
-          withTiming(0.35, { duration: durations.normal }),
+    progress.set(
+      withDelay(
+        index * 130,
+        withRepeat(
+          withSequence(
+            withTiming(1, { duration: durations.normal }),
+            withTiming(0.35, { duration: durations.normal }),
+          ),
+          -1,
+          false,
         ),
-        -1,
-        false,
       ),
     );
   }, [index, progress]);
 
   const style = useAnimatedStyle(() => ({
-    opacity: progress.value,
-    transform: [{ scale: 0.8 + progress.value * 0.35 }],
+    opacity: progress.get(),
+    transform: [{ scale: 0.8 + progress.get() * 0.35 }],
   }));
 
   return <Animated.View style={[styles.dot, style]} />;

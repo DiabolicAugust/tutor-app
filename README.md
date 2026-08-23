@@ -248,6 +248,48 @@ something changes state in a way the user needs to follow — an item leaving a 
 content replacing content, a control acknowledging a press. Nothing loops, nothing
 decorates.
 
+### Registration and the interface tour
+
+Sign-in leads to `/join`, which asks one question before showing any fields: are you
+opening a school, or joining one that exists? Those are not variants of a form — the first
+creates a tenant and its first admin, the second needs an invitation that already exists —
+so the fork comes first, and nobody fills in the wrong one.
+
+**Joining an existing school has no form on purpose.** A school decides who teaches under
+its name, and a self-service form would let anybody attach themselves to somebody else's
+roster. `/join/existing` therefore explains what to ask for and what will arrive, which is
+what somebody who landed there actually needs. Registration itself happens on the
+invitation link (`invite/[token]`).
+
+**Opening a school** is `/join/school`, two steps: the school, then the person running it.
+Two rather than one because the fields belong to two different things, and a single screen
+asking five unrelated questions at signup is the shape people abandon. Each step validates
+on the way out, so nothing wrong is discovered on the last screen. The time zone comes from
+the device, read through a `try/catch` — Hermes ships a reduced `Intl`, and a school
+created with a crash instead of a time zone is a worse outcome than one created in UTC.
+
+Success requests the tour, then adopts the session, in that order: adopting unmounts the
+screen, so anything that has to happen has to happen first.
+
+`shared/tutorial` is the tour. Steps live in a registry (`tour.ts`), each naming the route
+it teaches and optionally an anchor to highlight, so adding one is an entry plus two
+translation keys and the overlay never grows a switch. Three things are worth knowing:
+
+- **The tour drives navigation rather than following it.** Moving to a step moves the app
+  to the screen that step is about, which is the difference between a walkthrough and a
+  slideshow.
+- **The anchor is optional.** Some steps are about a whole screen, and the tab bar is a
+  native view this code cannot measure — a step insisting on a spotlight would have to fake
+  one, and a ring around the wrong place is worse than no ring.
+- **The spotlight is four rectangles around a hole**, not a mask: masking needs SVG or
+  `mix-blend-mode`, one a dependency and the other inconsistent between web and native.
+
+The request is persisted rather than held in state, because it is made on one side of the
+sign-in guard and honoured on the other, and everything in between unmounts. Settings has a
+"Show me around" entry so the tour is reachable more than once — otherwise it happens to
+one person on the day they open a school, leaving it unverifiable and invisible to every
+tutor who joined by invitation.
+
 ## Talking to the API
 
 Every request goes through `src/shared/api`. One place owns the base URL, the auth header,
@@ -378,7 +420,11 @@ Notes from getting this working, so the dead ends are not re-walked:
 
 ## Verifying changes
 
-There is no test suite yet, so:
+`.github/workflows/ci.yml` runs typecheck, lint and a full web export on every push to
+`main` and every pull request, and fails the build if any screen did not render. There is
+no unit-test suite here; the backend is where the tests live.
+
+Locally, in the same order:
 
 1. `npx tsc --noEmit` — the dictionaries, theme tokens and notification registry are typed
    such that most mistakes land here.

@@ -52,6 +52,22 @@ export type AcceptInvitationInput = {
   password: string;
 };
 
+/**
+ * Everything needed to bring a school into existence.
+ *
+ * The school and its first admin are created together, because a school with no
+ * admin is a tenant nobody can enter — so this is one input rather than two
+ * calls the caller has to sequence correctly.
+ */
+export type RegisterSchoolInput = {
+  schoolName: string;
+  /** IANA zone the school schedules in; the app fills in the device's. */
+  timezone: string;
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+};
+
 /** Newest first. */
 export function byNewestInvitation(a: Invitation, b: Invitation): number {
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();

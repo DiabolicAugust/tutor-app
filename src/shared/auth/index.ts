@@ -1,6 +1,7 @@
 export {
   defaultAuthClient,
   mockAuthClient,
+  mockSession,
   unavailableAuthClient,
   type AuthClient,
   type SignInCredentials,

@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -76,6 +77,12 @@ export default function SignInScreen() {
             />
 
             <Button label={t('auth.forgotPassword')} variant="ghost" fullWidth disabled />
+
+            {/* The only route into registration, so it is a button rather than a
+                line of small print. */}
+            <Link href="/join" asChild>
+              <Button label={t('auth.createAccount')} variant="secondary" fullWidth />
+            </Link>
           </View>
 
           <View style={styles.footer}>

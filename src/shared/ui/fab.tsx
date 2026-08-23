@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, type ViewProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 import { createStyles, durations } from '@/shared/theme';
@@ -6,7 +6,7 @@ import { createStyles, durations } from '@/shared/theme';
 import { Icon, type IconName } from './icon';
 import { motion } from './motion';
 
-export type FabProps = {
+export type FabProps = Omit<ViewProps, 'style' | 'children'> & {
   name: IconName;
   accessibilityLabel: string;
   onPress: () => void;
@@ -40,22 +40,25 @@ const useStyles = createStyles((t) => ({
  * grid has no pressed-state background to fall back on, so without it a tap
  * gives no feedback at all until the sheet opens.
  */
-export function Fab({ name, accessibilityLabel, onPress }: FabProps) {
+export function Fab({ name, accessibilityLabel, onPress, ...rest }: FabProps) {
   const styles = useStyles();
   const scale = useSharedValue(1);
 
-  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
 
   return (
-    <Animated.View style={[styles.fab, animatedStyle]}>
+    // `rest` reaches the root rather than the pressable so that anything
+    // measuring this control — the interface tour, for one — gets the button's
+    // real position on screen, not the icon's inside it.
+    <Animated.View style={[styles.fab, animatedStyle]} {...rest}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         onPressIn={() => {
-          scale.value = withTiming(motion.pressScale, { duration: durations.instant });
+          scale.set(withTiming(motion.pressScale, { duration: durations.instant }));
         }}
         onPressOut={() => {
-          scale.value = withTiming(1, { duration: durations.fast });
+          scale.set(withTiming(1, { duration: durations.fast }));
         }}
         onPress={onPress}
       >

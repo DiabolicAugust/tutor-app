@@ -6,6 +6,7 @@ import type {
   AcceptInvitationInput,
   Invitation,
   InvitationDetails,
+  RegisterSchoolInput,
   SchoolMember,
 } from './school';
 
@@ -16,6 +17,14 @@ import type {
  * below becomes an HTTP client without touching a single component.
  */
 export type SchoolClient = {
+  /**
+   * Creates a school and its first admin, and returns them already signed in.
+   *
+   * Public, like the invitation routes: the caller has no account yet, and
+   * ending onboarding on a login form would be a worse first minute for no gain.
+   */
+  registerSchool: (input: RegisterSchoolInput) => Promise<Session>;
+
   /** Calendar owners, caller first — also what the calendar filters list. */
   listTutors: () => Promise<SchoolMember[]>;
   listInvitations: () => Promise<Invitation[]>;

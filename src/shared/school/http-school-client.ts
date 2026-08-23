@@ -3,7 +3,12 @@ import { http } from '@/shared/api/http';
 import type { Session } from '@/shared/auth';
 
 import type { SchoolClient } from './school-client';
-import type { Invitation, InvitationDetails, SchoolMember } from './school';
+import type {
+  Invitation,
+  InvitationDetails,
+  RegisterSchoolInput,
+  SchoolMember,
+} from './school';
 
 type WireMember = {
   id: string;
@@ -31,6 +36,10 @@ const toMember = (member: WireMember): SchoolMember => ({
 });
 
 export const httpSchoolClient: SchoolClient = {
+  // Public: the caller has no token to send yet.
+  registerSchool: (input: RegisterSchoolInput) =>
+    http.post<Session>('/schools/register', input, true),
+
   async listTutors() {
     const wire = await http.get<WireMember[]>('/schools/current/tutors');
     return wire.map(toMember);

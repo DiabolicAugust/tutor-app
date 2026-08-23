@@ -1,0 +1,55 @@
+# Runs on every push to main and on every pull request aimed at it.
+#
+# There is no unit-test suite here yet; what this checks is that the app still
+# compiles and still renders. The web export is the closest thing to a build the
+# app has that needs no signing keys or emulator, and it has caught real
+# breakage: a screen that throws during render fails the export rather than
+# waiting to be noticed on a device.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint and render
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Render every screen
+        run: npm run build:web
+
+      # Expo's static export writes a page per route and exits 0 even when a
+      # screen threw: React leaves `<!--$!-->` in the HTML where a suspense
+      # boundary failed. Without this step a broken screen ships as a green
+      # build.
+      - name: Fail on a screen that did not render
+        run: |
+          if grep -rl '<!--\$!-->' dist; then
+            echo "::error::One or more screens failed to render during export."
+            exit 1
+          fi
+          echo "All exported screens rendered."
