@@ -1,3 +1,4 @@
+import { AppState } from 'react-native';
 import {
   createContext,
   useCallback,
@@ -31,6 +32,15 @@ export type NotificationsStore = {
   markAllRead: () => void;
   /** Runs an action from a notification's descriptor. */
   runAction: (notification: Notification, action: NotificationAction) => void;
+  /**
+   * Refetches server-sent notifications.
+   *
+   * Needed because the feed is not a live connection: something arriving on the
+   * server — an announcement, a payment warning — is invisible here until asked
+   * for. Called when a push arrives, when one is tapped, and when the app comes
+   * back to the foreground.
+   */
+  refresh: () => Promise<void>;
 };
 
 const NotificationsContext = createContext<NotificationsStore | null>(null);
@@ -58,18 +68,45 @@ export function NotificationsProvider({
   const [readIds, setReadIds] = useState<string[]>(() => readIdsStore.read() ?? []);
   const [sent, setSent] = useState<Notification[]>([]);
 
+  const refresh = useCallback(async () => {
+    try {
+      setSent(await client.list());
+    } catch {
+      // Keep whatever is already on screen: an empty feed would read as "nothing
+      // is happening", which is a different and wrong statement.
+    }
+  }, [client]);
+
   useEffect(() => {
     let active = true;
 
+    // The fetch is inside an async function so nothing is set synchronously in
+    // the effect body; `active` drops a response that arrives after unmount.
     void (async () => {
-      const loaded = await client.list();
-      if (active) setSent(loaded);
+      const loaded = await client.list().catch(() => null);
+      if (active && loaded) setSent(loaded);
     })();
 
     return () => {
       active = false;
     };
   }, [client]);
+
+  /**
+   * Refetches when the app returns to the foreground.
+   *
+   * Without this the feed showed whatever existed when the app started. An
+   * announcement sent while somebody had the app open in the background stayed
+   * invisible until they killed and reopened it — which is not a state anybody
+   * would think to try.
+   */
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void refresh();
+    });
+
+    return () => subscription.remove();
+  }, [refresh]);
 
   const notifications = useMemo(
     () => [...sent, ...deriveNotifications(lessons, new Date(), nameOf)].sort(byNewest),
@@ -124,8 +161,9 @@ export function NotificationsProvider({
       markRead,
       markAllRead,
       runAction,
+      refresh,
     };
-  }, [notifications, readIds, markRead, markAllRead, runAction]);
+  }, [notifications, readIds, markRead, markAllRead, runAction, refresh]);
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
 }

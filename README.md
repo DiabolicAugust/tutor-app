@@ -176,6 +176,42 @@ false.
 New tabs appear at the position this build intended, not appended. Appending would have put
 Students *after* More for everybody upgrading — a place no fresh install ever shows it.
 
+### Push notifications
+
+An announcement written by an admin reaches a tutor two ways, and both matter.
+
+**In the feed.** `NotificationsProvider` refetches when the app returns to the foreground,
+not only at launch. Without that an announcement sent while somebody had the app open in the
+background stayed invisible until they killed and reopened it — not a state anybody would
+think to try.
+
+**As a notification.** `shared/push` registers this device on sign-in and forgets it on
+sign-out. Both halves matter: a token left registered after sign-out sends the next person to
+use the phone the previous person's school announcements.
+
+Registration happens on sign-in rather than at launch, and asks for permission only the
+first time. A prompt that appears before the app has shown what it would notify about is the
+one most reliably declined; by the time somebody has a session they have seen their calendar.
+
+`requestPushToken` returns a *reason* rather than throwing, because every failure is
+ordinary: somebody declined, the build has no EAS project configured, or this is a browser.
+A caller that has to catch exceptions for the normal cases ends up treating them all the
+same, and "you said no" deserves different handling from "this cannot work here". Settings
+shows which of those applies — every reason is invisible from inside the app, and silence is
+indistinguishable from nothing having been announced.
+
+Announcements arrive on their own Android channel with the default sound. The custom chime
+stays with lesson reminders, so it keeps meaning one thing — an announcement that sounded
+like a lesson starting would be actively misleading. Channels are also independently
+mutable, which is the behaviour somebody who wants one and not the other expects.
+
+**Not working yet, and it needs you rather than code.** There is no EAS project id in
+`app.json` and no `google-services.json`, so `getExpoPushTokenAsync` has nothing to identify
+this app by and Android has no delivery credentials. Settings says so rather than pretending.
+The path is: create an EAS project, add its id to `app.json`, create a Firebase project,
+add `google-services.json` and upload the FCM V1 key to Expo. The code above then works
+unchanged.
+
 ### Bottom navigation
 
 Which tabs appear and in what order is a user preference, persisted and read by both tab

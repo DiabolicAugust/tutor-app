@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { useT } from '@/shared/i18n';
+import { usePushReceiver, usePushRegistration } from '@/shared/push';
 import { useLessonReminders } from '@/shared/reminders';
 import { useTheme } from '@/shared/theme';
 import { TutorialOverlay, TutorialProvider } from '@/shared/tutorial';
@@ -33,6 +34,13 @@ function AppStack() {
   // preference, not from anyone looking at a particular screen. Inside the
   // authenticated group, because there is no schedule before sign-in.
   useLessonReminders();
+
+  // Also once, and also here rather than at launch: registering needs a session
+  // to attach the device to, and asking for notification permission before
+  // somebody has seen what the app would notify them about is the surest way to
+  // be told no.
+  usePushRegistration();
+  usePushReceiver();
 
   return (
     <Stack

@@ -51,6 +51,12 @@ export const en = {
     explanation: 'This appears in the News tab for every member of the school.',
   },
   notificationSettings: {
+    announcementsTitle: 'School announcements',
+    announcementsHint: 'Sent by your school to everyone. Delivered as a notification when the app is closed.',
+    pushDenied: 'Notifications are switched off for Fox Academy in your device settings.',
+    pushNotConfigured: 'Announcements appear in News. Push delivery is not set up in this build.',
+    pushUnsupported: 'Announcements appear in News. Push delivery needs the mobile app.',
+    pushReady: 'This device will be notified.',
     title: 'Notifications',
     lessonReminders: 'Remind me before a lesson',
     lessonRemindersHint: 'An automatic notification before each scheduled lesson.',

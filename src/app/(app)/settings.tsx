@@ -4,6 +4,7 @@ import { useT } from '@/shared/i18n';
 import { TabSettings } from '@/shared/navigation';
 import { NotificationSettings } from '@/shared/user-config';
 import { createStyles } from '@/shared/theme';
+import { PushStatus } from '@/shared/push';
 import { useTutorial } from '@/shared/tutorial';
 import {
   Button,
@@ -43,6 +44,16 @@ export default function SettingsScreen() {
 
       <Card title={t('notificationSettings.title')}>
         <NotificationSettings />
+      </Card>
+
+      {/* A separate card, because these are separate Android channels and can be
+          muted independently — and because there is nothing to configure here,
+          only something to know. */}
+      <Card title={t('notificationSettings.announcementsTitle')}>
+        <Text variant="bodySm" color="textSecondary">
+          {t('notificationSettings.announcementsHint')}
+        </Text>
+        <PushStatus />
       </Card>
 
       <Card title={t('settings.navigation.title')}>

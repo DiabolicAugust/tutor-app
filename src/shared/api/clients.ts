@@ -20,6 +20,11 @@ import {
   mockNotificationsClient,
   type NotificationsClient,
 } from '@/shared/notifications/notifications-client';
+import {
+  httpPushClient,
+  mockPushClient,
+  type PushClient,
+} from '@/shared/push/push-client';
 import { httpSchoolClient } from '@/shared/school/http-school-client';
 import { mockSchoolClient } from '@/shared/school/mock-school-client';
 import type { SchoolClient } from '@/shared/school/school-client';
@@ -49,6 +54,7 @@ export type ApiClients = {
   notifications: NotificationsClient;
   notes: NotesClient;
   files: FilesClient;
+  push: PushClient;
   userConfig: UserConfigClient;
   support: SupportClient;
 };
@@ -74,6 +80,7 @@ export const apiClients: ApiClients = useMockClients
       notifications: mockNotificationsClient,
       notes: mockNotesClient,
       files: mockFilesClient,
+      push: mockPushClient,
       userConfig: mockUserConfigClient,
       support: mockSupportClient,
     }
@@ -86,6 +93,7 @@ export const apiClients: ApiClients = useMockClients
         notifications: httpNotificationsClient,
         notes: httpNotesClient,
         files: httpFilesClient,
+        push: httpPushClient,
         userConfig: httpUserConfigClient,
         support: httpSupportClient,
       }
@@ -97,6 +105,7 @@ export const apiClients: ApiClients = useMockClients
         notifications: mockNotificationsClient,
         notes: mockNotesClient,
         files: mockFilesClient,
+        push: mockPushClient,
         userConfig: mockUserConfigClient,
         support: mockSupportClient,
       };

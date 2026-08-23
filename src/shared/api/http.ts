@@ -115,7 +115,12 @@ export const http = {
   post: <T>(path: string, body?: unknown, anonymous = false) =>
     request<T>(path, { method: 'POST', body, anonymous }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
-  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  /**
+   * A body is optional and unusual, but legal: unregistering a device is
+   * identified by a push token, which is too long and too full of punctuation to
+   * put in a path.
+   */
+  delete: <T>(path: string, body?: unknown) => request<T>(path, { method: 'DELETE', body }),
   /** Multipart upload. The caller builds the form; this adds auth and the rest. */
   upload: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', body: form }),
 };
