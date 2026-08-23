@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { useAddons } from '@/shared/addons';
+import { describeGroup, useGroups } from '@/shared/groups';
 import { useFormat, useT } from '@/shared/i18n';
 import { useLessons, type NewLesson } from '@/shared/lessons';
 import { addDays, startOfDay } from '@/shared/lib/date';
@@ -59,8 +60,12 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const styles = useStyles();
   const { addLesson } = useLessons();
   const { ownStudents, find, addStudent } = useStudents();
+  const { groups } = useGroups();
   const { has } = useAddons();
 
+  /** Whether this lesson is for one student or for a group. */
+  const [taught, setTaught] = useState<'student' | 'group'>('student');
+  const [groupId, setGroupId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [addingStudent, setAddingStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
@@ -111,7 +116,15 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     setSubject(find(id)?.subject ?? '');
   };
 
+  const selectGroup = (id: string) => {
+    setGroupId(id);
+    setShowError(false);
+    setSubject(groups.find((group) => group.id === id)?.subject ?? '');
+  };
+
   const reset = () => {
+    setTaught('student');
+    setGroupId(null);
     setStudentId(null);
     setAddingStudent(false);
     setNewStudentName('');
@@ -119,17 +132,24 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     setShowError(false);
   };
 
+  const forGroup = taught === 'group';
+
   const handleCreate = async () => {
+    const group = forGroup ? (groups.find((it) => it.id === groupId) ?? null) : null;
+
     // Either an existing student, or one created on the spot. Creating goes
     // through the API layer, so it has to be awaited before the lesson can
     // reference the new id.
-    const resolvedId = addingStudent
-      ? newStudentName.trim()
-        ? (await addStudent(newStudentName, subject)).id
-        : null
-      : studentId;
+    const resolvedId = forGroup
+      ? null
+      : addingStudent
+        ? newStudentName.trim()
+          ? (await addStudent(newStudentName, subject)).id
+          : null
+        : studentId;
 
-    if (!resolvedId) {
+    // Exactly one of the two, which is also what the server enforces.
+    if (forGroup ? !group : !resolvedId) {
       setShowError(true);
       return;
     }
@@ -141,12 +161,27 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
       // Always the tutor's own calendar — see the note above.
       tutorId: ownCalendarId,
       studentId: resolvedId,
+      group: group
+        ? {
+            id: group.id,
+            name: group.name,
+            subject: group.subject,
+            level: group.level,
+            // Carried so the new block can expand before anything is refetched.
+            members: group.members.map((member) => ({
+              student: { id: member.student.id, name: member.student.name },
+            })),
+          }
+        : null,
       // Subject is optional in the form; the grid reads better with a fallback
       // than with an empty second line.
       subject: subject.trim() || t('lessons.title'),
       startsAt: startsAt.toISOString(),
       durationMinutes: Number(duration),
       status: 'scheduled',
+      topic: null,
+      homework: null,
+      attendances: [],
     };
 
     addLesson(draft);
@@ -171,12 +206,49 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
         />
       }
     >
+      {/* Only offered when there is a group to book for. A school that teaches
+          one-to-one only should not have to look past a control it never uses. */}
+      {groups.length > 0 ? (
+        <SegmentedControl
+          options={[
+            { value: 'student', label: t('event.forStudent') },
+            { value: 'group', label: t('event.forGroup') },
+          ]}
+          value={taught}
+          onChange={(value) => {
+            setTaught(value);
+            setShowError(false);
+          }}
+          accessibilityLabel={t('event.taught')}
+        />
+      ) : null}
+
       <View style={styles.section}>
         <Text variant="label" color="textSecondary">
-          {t('event.student')}
+          {t(forGroup ? 'event.group' : 'event.student')}
         </Text>
 
-        {addingStudent ? (
+        {forGroup ? (
+          <View style={styles.students}>
+            {groups.map((group) => (
+              <ListRow
+                key={group.id}
+                label={group.name}
+                description={describeGroup(group)}
+                value={t('groups.count', { count: group.members.length })}
+                selectable
+                selected={group.id === groupId}
+                onPress={() => selectGroup(group.id)}
+              />
+            ))}
+
+            {showError ? (
+              <Text variant="caption" color="danger">
+                {t('event.missingGroup')}
+              </Text>
+            ) : null}
+          </View>
+        ) : addingStudent ? (
           <TextField
             label={t('event.newStudentName')}
             value={newStudentName}
@@ -212,8 +284,9 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
         )}
 
         {/* Adding a student here is the same capability as adding one on the
-            students screen, so it is gated the same way. */}
-        {has('MANAGE_STUDENTS') ? (
+            students screen, so it is gated the same way. Meaningless while
+            booking for a group, whose membership is edited on the roster. */}
+        {!forGroup && has('MANAGE_STUDENTS') ? (
           <Button
             label={addingStudent ? t('event.pickExisting') : t('event.newStudent')}
             variant="ghost"

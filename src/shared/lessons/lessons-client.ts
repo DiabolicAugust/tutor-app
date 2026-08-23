@@ -1,10 +1,28 @@
 import { http } from '@/shared/api/http';
 import { fixtures } from '@/shared/fixtures';
+import { toDomainAttendance, type WireAttendance } from '@/shared/gradebook/attendance';
+
 
 import type { Lesson, LessonStatus, StudentLesson } from './lesson';
 
+/** A group as the wire carries it inside a lesson. Already the domain shape. */
+type WireLessonGroup = {
+  id: string;
+  name: string;
+  subject: string;
+  level: string | null;
+  members: { student: { id: string; name: string } }[];
+};
+
+/**
+ * Booking one lesson.
+ *
+ * Exactly one of `studentId` and `groupId`; the server rejects neither and both,
+ * and the form only ever offers one of the two.
+ */
 export type NewLessonInput = {
-  studentId: string;
+  studentId?: string;
+  groupId?: string;
   subject: string;
   /** ISO instant. */
   startsAt: string;
@@ -46,11 +64,20 @@ type WireStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
 type WireLesson = {
   id: string;
   tutorId: string;
-  studentId: string;
   subject: string;
   startsAt: string;
   durationMinutes: number;
   status: WireStatus;
+  /** The gradebook half. Absent from responses written before it existed. */
+  topic?: string | null;
+  homework?: string | null;
+  studentId: string | null;
+  group?: WireLessonGroup | null;
+  attendances?: {
+    studentId: string;
+    status: WireAttendance;
+    homeworkDone: boolean | null;
+  }[];
   /** Prisma's shape for an aggregate; flattened on the way in. */
   _count?: { notes: number };
 };
@@ -70,6 +97,15 @@ function toDomain(lesson: WireLesson): Lesson {
     startsAt: lesson.startsAt,
     durationMinutes: lesson.durationMinutes,
     status: toDomainStatus(lesson.status),
+    topic: lesson.topic ?? null,
+    homework: lesson.homework ?? null,
+    group: lesson.group ?? null,
+    attendances: (lesson.attendances ?? []).map((entry) => ({
+      studentId: entry.studentId,
+      // Non-null by construction: a register row always carries a status.
+      status: toDomainAttendance(entry.status)!,
+      homeworkDone: entry.homeworkDone,
+    })),
   };
 }
 
@@ -125,11 +161,15 @@ export const mockLessonsClient: LessonsClient = {
     return {
       id: `local-${localId}`,
       tutorId: 'me',
-      studentId: input.studentId,
+      studentId: input.studentId ?? null,
       subject: input.subject,
       startsAt: input.startsAt,
       durationMinutes: input.durationMinutes,
       status: 'scheduled',
+      topic: null,
+      group: null,
+      homework: null,
+      attendances: [],
     };
   },
 

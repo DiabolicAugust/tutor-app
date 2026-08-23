@@ -5,7 +5,7 @@ import { getAccessToken, notifyUnauthorized } from './auth-token';
 type Query = Record<string, string | number | boolean | undefined | null>;
 
 export type RequestOptions = {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   /**
    * Serialised as JSON, unless it is `FormData` — then it is passed straight to
    * `fetch`, which is the only way a multipart boundary gets set correctly.
@@ -115,6 +115,12 @@ export const http = {
   post: <T>(path: string, body?: unknown, anonymous = false) =>
     request<T>(path, { method: 'POST', body, anonymous }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
+  /**
+   * Full replacement, for the resources where a partial update is meaningless —
+   * a grade whose kind changed carries different fields, and merging half a new
+   * kind onto half an old one produces rows whose kind and contents disagree.
+   */
+  put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
   /**
    * A body is optional and unusual, but legal: unregistering a device is
    * identified by a push token, which is too long and too full of punctuation to

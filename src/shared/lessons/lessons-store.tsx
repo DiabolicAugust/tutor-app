@@ -79,7 +79,11 @@ export function LessonsProvider({
   const addLesson = useCallback(
     async (draft: NewLesson) => {
       const created = await client.create({
-        studentId: draft.studentId,
+        // Exactly one of the two; the form only ever offers one, and the server
+        // rejects neither and both.
+        ...(draft.group
+          ? { groupId: draft.group.id }
+          : { studentId: draft.studentId ?? undefined }),
         subject: draft.subject,
         startsAt: draft.startsAt,
         durationMinutes: draft.durationMinutes,

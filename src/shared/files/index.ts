@@ -7,6 +7,6 @@ export {
   byNewestFile,
   formatFileSize,
   type FileToUpload,
-  type StudentFile,
-} from './student-file';
-export { useStudentFiles, type StudentFilesState } from './use-student-files';
+  type StoredFile,
+} from './stored-file';
+export { useFiles, type FileSource, type FilesState } from './use-files';

@@ -66,4 +66,11 @@ export const icons = {
   document: { ios: 'doc', android: 'description' },
   students: { ios: 'person.2.fill', android: 'groups' },
   note: { ios: 'square.and.pencil', android: 'edit_note' },
+  journal: { ios: 'book.closed', android: 'menu_book' },
+  grade: { ios: 'star', android: 'star' },
+  progress: { ios: 'chart.line.uptrend.xyaxis', android: 'trending_up' },
+  trash: { ios: 'trash', android: 'delete' },
+  pencil: { ios: 'pencil', android: 'edit' },
+  share: { ios: 'square.and.arrow.up', android: 'share' },
+  folder: { ios: 'folder', android: 'folder' },
 } as const satisfies Record<string, IconName>;

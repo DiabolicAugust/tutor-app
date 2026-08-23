@@ -6,6 +6,16 @@ import {
   type FilesClient,
 } from '@/shared/files/files-client';
 import {
+  httpGradebookClient,
+  type GradebookClient,
+} from '@/shared/gradebook/gradebook-client';
+import { mockGradebookClient } from '@/shared/gradebook/mock-gradebook-client';
+import {
+  httpGroupsClient,
+  type GroupsClient,
+} from '@/shared/groups/groups-client';
+import { mockGroupsClient } from '@/shared/groups/mock-groups-client';
+import {
   httpLessonsClient,
   mockLessonsClient,
   type LessonsClient,
@@ -53,6 +63,8 @@ export type ApiClients = {
   students: StudentsClient;
   notifications: NotificationsClient;
   notes: NotesClient;
+  gradebook: GradebookClient;
+  groups: GroupsClient;
   files: FilesClient;
   push: PushClient;
   userConfig: UserConfigClient;
@@ -79,6 +91,8 @@ export const apiClients: ApiClients = useMockClients
       students: mockStudentsClient,
       notifications: mockNotificationsClient,
       notes: mockNotesClient,
+      gradebook: mockGradebookClient,
+      groups: mockGroupsClient,
       files: mockFilesClient,
       push: mockPushClient,
       userConfig: mockUserConfigClient,
@@ -92,6 +106,8 @@ export const apiClients: ApiClients = useMockClients
         students: httpStudentsClient,
         notifications: httpNotificationsClient,
         notes: httpNotesClient,
+        gradebook: httpGradebookClient,
+        groups: httpGroupsClient,
         files: httpFilesClient,
         push: httpPushClient,
         userConfig: httpUserConfigClient,
@@ -104,6 +120,8 @@ export const apiClients: ApiClients = useMockClients
         students: mockStudentsClient,
         notifications: mockNotificationsClient,
         notes: mockNotesClient,
+        gradebook: mockGradebookClient,
+        groups: mockGroupsClient,
         files: mockFilesClient,
         push: mockPushClient,
         userConfig: mockUserConfigClient,

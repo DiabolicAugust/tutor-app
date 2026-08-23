@@ -8,10 +8,12 @@ import type { NotificationKind, NotificationTone } from './notification';
  *
  * Actions name an intent (`markHeld`), not an implementation — the store decides
  * what that means, so the same descriptor works whether it mutates local state
- * today or calls an endpoint tomorrow.
+ * today or calls an endpoint tomorrow. `writeUp` is the exception the union makes
+ * visible: it opens a screen rather than performing a mutation, so the feed
+ * handles it and the store leaves it alone.
  */
 export type NotificationAction = {
-  id: 'markHeld' | 'markMissed';
+  id: 'markHeld' | 'markMissed' | 'writeUp';
   labelKey: TranslationKey<AppDictionary>;
   variant: ButtonVariant;
 };
@@ -69,6 +71,11 @@ export const notificationRegistry: Record<NotificationKind, NotificationDescript
     actions: [
       { id: 'markHeld', labelKey: 'news.actions.markHeld', variant: 'primary' },
       { id: 'markMissed', labelKey: 'news.actions.markMissed', variant: 'secondary' },
+      // The quick answers above settle the schedule; this settles the record.
+      // Offered here because this is the moment a tutor is already thinking about
+      // the lesson — asking them to find it again later is how a gradebook ends
+      // up empty.
+      { id: 'writeUp', labelKey: 'news.actions.writeUp', variant: 'ghost' },
     ],
   },
 };

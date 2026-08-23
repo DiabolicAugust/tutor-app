@@ -2,7 +2,7 @@ import { ScrollView, View } from 'react-native';
 
 import { useT } from '@/shared/i18n';
 import { TabSettings } from '@/shared/navigation';
-import { NotificationSettings } from '@/shared/user-config';
+import { GradebookSettings, NotificationSettings } from '@/shared/user-config';
 import { createStyles } from '@/shared/theme';
 import { PushStatus } from '@/shared/push';
 import { useTutorial } from '@/shared/tutorial';
@@ -54,6 +54,10 @@ export default function SettingsScreen() {
           {t('notificationSettings.announcementsHint')}
         </Text>
         <PushStatus />
+      </Card>
+
+      <Card title={t('gradebookSettings.title')}>
+        <GradebookSettings />
       </Card>
 
       <Card title={t('settings.navigation.title')}>

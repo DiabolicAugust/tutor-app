@@ -1,3 +1,4 @@
+export { GradebookSettings } from './gradebook-settings';
 export { NotificationSettings } from './notification-settings';
 export {
   defaultUserConfig,

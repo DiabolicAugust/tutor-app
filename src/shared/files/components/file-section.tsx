@@ -8,14 +8,18 @@ import { useFormat, useT } from '@/shared/i18n';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, Icon, IconButton, Text, icons, motion } from '@/shared/ui';
 
-import { isPreviewable, openFileExternally } from '../open-file';
+import { isPreviewable, openFileExternally, shareFile } from '../open-file';
 import { pickFile } from '../pick-file';
-import { formatFileSize, type StudentFile } from '../student-file';
-import { useStudentFiles } from '../use-student-files';
+import { formatFileSize, type StoredFile } from '../stored-file';
+import { useFiles, type FileSource } from '../use-files';
 import { FilePreviewSheet } from './file-preview-sheet';
 
 export type FileSectionProps = {
-  studentId: string | null;
+  /** Whose files to show — a student's documents, or the caller's own shelf. */
+  source: FileSource | null;
+  /** Card heading. A student's documents read differently from a shelf. */
+  title?: string;
+  emptyHint?: string;
 };
 
 /**
@@ -27,18 +31,18 @@ export type FileSectionProps = {
  * contracts and spreadsheets and this app has no business rendering a `.docx`
  * when the device already knows which app does.
  */
-export function FileSection({ studentId }: FileSectionProps) {
+export function FileSection({ source, title, emptyHint }: FileSectionProps) {
   const { t } = useT();
   const format = useFormat();
   const styles = useStyles();
   const user = useCurrentUser();
-  const { files, isLoading, isUploading, hasError, upload, remove } = useStudentFiles(studentId);
+  const { files, isLoading, isUploading, hasError, upload, remove } = useFiles(source);
 
   const [pickerFailed, setPickerFailed] = useState(false);
-  const [preview, setPreview] = useState<StudentFile | null>(null);
+  const [preview, setPreview] = useState<StoredFile | null>(null);
   const [openFailed, setOpenFailed] = useState<'unavailable' | 'failed' | null>(null);
 
-  const open = async (file: StudentFile) => {
+  const open = async (file: StoredFile) => {
     setOpenFailed(null);
 
     // No server, no bytes. The mock records what was picked so the list behaves,
@@ -61,6 +65,28 @@ export function FileSection({ studentId }: FileSectionProps) {
     }
   };
 
+  /**
+   * Sends the file somewhere.
+   *
+   * Its own action rather than a second tap inside the preview: sharing a
+   * worksheet with a parent is one of the two things tutors do with these, and
+   * burying it behind opening the file first would add a step to the common case.
+   */
+  const share = async (file: StoredFile) => {
+    setOpenFailed(null);
+
+    if (!hasApi) {
+      setOpenFailed('unavailable');
+      return;
+    }
+
+    try {
+      await shareFile(file);
+    } catch {
+      setOpenFailed('failed');
+    }
+  };
+
   const choose = async () => {
     setPickerFailed(false);
     try {
@@ -72,12 +98,12 @@ export function FileSection({ studentId }: FileSectionProps) {
   };
 
   return (
-    <Card title={t('files.title')}>
+    <Card title={title ?? t('files.title')}>
       {isLoading ? (
         <Text color="textSecondary">{t('common.loading')}</Text>
       ) : files.length === 0 ? (
         <Text variant="bodySm" color="textMuted">
-          {t('files.empty')}
+          {emptyHint ?? t('files.empty')}
         </Text>
       ) : (
         files.map((file) => (
@@ -107,6 +133,12 @@ export function FileSection({ studentId }: FileSectionProps) {
                 </Text>
               </View>
             </Pressable>
+            <IconButton
+              name={icons.share}
+              accessibilityLabel={t('files.share', { name: file.originalName })}
+              onPress={() => void share(file)}
+            />
+
             {/* Only what you added: the server refuses anything else, and an
                 action that fails is worse than one that is not offered. */}
             {file.uploadedById === user.id ? (

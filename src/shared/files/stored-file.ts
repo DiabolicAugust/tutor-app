@@ -1,11 +1,16 @@
 /**
- * A document kept against a student — a contract, a report, a worksheet.
+ * An uploaded file, whatever it is kept against.
+ *
+ * One shape for a student's document and for a tutor's own teaching material,
+ * because they differ only in *whose* they are — and that question is answered by
+ * the endpoint the row came from, not by a field on it. Two near-identical types
+ * would mean two clients, two hooks and two components for one idea.
  *
  * Field names match the API's `files` rows. `storageKey` is deliberately absent:
  * it is how the server finds the bytes and means nothing to the app, so exposing
  * it would only invite something to depend on it.
  */
-export type StudentFile = {
+export type StoredFile = {
   id: string;
   originalName: string;
   mimeType: string;
@@ -45,6 +50,6 @@ export function formatFileSize(bytes: number): string {
 }
 
 /** Newest first, matching how the list is read. */
-export function byNewestFile(a: StudentFile, b: StudentFile): number {
+export function byNewestFile(a: StoredFile, b: StoredFile): number {
   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 }

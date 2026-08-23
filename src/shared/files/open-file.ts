@@ -4,10 +4,10 @@ import * as Sharing from 'expo-sharing';
 import { apiBaseUrl } from '@/shared/api/api-config';
 import { getAccessToken } from '@/shared/api/auth-token';
 
-import type { StudentFile } from './student-file';
+import type { StoredFile } from './stored-file';
 
 /** Whether this file is something the app can show itself. */
-export function isPreviewable(file: StudentFile): boolean {
+export function isPreviewable(file: StoredFile): boolean {
   return file.mimeType.startsWith('image/');
 }
 
@@ -19,7 +19,7 @@ export function isPreviewable(file: StudentFile): boolean {
  * and comes back 401. The cache directory, not documents: this is a copy of
  * something the server holds, and the OS may reclaim it whenever it likes.
  */
-export async function downloadFile(file: StudentFile): Promise<string> {
+export async function downloadFile(file: StoredFile): Promise<string> {
   const token = getAccessToken();
   const destination = new File(Paths.cache, `${file.id}-${file.originalName}`);
 
@@ -40,17 +40,19 @@ export async function downloadFile(file: StudentFile): Promise<string> {
 }
 
 /**
- * Hands a file to whatever on the device can open it.
+ * Hands the file to the OS, which decides who can take it.
  *
- * The share sheet rather than a viewer of our own: a tutor's files are contracts,
- * spreadsheets and scans, and the app has no business trying to render a `.docx`.
- * The OS already knows which app does.
+ * One function behind two names below, because on both platforms opening and
+ * sending are the same sheet — the OS lists whatever can accept the type, and
+ * that list is both "view in" and "send to". Writing our own viewer or our own
+ * destination picker would be reimplementing something the device does better,
+ * for the sake of two labels.
  */
-export async function openFileExternally(file: StudentFile): Promise<void> {
+async function handToSystem(file: StoredFile): Promise<void> {
   const uri = await downloadFile(file);
 
   if (!(await Sharing.isAvailableAsync())) {
-    throw new Error('Opening files is not supported on this device.');
+    throw new Error('Sharing files is not supported on this device.');
   }
 
   await Sharing.shareAsync(uri, {
@@ -60,3 +62,22 @@ export async function openFileExternally(file: StudentFile): Promise<void> {
     UTI: file.mimeType,
   });
 }
+
+/**
+ * Opens a file in whatever app on the device handles its type.
+ *
+ * The system sheet rather than a viewer of our own: a tutor's files are
+ * contracts, spreadsheets and scans, and the app has no business trying to render
+ * a `.docx` when the device already knows which app does.
+ */
+export const openFileExternally = handToSystem;
+
+/**
+ * Sends a file wherever the user chooses — a chat, mail, another app, a folder.
+ *
+ * Offered as its own action even though it is the same sheet as opening, because
+ * they are different intentions: "let me look at this" and "send this to a
+ * parent" are the two things tutors do with a worksheet, and a single button
+ * labelled for one of them hides the other.
+ */
+export const shareFile = handToSystem;

@@ -1,5 +1,8 @@
 import { addDays, addMinutes, startOfDay } from '@/shared/lib/date';
-import type { Lesson } from '@/shared/lessons/lesson';
+import type { AttendanceStatus } from '@/shared/gradebook/attendance';
+import type { Lesson, LessonGroup } from '@/shared/lessons/lesson';
+
+import { fixtureGroups } from './groups';
 import { ownCalendarId } from '@/shared/tutors/tutor';
 
 /**
@@ -28,6 +31,42 @@ function onDay(dayOffset: number, hour: number, minute = 0): string {
   return date.toISOString();
 }
 
+/**
+ * The gradebook half of a lesson: what was covered, what was set, who turned up.
+ *
+ * Optional, because an unwritten-up lesson is a real and common state — and one
+ * the app has to render, since "which of yesterday's lessons still need writing
+ * up" is the question the journal exists to answer.
+ */
+type Journal = {
+  topic?: string | null;
+  homework?: string | null;
+  /** How the single student was marked. Group fixtures mark each member. */
+  attendance?: AttendanceStatus;
+  homeworkDone?: boolean | null;
+};
+
+/**
+ * The fixture groups, as a lesson carries them.
+ *
+ * Referenced by id rather than imported whole, so a renamed group is a compile
+ * error here instead of a lesson pointing at nothing.
+ */
+function groupOf(id: string): LessonGroup {
+  const group = fixtureGroups.find((candidate) => candidate.id === id);
+  if (!group) throw new Error(`Unknown fixture group: ${id}`);
+
+  return {
+    id: group.id,
+    name: group.name,
+    subject: group.subject,
+    level: group.level,
+    members: group.members.map((member) => ({
+      student: { id: member.student.id, name: member.student.name },
+    })),
+  };
+}
+
 let sequence = 0;
 function lesson(
   tutorId: string,
@@ -36,6 +75,7 @@ function lesson(
   startsAt: string,
   durationMinutes: number,
   status: Lesson['status'] = 'scheduled',
+  journal?: Journal,
 ): Lesson {
   sequence += 1;
   return {
@@ -46,6 +86,47 @@ function lesson(
     startsAt,
     durationMinutes,
     status,
+    group: null,
+    topic: journal?.topic ?? null,
+    homework: journal?.homework ?? null,
+    // One line for the single student, so a fixture lesson reads the same way a
+    // real one does after being written up.
+    attendances: journal?.attendance
+      ? [
+          {
+            studentId,
+            status: journal.attendance,
+            homeworkDone: journal.homeworkDone ?? null,
+          },
+        ]
+      : [],
+  };
+}
+
+/** A lesson for a group rather than for one student. */
+function groupLesson(
+  groupId: string,
+  subject: string,
+  startsAt: string,
+  durationMinutes: number,
+  status: Lesson['status'] = 'scheduled',
+  register: Lesson['attendances'] = [],
+): Lesson {
+  sequence += 1;
+  const group = groupOf(groupId);
+
+  return {
+    id: `fixture-${sequence}`,
+    tutorId: ownCalendarId,
+    studentId: null,
+    group,
+    subject,
+    startsAt,
+    durationMinutes,
+    status,
+    topic: null,
+    homework: null,
+    attendances: register,
   };
 }
 
@@ -61,8 +142,38 @@ export const fixtureLessons: Lesson[] = [
 
   // Every status has a look.
   lesson(ownCalendarId, 'student-maksym', 'Mathematics', hoursFromNow(7), 60, 'cancelled'),
-  lesson(ownCalendarId, 'student-mariia', 'Mathematics', onDay(-1, 13), 60, 'completed'),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-2, 10), 60, 'completed'),
+  lesson(ownCalendarId, 'student-mariia', 'Mathematics', onDay(-1, 13), 60, 'completed', {
+    topic: 'Quadratic equations — completing the square',
+    homework: 'Exercises 4.1–4.6',
+    // Set but not yet reviewed, which is the state most lessons sit in.
+    homeworkDone: null,
+    attendance: 'present',
+  }),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-2, 10), 60, 'completed', {
+    topic: 'Fractions: common denominators',
+    homework: 'Workbook p. 31',
+    homeworkDone: true,
+    attendance: 'late',
+  }),
+
+  // Anna's history, so one student has a gradebook worth opening: a no-show that
+  // was charged, an excused absence that was not, and a lesson still unwritten.
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-9, 10), 60, 'completed', {
+    topic: 'Percentages in word problems',
+    homework: null,
+    attendance: 'absentUnexcused',
+  }),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-16, 10), 60, 'cancelled', {
+    topic: null,
+    homework: null,
+    attendance: 'absentExcused',
+  }),
+  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-23, 10), 60, 'completed', {
+    topic: 'Order of operations',
+    homework: 'Sheet 2',
+    homeworkDone: false,
+    attendance: 'present',
+  }),
 
   // Fixed days, for the three-day and month views.
   lesson(ownCalendarId, 'student-ivan', 'Mathematics', onDay(1, 9, 30), 60),
@@ -76,4 +187,19 @@ export const fixtureLessons: Lesson[] = [
   lesson('tutor-2', 'student-daria', 'English', onDay(8, 14), 60),
   lesson(ownCalendarId, 'student-sofia', 'Geometry', onDay(-6, 16), 60, 'completed'),
   lesson(ownCalendarId, 'student-yaroslav', 'Mathematics', onDay(12, 10, 30), 60),
+
+  // Group lessons, so the calendar shows a group block in every view and the
+  // register has somewhere with more than one line to be filled in.
+  groupLesson('group-b1', 'Mathematics', hoursFromNow(2), 90),
+  groupLesson('group-exam', 'Mathematics', onDay(1, 17), 60),
+  groupLesson('group-b1', 'Mathematics', onDay(3, 16), 90),
+  // Already written up, so a marked group register is visible without touching
+  // anything: two came, one late, one cancelled in time.
+  groupLesson('group-b1', 'Mathematics', onDay(-3, 16), 90, 'completed', [
+    { studentId: 'student-anna', status: 'present', homeworkDone: true },
+    { studentId: 'student-petro', status: 'late', homeworkDone: false },
+    { studentId: 'student-sofia', status: 'absentExcused', homeworkDone: null },
+  ]),
+  // Ended and untouched, so the "needs writing up" dot has a group to sit on.
+  groupLesson('group-exam', 'Mathematics', hoursFromNow(-5), 60),
 ];

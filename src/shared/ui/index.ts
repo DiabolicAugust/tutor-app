@@ -10,6 +10,7 @@ export { ModalSheet, type ModalSheetProps } from './modal-sheet';
 export { motion } from './motion';
 export { LanguageSwitcher } from './language-switcher';
 export { PaletteVariantSwitcher } from './palette-variant-switcher';
+export { ScreenHeader, type ScreenHeaderProps } from './screen-header';
 export {
   SegmentedControl,
   type SegmentedControlProps,

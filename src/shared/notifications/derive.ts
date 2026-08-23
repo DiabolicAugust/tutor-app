@@ -1,4 +1,4 @@
-import { lessonEnd, lessonStart, type Lesson } from '@/shared/lessons';
+import { lessonEnd, lessonLabel, lessonStart, type Lesson } from '@/shared/lessons';
 import { ownCalendarId } from '@/shared/tutors';
 
 import type { Notification } from './notification';
@@ -39,7 +39,7 @@ export function deriveNotifications(
         kind: 'lessonNeedsConfirmation',
         // Sorted as of when the lesson ended, so the feed reads chronologically.
         createdAt: new Date(endMs).toISOString(),
-        data: { studentName: nameOf(lesson.studentId), at: lesson.startsAt },
+        data: { studentName: lessonLabel(lesson, nameOf), at: lesson.startsAt },
         lessonId: lesson.id,
         derived: true,
       });
@@ -51,7 +51,7 @@ export function deriveNotifications(
         id: `derived-soon-${lesson.id}`,
         kind: 'lessonStartingSoon',
         createdAt: now.toISOString(),
-        data: { studentName: nameOf(lesson.studentId), at: lesson.startsAt },
+        data: { studentName: lessonLabel(lesson, nameOf), at: lesson.startsAt },
         lessonId: lesson.id,
         derived: true,
       });

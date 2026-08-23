@@ -1,6 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker';
 
-import type { FileToUpload } from './student-file';
+import type { FileToUpload } from './stored-file';
 
 /**
  * Types a tutor plausibly keeps against a student.

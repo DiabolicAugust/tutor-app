@@ -19,7 +19,7 @@ import { useLessons } from '@/shared/lessons';
 import { addDays, isToday, startOfDay } from '@/shared/lib/date';
 import { createStyles } from '@/shared/theme';
 import { useTutorialAnchor } from '@/shared/tutorial';
-import { Fab, IconButton, SwipePager, Text, icons, motion } from '@/shared/ui';
+import { Fab, IconButton, ScreenHeader, SwipePager, Text, icons, motion } from '@/shared/ui';
 
 /**
  * The calendar tab.
@@ -87,7 +87,10 @@ function CalendarScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
+      {/* Children rather than props: this header is two rows of controls, and no
+          title/action shape would have survived it. `ScreenHeader` is here for
+          the padding and the width cap the other three screens use. */}
+      <ScreenHeader pinned>
         <View style={styles.titleRow} {...titleAnchor}>
           <Text variant="titleMd" numberOfLines={1} style={styles.title}>
             {title}
@@ -122,7 +125,7 @@ function CalendarScreen() {
             onPress={() => shift(1)}
           />
         </View>
-      </View>
+      </ScreenHeader>
 
       {/* Keyed on the view mode so switching day/3-day/month cross-fades: the
           content is replaced wholesale, and a cut reads as a glitch. */}
@@ -188,11 +191,6 @@ function CalendarScreen() {
 
 const useStyles = createStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.colors.background },
-  header: {
-    paddingHorizontal: t.spacing.md,
-    paddingBottom: t.spacing.xs,
-    gap: t.spacing.xs,
-  },
   viewContainer: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.xs },
   title: { flex: 1 },

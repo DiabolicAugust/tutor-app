@@ -1,5 +1,8 @@
 import { fixtureColleagues } from './colleagues';
 import { fixturesEnabled } from './enabled';
+import { fixtureGrades } from './grades';
+import { fixtureGroups } from './groups';
+import { fixtureLibraryFiles } from './library-files';
 import { fixtureLessons } from './lessons';
 import { fixtureNotes, fixtureOwnName } from './notes';
 import { fixtureNotifications } from './notifications';
@@ -27,7 +30,11 @@ export const fixtures = {
   schoolMembers: fixturesEnabled ? fixtureMembers : [],
   invitations: fixturesEnabled ? fixtureInvitations : [],
   notes: fixturesEnabled ? fixtureNotes : [],
+  grades: fixturesEnabled ? fixtureGrades : [],
+  groups: fixturesEnabled ? fixtureGroups : [],
   studentFiles: fixturesEnabled ? fixtureStudentFiles : [],
+  /** The tutor's own shelf — see `shared/files`. */
+  libraryFiles: fixturesEnabled ? fixtureLibraryFiles : [],
   schoolName: fixturesEnabled ? fixtureSchoolName : '',
   /** The signed-in tutor's display name, for anything a fixture attributes. */
   ownName: fixturesEnabled ? fixtureOwnName : '',

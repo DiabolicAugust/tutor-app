@@ -64,7 +64,9 @@ export function DayAgendaSheet({
               </Text>
             </View>
             <View style={styles.block}>
-              <EventBlock lesson={lesson} compact />
+              {/* Expandable here and not in the grid: a list has vertical room,
+                  a twenty-pixel grid cell does not. */}
+              <EventBlock lesson={lesson} compact expandable />
             </View>
           </View>
         ))

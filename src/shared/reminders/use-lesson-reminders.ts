@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 
 import { useFormat, useT } from '@/shared/i18n';
-import { useLessons } from '@/shared/lessons';
+import { lessonLabel, useLessons } from '@/shared/lessons';
 import { useStudents } from '@/shared/students';
 import { useUserConfig } from '@/shared/user-config';
 
@@ -63,7 +63,7 @@ export function useLessonReminders(): void {
       if (cancelled) return;
 
       const plans = planReminders(lessons, config.lessonReminderMinutes, (lesson, startsAt) => ({
-        title: t('reminders.title', { name: nameOf(lesson.studentId) }),
+        title: t('reminders.title', { name: lessonLabel(lesson, nameOf) }),
         body: t('reminders.body', {
           time: format.time(startsAt),
           subject: lesson.subject,

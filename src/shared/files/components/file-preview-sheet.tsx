@@ -6,11 +6,11 @@ import { createStyles } from '@/shared/theme';
 import { ModalSheet, Text } from '@/shared/ui';
 
 import { downloadFile } from '../open-file';
-import type { StudentFile } from '../student-file';
+import type { StoredFile } from '../stored-file';
 
 export type FilePreviewSheetProps = {
   /** The image to show, or `null` to close. */
-  file: StudentFile | null;
+  file: StoredFile | null;
   onClose: () => void;
 };
 

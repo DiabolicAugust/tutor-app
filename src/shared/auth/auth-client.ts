@@ -62,8 +62,9 @@ export function mockSession(options: {
     // which is the whole point of addons.
     addons: role === 'admin' ? [...allAddons] : ['INVITE_TUTORS'],
     // Reminders on, so a test build shows the preference in use rather than
-    // every account sitting on defaults.
-    config: { lessonReminders: true, lessonReminderMinutes: 60 },
+    // every account sitting on defaults. Marking on, because a test build should
+    // demonstrate the gradebook — the setting that hides it is in Settings.
+    config: { lessonReminders: true, lessonReminderMinutes: 60, gradesEnabled: true },
   };
 
   return { user, token: 'mock-token', issuedAt: new Date().toISOString() };

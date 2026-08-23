@@ -1,7 +1,7 @@
-import type { StudentFile } from '@/shared/files/student-file';
+import type { StoredFile } from '@/shared/files/stored-file';
 
 /** A fixture file also records whose it is; the client strips that on the way out. */
-export type FixtureStudentFile = StudentFile & { studentId: string };
+export type FixtureStoredFile = StoredFile & { studentId: string };
 
 function daysAgo(days: number): string {
   const date = new Date();
@@ -17,7 +17,7 @@ function daysAgo(days: number): string {
  * by a colleague, which is the only way to see that its remove button is
  * correctly absent.
  */
-export const fixtureStudentFiles: FixtureStudentFile[] = [
+export const fixtureStudentFiles: FixtureStoredFile[] = [
   {
     id: 'file-1',
     studentId: 'student-petro',

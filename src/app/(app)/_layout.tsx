@@ -60,6 +60,7 @@ function AppStack() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('more.settings') }} />
       <Stack.Screen name="school" options={{ headerShown: true, title: t('more.school') }} />
+      <Stack.Screen name="files" options={{ headerShown: true, title: t('more.files') }} />
       {/* One student, pushed over the tab bar. The roster itself is a tab now,
           so this is the only students route the stack owns. */}
       <Stack.Screen

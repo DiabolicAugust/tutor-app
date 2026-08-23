@@ -1,11 +1,14 @@
-import { ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useT } from '@/shared/i18n';
+import { LessonJournalSheet } from '@/shared/gradebook';
+import { useFormat, useT } from '@/shared/i18n';
+import { useLessons, type Lesson } from '@/shared/lessons';
 import { NotificationCard, useNotifications } from '@/shared/notifications';
 import { createStyles } from '@/shared/theme';
-import { Button, Card, Icon, Text, icons, motion } from '@/shared/ui';
+import { Button, Card, Icon, ScreenHeader, Text, icons, motion } from '@/shared/ui';
 
 /**
  * News tab: one feed of everything that needs the tutor's attention.
@@ -16,28 +19,30 @@ import { Button, Card, Icon, Text, icons, motion } from '@/shared/ui';
  */
 export default function NewsScreen() {
   const { t } = useT();
+  const format = useFormat();
   const styles = useStyles();
   const { notifications, unreadCount, isRead, markRead, markAllRead, runAction } =
     useNotifications();
+  const { lessons } = useLessons();
+
+  const [writingUp, setWritingUp] = useState<Lesson | null>(null);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text variant="titleLg">{t('news.title')}</Text>
-          <Text variant="caption" color="textSecondary">
-            {t('news.unread', { count: unreadCount })}
-          </Text>
-        </View>
-
-        {/* Leaves as soon as it has nothing left to do, which is also the
-            confirmation that it worked. */}
-        {unreadCount > 0 ? (
-          <Animated.View entering={motion.messageEnter()} exiting={motion.messageExit()}>
-            <Button label={t('news.markAllRead')} variant="ghost" onPress={markAllRead} />
-          </Animated.View>
-        ) : null}
-      </View>
+      <ScreenHeader
+        pinned
+        title={t('news.title')}
+        subtitle={t('news.unread', { count: unreadCount })}
+        action={
+          // Leaves as soon as it has nothing left to do, which is also the
+          // confirmation that it worked.
+          unreadCount > 0 ? (
+            <Animated.View entering={motion.messageEnter()} exiting={motion.messageExit()}>
+              <Button label={t('news.markAllRead')} variant="ghost" onPress={markAllRead} />
+            </Animated.View>
+          ) : null
+        }
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         {notifications.length === 0 ? (
@@ -55,26 +60,45 @@ export default function NewsScreen() {
               notification={notification}
               read={isRead(notification.id)}
               onPress={() => markRead(notification.id)}
-              onAction={runAction}
+              onAction={(item, action) => {
+                // One action needs a screen rather than a mutation, so it is
+                // handled here; every other intent still belongs to the store.
+                if (action.id === 'writeUp') {
+                  const lesson = lessons.find(
+                    (candidate) => candidate.id === item.lessonId,
+                  );
+                  if (lesson) {
+                    setWritingUp(lesson);
+                    markRead(item.id);
+                    return;
+                  }
+                }
+                runAction(item, action);
+              }}
             />
           ))
         )}
       </ScrollView>
+
+      <LessonJournalSheet
+        lesson={writingUp}
+        title={
+          writingUp
+            ? `${writingUp.subject} · ${format.dayTitle(new Date(writingUp.startsAt))}`
+            : ''
+        }
+        onClose={() => setWritingUp(null)}
+        // Closed on save: the write-up is the whole errand, and the item that
+        // prompted it has stopped applying — leaving the sheet open over a feed
+        // that has just changed under it is the confusing outcome.
+        onSaved={() => setWritingUp(null)}
+      />
     </SafeAreaView>
   );
 }
 
 const useStyles = createStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: t.spacing.md,
-    paddingHorizontal: t.spacing.lg,
-    paddingBottom: t.spacing.sm,
-  },
-  headerText: { gap: 2, flexShrink: 1 },
   content: {
     gap: t.spacing.sm,
     paddingHorizontal: t.spacing.lg,
