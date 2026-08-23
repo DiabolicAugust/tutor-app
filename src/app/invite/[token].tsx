@@ -5,7 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSession } from '@/shared/auth';
 import { useT } from '@/shared/i18n';
-import { mockSchoolClient, type InvitationDetails } from '@/shared/school';
+import { apiClients } from '@/shared/api';
+import type { InvitationDetails } from '@/shared/school';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, Text, TextField } from '@/shared/ui';
 
@@ -38,7 +39,7 @@ export default function InviteScreen() {
 
     void (async () => {
       try {
-        const resolved = await mockSchoolClient.describeInvitation(token);
+        const resolved = await apiClients.school.describeInvitation(token);
         if (active) setDetails(resolved);
       } catch {
         if (active) setInvalid(true);
@@ -57,7 +58,7 @@ export default function InviteScreen() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const session = await mockSchoolClient.acceptInvitation(token, { name, password });
+      const session = await apiClients.school.acceptInvitation(token, { name, password });
       // Adopting the session satisfies the root layout's guard, which moves the
       // new tutor into the app — no navigation call needed.
       adoptSession(session);

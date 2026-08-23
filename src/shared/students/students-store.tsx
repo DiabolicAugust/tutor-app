@@ -1,7 +1,17 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { fixtures } from '@/shared/fixtures';
+import { apiClients } from '@/shared/api';
 import { ownCalendarId } from '@/shared/tutors';
+
+import type { StudentsClient } from './students-client';
 
 import { byName, type Student } from './student';
 
@@ -17,34 +27,54 @@ export type StudentsStore = {
   /** Resolves a name for display; falls back to the id so nothing renders blank. */
   nameOf: (id: string) => string;
   /** Registers a student met for the first time while booking a lesson. */
-  addStudent: (name: string, subject: string) => Student;
+  addStudent: (name: string, subject: string) => Promise<Student>;
+  isLoading: boolean;
 };
 
 const StudentsContext = createContext<StudentsStore | null>(null);
 
-let localId = 0;
-
 /**
- * The tutor's students, seeded from the fixtures (empty in production).
+ * The tutor's students, loaded through the API layer — fixtures or HTTP,
+ * depending on how the build is configured.
  *
  * Mounted above `LessonsProvider`: a lesson refers to a student, and the news
  * feed needs names to render its messages.
  */
-export function StudentsProvider({ children }: { children: ReactNode }) {
-  const [students, setStudents] = useState<Student[]>(() => [...fixtures.students].sort(byName));
+export function StudentsProvider({
+  children,
+  client = apiClients.students,
+}: {
+  children: ReactNode;
+  client?: StudentsClient;
+}) {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addStudent = useCallback((name: string, subject: string) => {
-    localId += 1;
-    const created: Student = {
-      id: `local-student-${localId}`,
-      tutorId: ownCalendarId,
-      name: name.trim(),
-      subject: subject.trim(),
-      paidLessonsLeft: 0,
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const loaded = await client.list();
+        if (active) setStudents([...loaded].sort(byName));
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
     };
-    setStudents((current) => [...current, created].sort(byName));
-    return created;
-  }, []);
+  }, [client]);
+
+  const addStudent = useCallback(
+    async (name: string, subject: string) => {
+      const created = await client.create({ name, subject });
+      setStudents((current) => [...current, created].sort(byName));
+      return created;
+    },
+    [client],
+  );
 
   const value = useMemo<StudentsStore>(() => {
     const byId = new Map(students.map((student) => [student.id, student]));
@@ -54,8 +84,9 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
       find: (id) => byId.get(id),
       nameOf: (id) => byId.get(id)?.name ?? id,
       addStudent,
+      isLoading,
     };
-  }, [students, addStudent]);
+  }, [students, addStudent, isLoading]);
 
   return <StudentsContext.Provider value={value}>{children}</StudentsContext.Provider>;
 }

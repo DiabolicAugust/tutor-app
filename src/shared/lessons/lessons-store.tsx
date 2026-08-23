@@ -1,8 +1,17 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { fixtures } from '@/shared/fixtures';
+import { apiClients } from '@/shared/api';
 
 import type { Lesson, LessonStatus } from './lesson';
+import type { LessonsClient } from './lessons-client';
 
 /**
  * Draft of a new lesson: everything except the identity the backend assigns.
@@ -11,46 +20,101 @@ export type NewLesson = Omit<Lesson, 'id'>;
 
 export type LessonsStore = {
   lessons: readonly Lesson[];
-  addLesson: (draft: NewLesson) => Lesson;
+  isLoading: boolean;
+  addLesson: (draft: NewLesson) => Promise<Lesson>;
   /**
    * Confirming or cancelling a lesson after the fact — driven from the news
    * feed, which is why the schedule lives above both tabs.
    */
-  setLessonStatus: (id: string, status: LessonStatus) => void;
+  setLessonStatus: (id: string, status: LessonStatus) => Promise<void>;
 };
 
 const LessonsContext = createContext<LessonsStore | null>(null);
 
-let localId = 0;
+/** How much schedule to load: the calendar never shows more than a month. */
+const WINDOW_DAYS = 45;
 
 /**
- * Holds the schedule in memory, seeded from the fixtures (empty in production).
+ * The schedule, loaded through the API layer.
  *
- * The shape is deliberately the one a data layer will expose — a list plus
- * mutations — so replacing this with TypeORM/Prisma/Drizzle behind a query
- * client is a change of implementation, not of call sites. Nothing is persisted
- * yet: an added lesson lives until the app reloads, which is the honest
- * behaviour while there is no server to accept it.
+ * Mutations go to the client first and update local state from what comes back,
+ * so an id assigned by the server is the id the app uses — no reconciling a
+ * temporary one later.
  */
-export function LessonsProvider({ children }: { children: ReactNode }) {
-  const [lessons, setLessons] = useState<Lesson[]>(() => [...fixtures.lessons]);
+export function LessonsProvider({
+  children,
+  client = apiClients.lessons,
+}: {
+  children: ReactNode;
+  client?: LessonsClient;
+}) {
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addLesson = useCallback((draft: NewLesson) => {
-    localId += 1;
-    const created: Lesson = { ...draft, id: `local-${localId}` };
-    setLessons((current) => [...current, created]);
-    return created;
-  }, []);
+  useEffect(() => {
+    let active = true;
+    const now = new Date();
+    const from = new Date(now);
+    from.setDate(from.getDate() - WINDOW_DAYS);
+    const to = new Date(now);
+    to.setDate(to.getDate() + WINDOW_DAYS);
 
-  const setLessonStatus = useCallback((id: string, status: LessonStatus) => {
-    setLessons((current) =>
-      current.map((lesson) => (lesson.id === id ? { ...lesson, status } : lesson)),
-    );
-  }, []);
+    void (async () => {
+      try {
+        const loaded = await client.list({
+          from: from.toISOString(),
+          to: to.toISOString(),
+        });
+        if (active) setLessons(loaded);
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [client]);
+
+  const addLesson = useCallback(
+    async (draft: NewLesson) => {
+      const created = await client.create({
+        studentId: draft.studentId,
+        subject: draft.subject,
+        startsAt: draft.startsAt,
+        durationMinutes: draft.durationMinutes,
+      });
+      setLessons((current) => [...current, created]);
+      return created;
+    },
+    [client],
+  );
+
+  const setLessonStatus = useCallback(
+    async (id: string, status: LessonStatus) => {
+      // Applied locally first: confirming a lesson from the news feed should
+      // make the item leave immediately, not after a round trip.
+      setLessons((current) =>
+        current.map((lesson) => (lesson.id === id ? { ...lesson, status } : lesson)),
+      );
+
+      try {
+        const updated = await client.setStatus(id, status);
+        setLessons((current) =>
+          current.map((lesson) => (lesson.id === id ? updated : lesson)),
+        );
+      } catch {
+        // The optimistic change stands rather than flickering back; the next
+        // load corrects it. Surfacing this needs an error channel the feed does
+        // not have yet.
+      }
+    },
+    [client],
+  );
 
   const value = useMemo<LessonsStore>(
-    () => ({ lessons, addLesson, setLessonStatus }),
-    [lessons, addLesson, setLessonStatus],
+    () => ({ lessons, isLoading, addLesson, setLessonStatus }),
+    [lessons, isLoading, addLesson, setLessonStatus],
   );
 
   return <LessonsContext.Provider value={value}>{children}</LessonsContext.Provider>;

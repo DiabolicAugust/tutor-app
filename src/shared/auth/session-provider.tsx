@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { apiClients, setAccessToken, setUnauthorizedHandler } from '@/shared/api';
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
 
-import { defaultAuthClient, type AuthClient, type SignInCredentials } from './auth-client';
+import type { AuthClient, SignInCredentials } from './auth-client';
 import { SessionContext, type SessionValue } from './session-context';
 import { isSession, type Session } from './session';
 
@@ -29,7 +30,7 @@ export type SessionProviderProps = {
  */
 export function SessionProvider({
   children,
-  client = defaultAuthClient,
+  client = apiClients.auth,
   initialSession,
 }: SessionProviderProps) {
   const [session, setSession] = useState<Session | null>(
@@ -37,6 +38,12 @@ export function SessionProvider({
   );
   const [isPending, setIsPending] = useState(false);
   const [errorKey, setErrorKey] = useState<SessionValue['errorKey']>(null);
+
+  // The HTTP layer reads the token from a module-level holder rather than from
+  // React, because every request needs it and requests are not components.
+  useEffect(() => {
+    setAccessToken(session?.token ?? null);
+  }, [session]);
 
   const signIn = useCallback(
     async (credentials: SignInCredentials) => {
@@ -74,6 +81,16 @@ export function SessionProvider({
       setErrorKey(null);
     }
   }, [client]);
+
+  // A token the server will not accept is the same as no session; anything else
+  // leaves the app on screens it can no longer load.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      sessionStore.clear();
+      setSession(null);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   const value = useMemo<SessionValue>(
     () => ({

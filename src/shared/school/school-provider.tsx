@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { mockSchoolClient } from './mock-school-client';
+import { apiClients } from '@/shared/api';
+
 import type { SchoolClient } from './school-client';
 import { byNewestInvitation, type Invitation, type SchoolMember } from './school';
 
@@ -25,7 +26,7 @@ const SchoolContext = createContext<SchoolStore | null>(null);
  */
 export function SchoolProvider({
   children,
-  client = mockSchoolClient,
+  client = apiClients.school,
 }: {
   children: ReactNode;
   client?: SchoolClient;

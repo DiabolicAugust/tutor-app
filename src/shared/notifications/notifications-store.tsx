@@ -1,12 +1,21 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
-import { fixtures } from '@/shared/fixtures';
+import { apiClients } from '@/shared/api';
 import { useLessons } from '@/shared/lessons';
 import { useStudents } from '@/shared/students';
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
 
 import { deriveNotifications } from './derive';
 import { byNewest, type Notification } from './notification';
+import type { NotificationsClient } from './notifications-client';
 import type { NotificationAction } from './registry';
 
 const isStringArray = (value: unknown): value is string[] =>
@@ -37,17 +46,34 @@ const NotificationsContext = createContext<NotificationsStore | null>(null);
  * Depends on `LessonsProvider` and `StudentsProvider`, so it must be mounted
  * inside both.
  */
-export function NotificationsProvider({ children }: { children: ReactNode }) {
+export function NotificationsProvider({
+  children,
+  client = apiClients.notifications,
+}: {
+  children: ReactNode;
+  client?: NotificationsClient;
+}) {
   const { lessons, setLessonStatus } = useLessons();
   const { nameOf } = useStudents();
   const [readIds, setReadIds] = useState<string[]>(() => readIdsStore.read() ?? []);
+  const [sent, setSent] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      const loaded = await client.list();
+      if (active) setSent(loaded);
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [client]);
 
   const notifications = useMemo(
-    () =>
-      [...fixtures.notifications, ...deriveNotifications(lessons, new Date(), nameOf)].sort(
-        byNewest,
-      ),
-    [lessons, nameOf],
+    () => [...sent, ...deriveNotifications(lessons, new Date(), nameOf)].sort(byNewest),
+    [sent, lessons, nameOf],
   );
 
   const persistRead = useCallback((next: string[]) => {
@@ -63,21 +89,26 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         readIdsStore.write(next);
         return next;
       });
+
+      // Derived notifications exist only on the device, so telling the server
+      // about them would be a 404.
+      if (!id.startsWith('derived-')) void client.markRead(id).catch(() => undefined);
     },
-    [],
+    [client],
   );
 
   const markAllRead = useCallback(() => {
     persistRead(notifications.map((notification) => notification.id));
-  }, [notifications, persistRead]);
+    void client.markAllRead().catch(() => undefined);
+  }, [notifications, persistRead, client]);
 
   const runAction = useCallback(
     (notification: Notification, action: NotificationAction) => {
       // Actions name an intent; this is the one place that decides what the
       // intent does. With a backend, these become mutations.
       if (notification.lessonId) {
-        if (action.id === 'markHeld') setLessonStatus(notification.lessonId, 'completed');
-        if (action.id === 'markMissed') setLessonStatus(notification.lessonId, 'cancelled');
+        if (action.id === 'markHeld') void setLessonStatus(notification.lessonId, 'completed');
+        if (action.id === 'markMissed') void setLessonStatus(notification.lessonId, 'cancelled');
       }
       markRead(notification.id);
     },

@@ -179,6 +179,46 @@ something changes state in a way the user needs to follow — an item leaving a 
 content replacing content, a control acknowledging a press. Nothing loops, nothing
 decorates.
 
+## Talking to the API
+
+Every request goes through `src/shared/api`. One place owns the base URL, the auth header,
+JSON encoding, the timeout, and turning failures into `ApiError` — feature clients describe
+*what* they call, never *how*.
+
+```
+shared/api/
+  api-config.ts   # EXPO_PUBLIC_API_URL, and whether to use mocks at all
+  http.ts         # the single request function + get/post/patch/delete
+  api-error.ts    # ApiError: status, isUnauthorized, isNetworkFailure
+  auth-token.ts   # the current token, held outside React
+  clients.ts      # THE registry: mock or HTTP, decided once
+```
+
+**`clients.ts` is the switch.** Every provider takes its client from `apiClients` by
+default, so pointing the whole app at a backend is setting one variable:
+
+```bash
+EXPO_PUBLIC_API_URL=http://192.168.0.10:3000/api npx expo start
+```
+
+An API always wins over fixtures — a build pointed at a server must not quietly ignore it.
+With neither configured (a production build not yet pointed anywhere) the auth client fails
+loudly rather than fabricating a session.
+
+**The token lives outside React** (`auth-token.ts`). Every request needs it, the token
+comes from the session, and the session is obtained *through* a request — a module-level
+holder that `SessionProvider` writes to breaks that cycle. A 401 signs the user out through
+a registered handler, so an expired token cannot leave the app on screens it can no longer
+load.
+
+**Wire formats are mapped at the boundary, not in the domain.** The API says `SCHEDULED`
+and `ADMIN_ANNOUNCEMENT`; the app says `scheduled` and `adminAnnouncement`. Each HTTP client
+translates its own responses, so no component ever sees two vocabularies. A notification
+kind this build does not recognise is skipped rather than rendered blank — an older app has
+to survive a newer server.
+
+Providers still accept a `client` prop, which is what keeps them testable in isolation.
+
 ## Test data
 
 All test data lives in `src/shared/fixtures/` behind a single flag:

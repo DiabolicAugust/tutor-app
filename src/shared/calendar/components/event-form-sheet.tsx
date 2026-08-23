@@ -117,11 +117,13 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     setShowError(false);
   };
 
-  const handleCreate = () => {
-    // Either an existing student, or one created on the spot.
+  const handleCreate = async () => {
+    // Either an existing student, or one created on the spot. Creating goes
+    // through the API layer, so it has to be awaited before the lesson can
+    // reference the new id.
     const resolvedId = addingStudent
       ? newStudentName.trim()
-        ? addStudent(newStudentName, subject).id
+        ? (await addStudent(newStudentName, subject)).id
         : null
       : studentId;
 
@@ -158,7 +160,14 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
         onClose();
       }}
       title={t('event.add')}
-      footer={<Button label={t('event.create')} fullWidth size="lg" onPress={handleCreate} />}
+      footer={
+        <Button
+          label={t('event.create')}
+          fullWidth
+          size="lg"
+          onPress={() => void handleCreate()}
+        />
+      }
     >
       <View style={styles.section}>
         <Text variant="label" color="textSecondary">
