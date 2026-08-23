@@ -28,6 +28,10 @@ export default function AppLayout() {
         contentStyle: { backgroundColor: colors.background },
       }}
     >
+      {/* Declared first, and therefore the stack's initial route. Leaving it out
+          made `settings` the anchor: signing in landed the user on Settings with
+          no back button, since it was the root of the stack. */}
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('more.settings') }} />
     </Stack>
   );

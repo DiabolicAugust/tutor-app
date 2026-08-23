@@ -27,7 +27,14 @@ export default function AppTabs() {
       backgroundColor={colors.surfaceElevated}
       iconColor={{ default: colors.textMuted, selected: colors.brand }}
       indicatorColor={colors.brandSoft}
-      labelStyle={{ color: colors.textSecondary, selected: { color: colors.brand } }}
+      // Both states must be given explicitly. `labelStyle` accepts either a
+      // plain style or a { default, selected } pair — mixing the two silently
+      // drops the top-level color, leaving unselected labels the platform
+      // default, which is black and invisible on a dark tab bar.
+      labelStyle={{
+        default: { color: colors.textSecondary },
+        selected: { color: colors.brand },
+      }}
     >
       {orderedTabs.map((tab) => (
         <NativeTabs.Trigger key={tab.key} name={tab.key} hidden={!isVisible(tab.key)}>
