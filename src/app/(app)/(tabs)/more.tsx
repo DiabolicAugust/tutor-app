@@ -32,6 +32,11 @@ export default function MoreScreen() {
         </Card>
 
         <Card>
+          {/* The role arrives with the session at sign-in, so gating on it costs
+              no extra request. */}
+          {user.role === 'admin' ? (
+            <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
+          ) : null}
           <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
         </Card>
 

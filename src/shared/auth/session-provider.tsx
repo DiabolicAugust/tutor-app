@@ -57,6 +57,12 @@ export function SessionProvider({
     [client],
   );
 
+  const adoptSession = useCallback((next: Session) => {
+    sessionStore.write(next);
+    setSession(next);
+    setErrorKey(null);
+  }, []);
+
   const signOut = useCallback(async () => {
     // Local state is cleared regardless of what the backend says: a user who
     // asked to sign out must end up signed out even if the request fails.
@@ -77,10 +83,11 @@ export function SessionProvider({
       isPending,
       errorKey,
       signIn,
+      adoptSession,
       signOut,
       clearError: () => setErrorKey(null),
     }),
-    [session, isPending, errorKey, signIn, signOut],
+    [session, isPending, errorKey, signIn, adoptSession, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

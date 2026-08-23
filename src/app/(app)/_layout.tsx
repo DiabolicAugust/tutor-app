@@ -33,6 +33,7 @@ export default function AppLayout() {
           no back button, since it was the root of the stack. */}
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="settings" options={{ headerShown: true, title: t('more.settings') }} />
+      <Stack.Screen name="school" options={{ headerShown: true, title: t('more.school') }} />
     </Stack>
   );
 }

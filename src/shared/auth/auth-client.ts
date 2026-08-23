@@ -43,11 +43,15 @@ export const mockAuthClient: AuthClient = {
   async signIn({ email }) {
     const trimmedEmail = email.trim();
     const user: AuthUser = {
-      id: `mock-${Date.now()}`,
+      // `me` rather than a timestamp: fixture lessons and the school roster
+      // reference the signed-in tutor by that id.
+      id: 'me',
       email: trimmedEmail || 'tutor@foxacademy.dev',
       name: nameFromEmail(trimmedEmail),
-      role: 'tutor',
-      schoolId: null,
+      // Sign in with an address starting "admin" to get the admin role, which is
+      // the only way to reach school management in a test build.
+      role: trimmedEmail.toLowerCase().startsWith('admin') ? 'admin' : 'tutor',
+      schoolId: 'demo-school',
     };
 
     return {

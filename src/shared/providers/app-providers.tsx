@@ -5,6 +5,7 @@ import { I18nProvider } from '@/shared/i18n';
 import { LessonsProvider } from '@/shared/lessons';
 import { TabPreferencesProvider } from '@/shared/navigation';
 import { NotificationsProvider } from '@/shared/notifications';
+import { SchoolProvider } from '@/shared/school';
 import { StudentsProvider } from '@/shared/students';
 import { ThemeProvider } from '@/shared/theme';
 
@@ -25,13 +26,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <I18nProvider>
       <ThemeProvider>
         <SessionProvider>
-          <StudentsProvider>
-            <LessonsProvider>
-              <NotificationsProvider>
-                <TabPreferencesProvider>{children}</TabPreferencesProvider>
-              </NotificationsProvider>
-            </LessonsProvider>
-          </StudentsProvider>
+          <SchoolProvider>
+            <StudentsProvider>
+              <LessonsProvider>
+                <NotificationsProvider>
+                  <TabPreferencesProvider>{children}</TabPreferencesProvider>
+                </NotificationsProvider>
+              </LessonsProvider>
+            </StudentsProvider>
+          </SchoolProvider>
         </SessionProvider>
       </ThemeProvider>
     </I18nProvider>

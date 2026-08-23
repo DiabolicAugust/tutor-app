@@ -2,6 +2,7 @@ import { fixtureColleagues } from './colleagues';
 import { fixturesEnabled } from './enabled';
 import { fixtureLessons } from './lessons';
 import { fixtureNotifications } from './notifications';
+import { fixtureInvitations, fixtureMembers, fixtureSchoolName } from './school';
 import { fixtureStudents } from './students';
 
 export { fixturesEnabled };
@@ -21,4 +22,7 @@ export const fixtures = {
   notifications: fixturesEnabled ? fixtureNotifications : [],
   colleagues: fixturesEnabled ? fixtureColleagues : [],
   students: fixturesEnabled ? fixtureStudents : [],
+  schoolMembers: fixturesEnabled ? fixtureMembers : [],
+  invitations: fixturesEnabled ? fixtureInvitations : [],
+  schoolName: fixturesEnabled ? fixtureSchoolName : '',
 } as const;

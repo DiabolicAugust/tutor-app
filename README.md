@@ -146,6 +146,25 @@ definition, not in the settings UI, so every consumer respects it. A stored orde
 reconciled against the tabs that exist now, so a build that adds or removes one does not
 strand the preference.
 
+### School management and invitations
+
+The **More** tab shows a *School management* entry only when the session's role is `admin`.
+The role arrives with the session at sign-in, so gating on it costs no extra request —
+which is the point of keeping it in the session rather than fetching it per screen.
+
+From there an admin invites a tutor by email. The backend mails a link of the form
+`foxacademy://invite/<token>`; tapping it on a phone opens `app/invite/[token].tsx`
+directly, where the invited person sets a name and password and lands signed in. The email
+is displayed but not editable — it comes from the invitation, or the link would be a way to
+create an account for any address.
+
+That route sits inside the *unauthenticated* group, because an invitation exists for
+someone who has no account. A consequence worth knowing: a signed-in user who taps an
+invite link is redirected into the app and has to sign out first.
+
+To try it with fixtures, sign in with an address starting `admin` — the mock client hands
+back the admin role for those.
+
 ### Launch
 
 `AppSplash` covers the first frames with the app's own animated loader and fades out. It

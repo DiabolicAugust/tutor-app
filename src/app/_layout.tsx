@@ -29,6 +29,10 @@ function RootNavigator() {
 
         <Stack.Protected guard={!isSignedIn}>
           <Stack.Screen name="sign-in" />
+          {/* Opened by the emailed link (foxacademy://invite/<token>). Grouped
+              with sign-in because an invitation is for someone who has no
+              account yet — a signed-in user must sign out to use one. */}
+          <Stack.Screen name="invite/[token]" />
         </Stack.Protected>
       </Stack>
 
