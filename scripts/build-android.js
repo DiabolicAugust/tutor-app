@@ -16,7 +16,13 @@
 // they are on a phone.
 
 const { execFileSync, spawnSync } = require('node:child_process');
-const { copyFileSync, existsSync, mkdirSync, statSync } = require('node:fs');
+const {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+} = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
@@ -43,6 +49,9 @@ const NOT_MIRRORED = ['build', '.gradle', '.cxx', '.kotlin', 'node_modules'];
 const COPIED_FILES = [
   'app.json',
   'package.json',
+  // Copied so the install below resolves the same versions this repository
+  // was tested against rather than whatever is newest today.
+  'package-lock.json',
   'tsconfig.json',
   '.env',
   'eslint.config.js',
@@ -72,6 +81,40 @@ function robocopy(from, to) {
   }
 }
 
+/**
+ * Dependencies named in the build directory's manifest that are not installed
+ * there.
+ *
+ * `node_modules` is deliberately not mirrored — it is gigabytes and holds
+ * compiled native code — so the build directory keeps its own and can fall behind
+ * the moment a package is added here.
+ *
+ * The question asked is "is everything named actually present", not "did
+ * package.json change since last time". The second version of this checked for a
+ * change, and was wrong in exactly the way that matters: the build that first
+ * copied the new manifest also failed, so the next attempt saw no change,
+ * installed nothing and failed again. A check against reality recovers on its
+ * own; a check against history stays stuck.
+ *
+ * The failure it prevents arrives from inside Gradle as a config plugin that
+ * cannot be resolved, which reads as a broken plugin rather than as a directory
+ * one package behind.
+ */
+function missingModules() {
+  const manifest = JSON.parse(
+    readFileSync(path.join(SHORT, 'package.json'), 'utf8'),
+  );
+  const names = Object.keys({
+    ...manifest.dependencies,
+    ...manifest.devDependencies,
+  });
+
+  return names.filter(
+    (name) =>
+      !existsSync(path.join(SHORT, 'node_modules', ...name.split('/'), 'package.json')),
+  );
+}
+
 function main() {
   const args = process.argv.slice(2);
   const abi = args.includes('--abi') ? args[args.indexOf('--abi') + 1] : null;
@@ -91,10 +134,11 @@ function main() {
     );
   }
 
-  step('1/3 mirroring the sources');
+  step('1/4 mirroring the sources');
   for (const dir of MIRRORED_DIRS) {
     robocopy(path.join(ROOT, dir), path.join(SHORT, dir));
   }
+
   for (const file of COPIED_FILES) {
     const from = path.join(ROOT, file);
     if (existsSync(from)) copyFileSync(from, path.join(SHORT, file));
@@ -107,7 +151,22 @@ function main() {
   }
   console.log('sources in step');
 
-  step('2/3 clearing the bundle output');
+  step('2/4 installing dependencies');
+  const missing = missingModules();
+  if (missing.length > 0) {
+    // Only when something is actually absent: a full install takes minutes and
+    // most builds change nothing but source files.
+    console.log(`installing (${missing.slice(0, 4).join(', ')}…)`);
+    execFileSync('npm', ['install', '--no-audit', '--no-fund'], {
+      stdio: 'inherit',
+      shell: true,
+      cwd: SHORT,
+    });
+  } else {
+    console.log('every dependency is installed');
+  }
+
+  step('3/4 clearing the bundle output');
   // Gradle treats the bundle task as up to date on inputs it does not track, so
   // a JS-only change can otherwise ship the previous bundle inside a new APK.
   // Built from path segments rather than a literal: a Windows path in a source
@@ -120,7 +179,7 @@ function main() {
   }
   console.log('cleared');
 
-  step(`3/3 assembling${abi ? ` for ${abi}` : ''}`);
+  step(`4/4 assembling${abi ? ` for ${abi}` : ''}`);
   execFileSync(
     path.join(SHORT, 'android', 'gradlew.bat'),
     ['assembleRelease', ...(abi ? [`-PreactNativeArchitectures=${abi}`] : [])],
