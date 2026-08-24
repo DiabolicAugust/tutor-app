@@ -1,10 +1,12 @@
 import { View } from 'react-native';
 
+import { FileSection } from '@/shared/files';
 import { useT } from '@/shared/i18n';
 import { isGroupLesson, lessonStudentIds } from '@/shared/lessons';
 import { NoteSection } from '@/shared/notes';
 import { useStudents } from '@/shared/students';
 import { createStyles } from '@/shared/theme';
+import { useTutorName } from '@/shared/tutors';
 import { Button, ModalSheet, Text, TextField } from '@/shared/ui';
 
 import { useLessonJournal } from '../use-lesson-journal';
@@ -53,6 +55,7 @@ export function LessonJournalSheet({
   const { t } = useT();
   const styles = useStyles();
   const { nameOf } = useStudents();
+  const tutorName = useTutorName();
   const { draft, set, mark, setHomeworkDone, isDirty, isSaving, hasError, save } =
     useLessonJournal(lesson);
 
@@ -75,6 +78,7 @@ export function LessonJournalSheet({
 
   const isGroup = lesson ? isGroupLesson(lesson) : false;
   const askHomework = draft.homework.trim().length > 0;
+  const teacher = lesson ? tutorName(lesson.tutorId) : null;
 
   return (
     <ModalSheet
@@ -95,6 +99,16 @@ export function LessonJournalSheet({
       }
     >
       <View style={styles.form}>
+        {/* Who is teaching, before anything else on the sheet. On your own
+            lesson it is not news; opened from a calendar with a colleague's day
+            overlaid, it is the first thing worth knowing — and it is what the
+            grid could not show, since a block only carries a colour. */}
+        {teacher ? (
+          <Text testID="journal-teacher" variant="bodySm" color="textSecondary">
+            {t('gradebook.journal.taughtBy', { name: teacher })}
+          </Text>
+        ) : null}
+
         <View style={styles.field}>
           <Text variant="label">
             {t(isGroup ? 'gradebook.journal.register' : 'gradebook.journal.attendance')}
@@ -161,6 +175,16 @@ export function LessonJournalSheet({
           onChanged={onChanged}
         />
       ) : null}
+
+      {/* Against the lesson rather than each student who was there: a group
+          lesson hands the same worksheet to everybody, and a copy per student
+          would be five files where a person sees one. */}
+      <FileSection
+        testID="journal-files"
+        source={lesson ? { kind: 'lesson', id: lesson.id } : null}
+        title={t('files.lessonTitle')}
+        emptyHint={t('files.lessonEmpty')}
+      />
 
       <NoteSection
         testID="journal-notes"

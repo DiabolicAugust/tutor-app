@@ -14,8 +14,9 @@ import {
   dayCountFor,
   useCalendarPreferences,
 } from '@/shared/calendar';
+import { LessonJournalSheet } from '@/shared/gradebook';
 import { useFormat, useT } from '@/shared/i18n';
-import { useLessons } from '@/shared/lessons';
+import { useLessons, type Lesson } from '@/shared/lessons';
 import { addDays, isToday, startOfDay } from '@/shared/lib/date';
 import { createStyles } from '@/shared/theme';
 import { useTutorialAnchor } from '@/shared/tutorial';
@@ -56,6 +57,8 @@ function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(() => startOfDay(new Date()));
   const [sheet, setSheet] = useState<Sheet>('none');
   const [agendaDay, setAgendaDay] = useState<Date | null>(null);
+  /** The lesson whose sheet is open, or null. */
+  const [openLesson, setOpenLesson] = useState<Lesson | null>(null);
   const [eventDay, setEventDay] = useState(selectedDay);
 
   const dayCount = dayCountFor(viewMode);
@@ -159,7 +162,12 @@ function CalendarScreen() {
           /* Only the day views: a month grid is scrolled vertically and paged by
              its own header, and a horizontal swipe there would be ambiguous. */
           <SwipePager onNext={() => shift(1)} onPrevious={() => shift(-1)}>
-            <TimeGridView days={days} lessons={lessons} visibleCalendarIds={visibleCalendarIds} />
+            <TimeGridView
+              days={days}
+              lessons={lessons}
+              visibleCalendarIds={visibleCalendarIds}
+              onSelectLesson={setOpenLesson}
+            />
           </SwipePager>
         )}
       </Animated.View>
@@ -189,12 +197,37 @@ function CalendarScreen() {
           setAgendaDay(null);
           openEventForm(day);
         }}
+        onSelectLesson={(lesson) => {
+          // The agenda closes first. Two sheets stacked leaves the lower one
+          // visible around the edges of the upper, and dismissing the top one
+          // reveals a list the person has finished with.
+          setAgendaDay(null);
+          setOpenLesson(lesson);
+        }}
       />
 
       <EventFormSheet
         visible={sheet === 'event'}
         initialDay={eventDay}
         onClose={() => setSheet('none')}
+      />
+
+      {/* The lesson itself: who is teaching it, what was covered, the material
+          handed out, a note. The grid can only carry a colour and a name, so
+          everything else about an hour lives here. */}
+      <LessonJournalSheet
+        lesson={openLesson}
+        title={
+          openLesson
+            ? `${openLesson.subject?.name ?? t('lessons.title')} · ${format.dayTitle(
+                new Date(openLesson.startsAt),
+              )}`
+            : ''
+        }
+        onClose={() => setOpenLesson(null)}
+        // Kept open on save: somebody who has just marked attendance often
+        // attaches the worksheet next, and closing would make that two trips.
+        onSaved={(updated) => setOpenLesson(updated)}
       />
     </SafeAreaView>
   );

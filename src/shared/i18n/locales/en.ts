@@ -262,6 +262,9 @@ export const en = {
     lessonEmpty: 'Nothing noted for this lesson yet.',
   },
   files: {
+    lessonTitle: 'Material',
+    lessonEmpty:
+      'Nothing attached yet. A worksheet, the slides, a photo of the board — whatever is worth keeping with the lesson.',
     open: 'Open {{name}}',
     openFailed: 'Could not open that file.',
     openUnavailable: 'Files are not stored in a test build — only their names are.',
@@ -377,6 +380,7 @@ export const en = {
       descriptive: 'In words',
     },
     journal: {
+      taughtBy: 'Taught by {{name}}',
       open: 'Write up this lesson',
       register: 'Register',
       registerEmpty: 'Nobody to mark — this group has no students yet.',

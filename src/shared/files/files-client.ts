@@ -7,6 +7,15 @@ export type FilesClient = {
   listForStudent: (studentId: string) => Promise<StoredFile[]>;
   uploadForStudent: (studentId: string, file: FileToUpload) => Promise<StoredFile>;
   /**
+   * Material for one lesson: the worksheet handed out, the slides, a recording.
+   *
+   * Against the lesson rather than each student who was there — a group lesson
+   * hands the same sheet to everybody, and a copy per student would be five files
+   * where a person sees one.
+   */
+  listForLesson: (lessonId: string) => Promise<StoredFile[]>;
+  uploadForLesson: (lessonId: string, file: FileToUpload) => Promise<StoredFile>;
+  /**
    * The caller's own teaching material — files kept for themselves rather than
    * against a student. Their own shelf, not the school's: an admin sees theirs.
    */
@@ -22,6 +31,11 @@ export const httpFilesClient: FilesClient = {
   // a `FormData` file part cannot be used any more.
   uploadForStudent: (studentId, file) =>
     uploadFile<StoredFile>(`/students/${studentId}/files`, file),
+
+  listForLesson: (lessonId) => http.get<StoredFile[]>(`/lessons/${lessonId}/files`),
+
+  uploadForLesson: (lessonId, file) =>
+    uploadFile<StoredFile>(`/lessons/${lessonId}/files`, file),
 
   listLibrary: () => http.get<StoredFile[]>('/files'),
 

@@ -4,4 +4,8 @@ export {
   tutorColorIndex,
   type Tutor,
 } from './tutor';
-export { useCalendarOwners, useOwnCalendarId } from './use-calendar-owners';
+export {
+  useCalendarOwners,
+  useOwnCalendarId,
+  useTutorName,
+} from './use-calendar-owners';

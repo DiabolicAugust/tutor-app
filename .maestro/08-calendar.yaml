@@ -120,3 +120,46 @@ tags:
     id: 'calendar-settings-sheet-close'
 - assertVisible:
     id: 'calendar-add'
+
+# --- opening a lesson from the grid ---
+#
+# `TimeGridView` declared an `onSelectLesson` that nothing ever passed, so a tap
+# on a lesson did nothing at all — which no assertion about the calendar could
+# have caught, because the grid rendered perfectly.
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 30000
+- tapOn: ${STUDENT}
+- extendedWaitUntil:
+    visible:
+      id: 'journal-sheet'
+    timeout: 30000
+
+# Who is teaching it. The block itself can only carry a colour, so this is the
+# only place the answer appears — and the reason the sheet is worth opening on
+# somebody else's day.
+- assertVisible:
+    id: 'journal-teacher'
+
+# Material belongs to the hour, not to each student who was in it. Uploading here
+# is the whole path: before this the files table had no lesson to point at, so a
+# worksheet could only be filed against one person.
+- assertVisible:
+    id: 'journal-files'
+- assertVisible:
+    id: 'journal-files-empty'
+- tapOn:
+    id: 'journal-files-add'
+- runFlow: subflows/pick-a-file-for-lesson.yaml
+- extendedWaitUntil:
+    visible: ${UPLOAD}
+    timeout: 60000
+- assertNotVisible:
+    id: 'journal-files-empty'
+
+- tapOn:
+    id: 'journal-sheet-close'
+- assertVisible:
+    id: 'calendar-add'

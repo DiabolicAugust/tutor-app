@@ -10,6 +10,13 @@ import { EventBlock } from './event-block';
 export type DayAgendaSheetProps = {
   day: Date | null;
   lessons: readonly Lesson[];
+  /**
+   * Opening one of the day's lessons.
+   *
+   * Optional, because the sheet is useful without it — it is a list of the day,
+   * and it was that before a lesson could be opened at all.
+   */
+  onSelectLesson?: (lesson: Lesson) => void;
   visibleCalendarIds: readonly string[];
   onClose: () => void;
   /** Offered inside the sheet so a month-view tap can lead straight to booking. */
@@ -31,6 +38,7 @@ const useStyles = createStyles((t) => ({
 export function DayAgendaSheet({
   day,
   lessons,
+  onSelectLesson,
   visibleCalendarIds,
   onClose,
   onAddEvent,
@@ -74,7 +82,15 @@ export function DayAgendaSheet({
             <View style={styles.block}>
               {/* Expandable here and not in the grid: a list has vertical room,
                   a twenty-pixel grid cell does not. */}
-              <EventBlock lesson={lesson} compact expandable />
+              {/* Expandable *and* pressable: tapping a group block opens the
+                  lesson, and the chevron inside it still expands the member
+                  list without the two fighting over the same tap. */}
+              <EventBlock
+                lesson={lesson}
+                compact
+                expandable
+                onPress={onSelectLesson}
+              />
             </View>
           </View>
         ))

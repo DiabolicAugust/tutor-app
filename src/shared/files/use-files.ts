@@ -12,7 +12,10 @@ import { byNewestFile, type FileToUpload, type StoredFile } from './stored-file'
  * A tagged union rather than a nullable student id, so "the library" is a state
  * a caller can name instead of one it falls into by leaving something out.
  */
-export type FileSource = { kind: 'student'; id: string } | { kind: 'library' };
+export type FileSource =
+  | { kind: 'student'; id: string }
+  | { kind: 'lesson'; id: string }
+  | { kind: 'library' };
 
 /**
  * Why the last write failed, when the server said something specific.
@@ -47,6 +50,44 @@ export type FilesState = {
  * Same shape as `useNotes` and for the same reason: read on one screen at a time,
  * so local state rather than a provider nothing else would use.
  */
+/**
+ * The cache key for a source.
+ *
+ * A function rather than a nested conditional, because there are three kinds now
+ * and the conditional had already stopped being readable at two.
+ */
+function keyFor(source: FileSource): string {
+  return source.kind === 'library' ? 'library' : `${source.kind}:${source.id}`;
+}
+
+/** Reading a source. One place that knows which endpoint each kind comes from. */
+function list(client: FilesClient, source: FileSource): Promise<StoredFile[]> {
+  switch (source.kind) {
+    case 'student':
+      return client.listForStudent(source.id);
+    case 'lesson':
+      return client.listForLesson(source.id);
+    case 'library':
+      return client.listLibrary();
+  }
+}
+
+/** Writing to a source. Paired with `list` so the two cannot disagree. */
+function store(
+  client: FilesClient,
+  source: FileSource,
+  file: FileToUpload,
+): Promise<StoredFile> {
+  switch (source.kind) {
+    case 'student':
+      return client.uploadForStudent(source.id, file);
+    case 'lesson':
+      return client.uploadForLesson(source.id, file);
+    case 'library':
+      return client.uploadToLibrary(file);
+  }
+}
+
 export function useFiles(
   source: FileSource | null,
   client: FilesClient = apiClients.files,
@@ -55,12 +96,8 @@ export function useFiles(
   const [failure, setFailure] = useState<FileFailure | null>(null);
 
   const { data, isLoading, setData } = useAsyncData(
-    source ? (source.kind === 'student' ? `student:${source.id}` : 'library') : null,
-    async () =>
-      (source!.kind === 'student'
-        ? await client.listForStudent(source!.id)
-        : await client.listLibrary()
-      ).sort(byNewestFile),
+    source ? keyFor(source) : null,
+    async () => (await list(client, source!)).sort(byNewestFile),
   );
 
   // Memoised so the callbacks below do not get a new dependency every render.
@@ -73,10 +110,7 @@ export function useFiles(
       setIsUploading(true);
       setFailure(null);
       try {
-        const created =
-          source.kind === 'student'
-            ? await client.uploadForStudent(source.id, file)
-            : await client.uploadToLibrary(file);
+        const created = await store(client, source, file);
         setData((current) => [created, ...(current ?? [])]);
       } catch (cause) {
         setFailure(reasonFor(cause));
