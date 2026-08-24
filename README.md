@@ -408,58 +408,38 @@ to survive a newer server.
 
 Providers still accept a `client` prop, which is what keeps them testable in isolation.
 
-## Test data
+## Where data comes from
 
-All test data lives in `src/shared/fixtures/` behind a single flag:
+The API, and nothing else. `EXPO_PUBLIC_API_URL` is inlined at bundle time, so
+which server a build talks to is decided when the build is made.
 
-```ts
-export const fixturesEnabled = __DEV__ || process.env.EXPO_PUBLIC_FIXTURES === '1';
-```
+There used to be a second answer. Every client had a `mock*` half backed by
+`src/shared/fixtures/`, and a flag chose between them — which was the right shape
+while the app was written ahead of its backend, and stopped being right the moment
+there was one. Two implementations of every client meant a second thing to keep in
+step with the server, silently wrong as soon as it fell behind, and a build that
+quietly ran on invented students is one nobody can trust a bug report from.
 
-- **Development** — always on, so the app is explorable out of the box.
-- **Test build** — set `EXPO_PUBLIC_FIXTURES=1`:
+It also hid real bugs, which is the part worth remembering:
 
-  ```bash
-  EXPO_PUBLIC_FIXTURES=1 npx expo export --platform web        # bash
-  ```
+- The mock auth client issued a user whose id matched the fixtures, so "my
+  students" and "my calendar" worked in a test build and matched nothing at all
+  against a server.
+- `tutorColorIndex` looked a calendar's owner up in the fixture colleagues. Against
+  a server nothing was ever found, every colleague came back as index zero, and a
+  school's calendars were all drawn in the same colour — which is the one thing
+  overlaying them is for. It derives a stable index from the id now.
 
-  ```powershell
-  $env:EXPO_PUBLIC_FIXTURES=1; npx expo export --platform web  # PowerShell
-  ```
+With no `EXPO_PUBLIC_API_URL` configured, signing in fails loudly through
+`unavailableAuthClient` rather than fetching a relative path: "this build was not
+pointed at a server" and "the server is broken" should not look the same. Nothing
+else needs that guard, because nothing behind sign-in is reachable without a
+session.
 
-  For EAS, put the variable in the build profile's `env` block.
-- **Production** — off, so no invented students, lessons or announcements ship, and
-  sign-in fails loudly (`unavailableAuthClient`) instead of faking a session.
+Providers still accept a `client` prop, which is what keeps them testable in
+isolation — and what the end-to-end suite in `.maestro/` exercises for real,
+against a local backend.
 
-`EXPO_PUBLIC_*` values are inlined at bundle time, so with the flag off the fixture
-modules are dropped from the bundle rather than merely unused.
-
-### Keeping fixtures current
-
-**A test build must always demonstrate everything the app can do.** So:
-
-- adding a feature means adding fixtures for it, in the same change;
-- changing a feature means updating the fixtures that cover it.
-
-`fixtureLessons` is built relative to *now* on every launch — a lesson that has already
-ended but is unconfirmed, one starting within the hour, two at the same time, plus
-cancelled and completed ones. That is deliberate: it guarantees every notification kind
-and every calendar state is visible whenever the build is opened, rather than only on the
-day the data happened to be written.
-
-| Area | Fixture | Where the real thing plugs in |
-| --- | --- | --- |
-| Sign-in | Any email/password succeeds; the user is built from the email | Implement `AuthClient`, pass it as `<SessionProvider client={...}>` |
-| Schedule | `fixtureLessons`, in memory, lost on reload | `LessonsProvider` exposes a list plus mutations — the shape a data layer will have |
-| News | `fixtureNotifications` for server-pushed kinds | `NotificationsProvider`; derived kinds keep working as-is |
-| Colleagues | `fixtureColleagues` | `shared/tutors` — the own calendar is always real |
-| Notes | `fixtureNotes` — several on one student, one on a lesson, one by a colleague | `NotesClient`; the colleague's note is the only way to see its remove button correctly absent |
-| Files | `fixtureStudentFiles` — varied sizes and types, one uploaded by a colleague | `FilesClient`; the mock records a picked file's real name and type, and stores no bytes |
-
-A yellow notice on the sign-in screen says the backend is missing; it appears only when
-fixtures are on. The backend now exists — NestJS and Prisma, in its own repository — and
-pointing this app at it is setting `EXPO_PUBLIC_API_URL`, because every client above is
-selected in one registry.
 
 ## Android builds (Windows)
 
@@ -479,7 +459,6 @@ robocopy $src C:\fa /E /XD "$src\.git" "$src\dist" "$src\.expo" "$src\builds" ".
   "$src\android\build" "$src\android\app\build" "$src\android\.gradle"
 
 Set-Location C:\fa\android
-$env:EXPO_PUBLIC_FIXTURES = '1'
 .\gradlew.bat assembleRelease -PreactNativeArchitectures=arm64-v8a
 ```
 

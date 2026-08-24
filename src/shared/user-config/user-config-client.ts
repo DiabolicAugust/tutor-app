@@ -1,6 +1,6 @@
 import { http } from '@/shared/api/http';
 
-import { defaultUserConfig, type UserConfig, type UserConfigPatch } from './user-config';
+import type { UserConfig, UserConfigPatch } from './user-config';
 
 /**
  * Preference changes go to the server, like every other write in the app.
@@ -14,14 +14,4 @@ export type UserConfigClient = {
 
 export const httpUserConfigClient: UserConfigClient = {
   update: (patch) => http.patch<UserConfig>('/users/me/config', patch),
-};
-
-/** Echoes the patch back, merged — enough for the UI to behave correctly. */
-let mockConfig: UserConfig = { ...defaultUserConfig };
-
-export const mockUserConfigClient: UserConfigClient = {
-  async update(patch) {
-    mockConfig = { ...mockConfig, ...patch };
-    return mockConfig;
-  },
 };

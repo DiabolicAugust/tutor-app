@@ -4,7 +4,6 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useSession } from '@/shared/auth';
-import { useMockClients } from '@/shared/api';
 import { useT } from '@/shared/i18n';
 import { createStyles } from '@/shared/theme';
 import { Button, LanguageSwitcher, Text, TextField } from '@/shared/ui';
@@ -94,16 +93,6 @@ export default function SignInScreen() {
           </View>
 
           <View style={styles.footer}>
-            {/* Shown only when the mock auth client is in use — it is what makes
-                any credentials work. Pointing the build at a real API removes
-                both the mock and the notice. */}
-            {useMockClients ? (
-              <View style={styles.notice}>
-                <Text variant="caption" color="warning">
-                  {t('auth.mockNotice')}
-                </Text>
-              </View>
-            ) : null}
             <LanguageSwitcher />
           </View>
         </ScrollView>
@@ -128,9 +117,4 @@ const useStyles = createStyles((t) => ({
   header: { gap: t.spacing.xs },
   form: { gap: t.spacing.md },
   footer: { gap: t.spacing.md },
-  notice: {
-    backgroundColor: t.colors.warningSoft,
-    borderRadius: t.radius.md,
-    padding: t.spacing.md,
-  },
 }));

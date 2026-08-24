@@ -19,14 +19,3 @@ export type SupportClient = {
 export const httpSupportClient: SupportClient = {
   submit: (message) => http.post<SupportRequestReceipt>('/support', { message }),
 };
-
-let sequence = 0;
-
-export const mockSupportClient: SupportClient = {
-  async submit() {
-    sequence += 1;
-    // Accepted and dropped: with no server there is nothing to store, and
-    // pretending otherwise would hide that from whoever is testing.
-    return { id: `mock-support-${sequence}`, createdAt: new Date().toISOString() };
-  },
-};

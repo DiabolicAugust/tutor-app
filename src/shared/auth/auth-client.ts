@@ -1,5 +1,4 @@
 import { allAddons } from '@/shared/addons';
-import { fixturesEnabled } from '@/shared/fixtures';
 
 import type { AuthUser, Session } from './session';
 
@@ -71,27 +70,6 @@ export function mockSession(options: {
 }
 
 /**
- * Stand-in until a backend exists: **any** credentials succeed, and the user is
- * fabricated from whatever email was typed (or a placeholder if none was).
- *
- * It is async on purpose even though nothing awaits — the pending/error states
- * in the provider and the sign-in screen are therefore real code paths that a
- * network client will exercise unchanged, instead of being added later.
- *
- * Sign in with an address starting "admin" to get the admin role, which is the
- * only way to reach school management in a test build.
- */
-export const mockAuthClient: AuthClient = {
-  async signIn({ email }) {
-    return mockSession({ email });
-  },
-
-  async signOut() {
-    // Nothing to revoke without a backend.
-  },
-};
-
-/**
  * What a production build gets until a real backend exists: sign-in fails
  * loudly instead of fabricating a session. Better an error on the login screen
  * than a shipped app that pretends to authenticate.
@@ -103,7 +81,13 @@ export const unavailableAuthClient: AuthClient = {
   async signOut() {},
 };
 
-/** The client used unless one is passed to `SessionProvider`. */
-export const defaultAuthClient: AuthClient = fixturesEnabled
-  ? mockAuthClient
-  : unavailableAuthClient;
+/**
+ * The client used unless one is passed to `SessionProvider`.
+ *
+ * There is nothing to choose between any more. It used to pick a mock that
+ * accepted any password, which is what a build with no backend needed and what
+ * hid a real bug for a while: the mock issued a user whose id matched the
+ * fixtures, so "my students" and "my calendar" worked in a test build and
+ * matched nothing against a server.
+ */
+export const defaultAuthClient: AuthClient = unavailableAuthClient;

@@ -1,6 +1,5 @@
 import { http } from '@/shared/api/http';
 import { ApiError } from '@/shared/api/api-error';
-import { fixtures } from '@/shared/fixtures';
 
 import type { Subject, SubjectUsage } from './subject';
 
@@ -70,67 +69,3 @@ export function inUseFrom(error: unknown): SubjectUsage | null {
   return code === 'SUBJECT_IN_USE' && usage ? usage : null;
 }
 
-let localId = 0;
-
-export const mockSubjectsClient: SubjectsClient = {
-  async list() {
-    return [...fixtures.subjects];
-  },
-
-  async create(name) {
-    localId += 1;
-    return { id: `local-subject-${localId}`, name: name.trim(), hiddenAt: null };
-  },
-
-  async rename(id, name) {
-    return { id, name: name.trim(), hiddenAt: null };
-  },
-
-  async usage(id) {
-    const subject =
-      fixtures.subjects.find((candidate) => candidate.id === id) ??
-      ({ id, name: '', hiddenAt: null } as Subject);
-
-    // Chemistry is the retired one, so it is the one with history and nothing
-    // current. Anything else reports a student to move, which is what makes the
-    // "reassign first" screen reachable on fixtures.
-    const retired = subject.id === 'subject-chemistry';
-    const students = retired
-      ? []
-      : fixtures.students
-          .filter((student) => student.subject?.id === subject.id)
-          .map((student) => ({ id: student.id, name: student.name }));
-    const groups = retired
-      ? []
-      : fixtures.groups
-          .filter((group) => group.subject?.id === subject.id)
-          .map((group) => ({ id: group.id, name: group.name }));
-
-    return {
-      subject,
-      students,
-      groups,
-      upcomingLessons: retired ? 0 : students.length,
-      pastLessons: retired ? 4 : 1,
-      canHide: students.length === 0 && groups.length === 0,
-    };
-  },
-
-  async hide(id) {
-    const usage = await mockSubjectsClient.usage(id);
-    if (!usage.canHide) {
-      // The same shape the server refuses with, so the screen that handles it is
-      // exercised on fixtures rather than only against a backend.
-      throw new ApiError(409, 'Reassign what still studies this subject first', {
-        code: 'SUBJECT_IN_USE',
-        usage,
-      });
-    }
-    return { ...usage.subject, hiddenAt: new Date().toISOString() };
-  },
-
-  async restore(id) {
-    const usage = await mockSubjectsClient.usage(id);
-    return { ...usage.subject, hiddenAt: null };
-  },
-};

@@ -22,15 +22,3 @@ export const httpPushClient: PushClient = {
     await http.delete<void>('/users/me/devices', device);
   },
 };
-
-/**
- * Stand-in with no server to tell.
- *
- * Resolves rather than throwing: registration runs on every sign-in, and a test
- * build should not log an error on every launch for a server it was never
- * pointed at.
- */
-export const mockPushClient: PushClient = {
-  async register() {},
-  async unregister() {},
-};

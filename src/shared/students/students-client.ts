@@ -1,5 +1,4 @@
 import { http } from '@/shared/api/http';
-import { fixtures } from '@/shared/fixtures';
 
 import type { Student } from './student';
 
@@ -42,52 +41,4 @@ export const httpStudentsClient: StudentsClient = {
   remove: async (id) => {
     await http.delete<void>(`/students/${id}`);
   },
-};
-
-let localId = 0;
-
-/** The subject row a form named by id. Null for none and for an unknown one. */
-function subjectById(id: string | null | undefined) {
-  if (!id) return null;
-  return fixtures.subjects.find((subject) => subject.id === id) ?? null;
-}
-
-export const mockStudentsClient: StudentsClient = {
-  async list() {
-    return [...fixtures.students];
-  },
-
-  async create(input) {
-    localId += 1;
-    return {
-      id: `local-student-${localId}`,
-      tutorId: 'me',
-      name: input.name.trim(),
-      subject: subjectById(input.subjectId),
-      paidLessonsLeft: 0,
-    };
-  },
-
-  async update(id, patch) {
-    const existing = fixtures.students.find((student) => student.id === id);
-    const base = existing ?? {
-      id,
-      tutorId: 'me',
-      name: '',
-      subject: null,
-      paidLessonsLeft: 0,
-    };
-
-    // The store applies the result, so echoing the merge is enough for the UI to
-    // behave exactly as it will against a server. `subjectId` is translated back
-    // into the row here, the way the server answers with it.
-    const { subjectId, ...rest } = patch;
-    return {
-      ...base,
-      ...rest,
-      ...(subjectId === undefined ? {} : { subject: subjectById(subjectId) }),
-    };
-  },
-
-  async remove() {},
 };

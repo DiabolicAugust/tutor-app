@@ -1,65 +1,29 @@
 import { httpAuthClient } from '@/shared/auth/http-auth-client';
-import { mockAuthClient, unavailableAuthClient, type AuthClient } from '@/shared/auth/auth-client';
-import {
-  httpFilesClient,
-  mockFilesClient,
-  type FilesClient,
-} from '@/shared/files/files-client';
+import { unavailableAuthClient, type AuthClient } from '@/shared/auth/auth-client';
+import { httpFilesClient, type FilesClient } from '@/shared/files/files-client';
 import {
   httpGradebookClient,
   type GradebookClient,
 } from '@/shared/gradebook/gradebook-client';
-import { mockGradebookClient } from '@/shared/gradebook/mock-gradebook-client';
-import {
-  httpGroupsClient,
-  type GroupsClient,
-} from '@/shared/groups/groups-client';
-import { mockGroupsClient } from '@/shared/groups/mock-groups-client';
-import {
-  httpLessonsClient,
-  mockLessonsClient,
-  type LessonsClient,
-} from '@/shared/lessons/lessons-client';
-import {
-  httpNotesClient,
-  mockNotesClient,
-  type NotesClient,
-} from '@/shared/notes/notes-client';
+import { httpGroupsClient, type GroupsClient } from '@/shared/groups/groups-client';
+import { httpLessonsClient, type LessonsClient } from '@/shared/lessons/lessons-client';
+import { httpNotesClient, type NotesClient } from '@/shared/notes/notes-client';
 import {
   httpNotificationsClient,
-  mockNotificationsClient,
   type NotificationsClient,
 } from '@/shared/notifications/notifications-client';
-import {
-  httpPushClient,
-  mockPushClient,
-  type PushClient,
-} from '@/shared/push/push-client';
+import { httpPushClient, type PushClient } from '@/shared/push/push-client';
 import { httpSchoolClient } from '@/shared/school/http-school-client';
-import { mockSchoolClient } from '@/shared/school/mock-school-client';
 import type { SchoolClient } from '@/shared/school/school-client';
-import {
-  httpStudentsClient,
-  mockStudentsClient,
-  type StudentsClient,
-} from '@/shared/students/students-client';
-import {
-  httpSubjectsClient,
-  mockSubjectsClient,
-  type SubjectsClient,
-} from '@/shared/subjects/subjects-client';
-import {
-  httpSupportClient,
-  mockSupportClient,
-  type SupportClient,
-} from '@/shared/support/support-client';
+import { httpStudentsClient, type StudentsClient } from '@/shared/students/students-client';
+import { httpSubjectsClient, type SubjectsClient } from '@/shared/subjects/subjects-client';
+import { httpSupportClient, type SupportClient } from '@/shared/support/support-client';
 import {
   httpUserConfigClient,
-  mockUserConfigClient,
   type UserConfigClient,
 } from '@/shared/user-config/user-config-client';
 
-import { hasApi, useMockClients } from './api-config';
+import { hasApi } from './api-config';
 
 export type ApiClients = {
   auth: AuthClient;
@@ -78,61 +42,33 @@ export type ApiClients = {
 };
 
 /**
- * The one place that decides where data comes from.
+ * Where data comes from: the API, and nothing else.
  *
- * Every provider takes its client from here by default, so pointing the whole
- * app at a real backend is setting `EXPO_PUBLIC_API_URL` — not editing five
- * files. Individual providers still accept a `client` prop, which is what makes
- * them testable in isolation.
+ * This used to choose between three sets — fixtures, HTTP, and a set that refused
+ * to do anything — which was the right shape while the app was written ahead of
+ * its backend. There is a backend now, and a second implementation of every
+ * client was a second thing to keep in step with the server, silently wrong the
+ * moment it fell behind. Deleted rather than left as a fallback: a build that
+ * quietly runs on invented students is one nobody can trust a bug report from.
  *
- * With no API and no fixtures (a production build that has not been pointed at a
- * server yet) the auth client fails loudly rather than fabricating a session,
- * and the rest return nothing. Better an empty app than a convincing lie.
+ * Authentication is the exception, and only in one direction. With no
+ * `EXPO_PUBLIC_API_URL` configured, signing in fails loudly instead of fetching a
+ * relative path — which is the difference between "this build was not pointed at
+ * a server" and "the server is broken". The rest need no such guard: nothing
+ * behind sign-in is reachable without a session.
  */
-export const apiClients: ApiClients = useMockClients
-  ? {
-      auth: mockAuthClient,
-      school: mockSchoolClient,
-      lessons: mockLessonsClient,
-      students: mockStudentsClient,
-      subjects: mockSubjectsClient,
-      notifications: mockNotificationsClient,
-      notes: mockNotesClient,
-      gradebook: mockGradebookClient,
-      groups: mockGroupsClient,
-      files: mockFilesClient,
-      push: mockPushClient,
-      userConfig: mockUserConfigClient,
-      support: mockSupportClient,
-    }
-  : hasApi
-    ? {
-        auth: httpAuthClient,
-        school: httpSchoolClient,
-        lessons: httpLessonsClient,
-        students: httpStudentsClient,
-        subjects: httpSubjectsClient,
-        notifications: httpNotificationsClient,
-        notes: httpNotesClient,
-        gradebook: httpGradebookClient,
-        groups: httpGroupsClient,
-        files: httpFilesClient,
-        push: httpPushClient,
-        userConfig: httpUserConfigClient,
-        support: httpSupportClient,
-      }
-    : {
-        auth: unavailableAuthClient,
-        school: mockSchoolClient,
-        lessons: mockLessonsClient,
-        students: mockStudentsClient,
-        subjects: mockSubjectsClient,
-        notifications: mockNotificationsClient,
-        notes: mockNotesClient,
-        gradebook: mockGradebookClient,
-        groups: mockGroupsClient,
-        files: mockFilesClient,
-        push: mockPushClient,
-        userConfig: mockUserConfigClient,
-        support: mockSupportClient,
-      };
+export const apiClients: ApiClients = {
+  auth: hasApi ? httpAuthClient : unavailableAuthClient,
+  school: httpSchoolClient,
+  lessons: httpLessonsClient,
+  students: httpStudentsClient,
+  subjects: httpSubjectsClient,
+  notifications: httpNotificationsClient,
+  notes: httpNotesClient,
+  gradebook: httpGradebookClient,
+  groups: httpGroupsClient,
+  files: httpFilesClient,
+  push: httpPushClient,
+  userConfig: httpUserConfigClient,
+  support: httpSupportClient,
+};

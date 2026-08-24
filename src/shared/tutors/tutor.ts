@@ -1,6 +1,3 @@
-import { fixtureColleagues } from '@/shared/fixtures/colleagues';
-import { fixturesEnabled } from '@/shared/fixtures/enabled';
-
 /**
  * A calendar owner.
  *
@@ -16,21 +13,6 @@ export type Tutor = {
   /** Index into the theme's `eventColors`, so identity colors stay stable. */
   colorIndex: number;
 };
-
-/**
- * The fixtures' id for the signed-in tutor.
- *
- * **Not** a stand-in for "whoever is signed in" — use `user.id` for that. It was
- * used that way, and against a real server it was wrong in two expensive places:
- * students carry a real tutor id, so "my students" matched nothing and the
- * booking form said the school had none; and lessons carry one too, so the
- * calendar filtered out every lesson that had just been created and they looked
- * like they had failed to save.
- *
- * The mock auth client issues a user with this id, which is why fixture builds
- * kept working and hid the problem.
- */
-export const fixtureOwnCalendarId = 'me';
 
 /** The signed-in tutor's own calendar, built from the session. */
 export function ownCalendarFor(userId: string): Tutor {
@@ -48,13 +30,33 @@ export function calendarOwnersFor(
   userId: string,
   colleagues: readonly Tutor[] = [],
 ): Tutor[] {
-  return [
-    ownCalendarFor(userId),
-    ...(fixturesEnabled ? fixtureColleagues : colleagues),
-  ];
+  return [ownCalendarFor(userId), ...colleagues];
 }
 
+/**
+ * A stable colour for a calendar, derived from its owner's id.
+ *
+ * This used to look the id up in the test data, which meant that against a real
+ * server nothing was ever found and every colleague came back as index zero —
+ * so a school's calendars were all drawn in the same colour, and the one thing
+ * overlaying them is for stopped working. It looked right on a fixture build,
+ * which is exactly how it survived.
+ *
+ * Derived rather than assigned, because there is nowhere to assign from: the
+ * server does not hand out colours, and a counter over "whoever loaded first"
+ * would give the same person a different colour on every launch. A hash of the
+ * id is stable across devices, across sessions and across who else is on screen.
+ *
+ * The caller takes this modulo the palette length, so the range only has to be
+ * non-negative.
+ */
 export function tutorColorIndex(id: string): number {
-  const colleague = fixtureColleagues.find((tutor) => tutor.id === id);
-  return colleague?.colorIndex ?? 0;
+  let hash = 0;
+  for (let index = 0; index < id.length; index += 1) {
+    // Multiply-and-add over the code points. `| 0` keeps it a 32-bit integer, so
+    // the arithmetic stays exact instead of drifting into floating point.
+    hash = (hash * 31 + id.charCodeAt(index)) | 0;
+  }
+
+  return Math.abs(hash);
 }

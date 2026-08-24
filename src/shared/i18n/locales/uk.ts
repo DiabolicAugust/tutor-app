@@ -99,7 +99,6 @@ export const uk = {
     name: 'Імʼя',
     namePlaceholder: 'Імʼя та прізвище',
     subject: 'Звичний предмет',
-    subjectPlaceholder: 'Математика',
     paidLessons: 'Залишок оплачених занять',
     nameRequired: 'Вкажіть імʼя.',
     save: 'Зберегти',
@@ -183,7 +182,6 @@ export const uk = {
     signInFailed: 'Не вдалося увійти. Спробуйте ще раз.',
     sessionExpired: 'Сесія завершилася. Увійдіть, будь ласка, знову.',
     createAccount: 'Створити акаунт',
-    mockNotice: 'Бекенду ще немає — підійде будь-яка пошта й пароль.',
   },
   join: {
     title: 'З чого почнемо',
@@ -616,7 +614,6 @@ export const uk = {
     ownCalendarNote: 'Заняття додаються у ваш власний календар.',
     studentPlaceholder: 'З ким заняття?',
     subject: 'Предмет',
-    subjectPlaceholder: 'Математика',
     date: 'Дата',
     startTime: 'Початок',
     duration: 'Тривалість',

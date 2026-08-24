@@ -1,7 +1,7 @@
 export { FilePreviewSheet, type FilePreviewSheetProps } from './components/file-preview-sheet';
 export { downloadFile, isPreviewable, openFileExternally } from './open-file';
 export { FileSection, type FileSectionProps } from './components/file-section';
-export { httpFilesClient, mockFilesClient, type FilesClient } from './files-client';
+export { httpFilesClient, type FilesClient } from './files-client';
 export { pickFile } from './pick-file';
 export {
   byNewestFile,

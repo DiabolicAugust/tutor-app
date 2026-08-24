@@ -1,4 +1,4 @@
-export { apiBaseUrl, hasApi, requestTimeoutMs, useMockClients } from './api-config';
+export { apiBaseUrl, hasApi, requestTimeoutMs } from './api-config';
 export { ApiError } from './api-error';
 export {
   getAccessToken,

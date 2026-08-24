@@ -1,5 +1,4 @@
 import { http } from '@/shared/api/http';
-import { fixtures } from '@/shared/fixtures';
 import { toDomainAttendance, type WireAttendance } from '@/shared/gradebook/attendance';
 import type { Subject } from '@/shared/subjects/subject';
 
@@ -143,47 +142,5 @@ export const httpLessonsClient: LessonsClient = {
     return toDomain(
       await http.patch<WireLesson>(`/lessons/${id}/status`, { status: toWireStatus(status) }),
     );
-  },
-};
-
-/** Fixture-backed. Range is ignored: the whole fixture set is small by design. */
-let localId = 0;
-
-export const mockLessonsClient: LessonsClient = {
-  async list() {
-    return [...fixtures.lessons];
-  },
-
-  async listForStudent(studentId) {
-    return fixtures.lessons
-      .filter((lesson) => lesson.studentId === studentId)
-      .map((lesson) => ({
-        ...lesson,
-        noteCount: fixtures.notes.filter((note) => note.lessonId === lesson.id).length,
-      }))
-      .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
-  },
-
-  async create(input) {
-    localId += 1;
-    return {
-      id: `local-${localId}`,
-      tutorId: 'me',
-      studentId: input.studentId ?? null,
-      subject: fixtures.subjects.find((s) => s.id === input.subjectId) ?? null,
-      startsAt: input.startsAt,
-      durationMinutes: input.durationMinutes,
-      status: 'scheduled',
-      topic: null,
-      group: null,
-      homework: null,
-      attendances: [],
-    };
-  },
-
-  async setStatus(id, status) {
-    const existing = fixtures.lessons.find((lesson) => lesson.id === id);
-    if (!existing) throw new Error(`Unknown lesson: ${id}`);
-    return { ...existing, status };
   },
 };

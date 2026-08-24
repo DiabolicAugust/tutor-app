@@ -95,7 +95,6 @@ export const en = {
     name: 'Name',
     namePlaceholder: 'First and last name',
     subject: 'Usual subject',
-    subjectPlaceholder: 'Mathematics',
     paidLessons: 'Paid lessons left',
     nameRequired: 'Enter a name.',
     save: 'Save',
@@ -180,7 +179,6 @@ export const en = {
     signInFailed: 'Could not sign in. Please try again.',
     sessionExpired: 'Your session ended. Please sign in again.',
     createAccount: 'Create an account',
-    mockNotice: 'No backend yet — any email and password will sign you in.',
   },
   join: {
     title: 'Get started',
@@ -573,7 +571,6 @@ export const en = {
     ownCalendarNote: 'Lessons are added to your own calendar.',
     studentPlaceholder: 'Who is the lesson with?',
     subject: 'Subject',
-    subjectPlaceholder: 'Mathematics',
     date: 'Date',
     startTime: 'Starts at',
     duration: 'Duration',

@@ -1,4 +1,3 @@
-export { mockSchoolClient } from './mock-school-client';
 export {
   byNewestInvitation,
   type AcceptInvitationInput,

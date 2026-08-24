@@ -1,6 +1,5 @@
 export {
   calendarOwnersFor,
-  fixtureOwnCalendarId,
   ownCalendarFor,
   tutorColorIndex,
   type Tutor,

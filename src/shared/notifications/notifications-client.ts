@@ -1,5 +1,4 @@
 import { http } from '@/shared/api/http';
-import { fixtures } from '@/shared/fixtures';
 
 import type { Notification, NotificationKind } from './notification';
 
@@ -43,12 +42,4 @@ export const httpNotificationsClient: NotificationsClient = {
 
   markRead: (id) => http.post<void>(`/notifications/${id}/read`),
   markAllRead: () => http.post<void>('/notifications/read-all'),
-};
-
-export const mockNotificationsClient: NotificationsClient = {
-  async list() {
-    return [...fixtures.notifications];
-  },
-  async markRead() {},
-  async markAllRead() {},
 };
