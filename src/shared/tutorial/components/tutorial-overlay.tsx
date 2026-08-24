@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
@@ -47,6 +47,16 @@ export function TutorialOverlay() {
       setHeight(measuredHeight);
     });
   }, [setOverlayOrigin]);
+
+  /**
+   * Re-measured on every step, not only on layout.
+   *
+   * The anchors already re-measure per step, and the overlay did not — so a
+   * screen whose layout had changed since the tour began was compared against a
+   * stale origin, and the highlight landed off by the difference. The last step
+   * showed it worst, having the most navigation behind it.
+   */
+  useEffect(measureSelf, [measureSelf, step?.id]);
 
   if (!step) return null;
 

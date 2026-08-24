@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
+import { RefreshControl, ScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { useAddons } from '@/shared/addons';
 import { useCurrentUser } from '@/shared/auth';
 import { GroupFormSheet, describeGroup, useGroups, type Group } from '@/shared/groups';
 import { useT } from '@/shared/i18n';
+import { useRefresh } from '@/shared/lib/use-refresh';
 import { StudentFormSheet, byName, useStudents, type Student } from '@/shared/students';
 import { createStyles } from '@/shared/theme';
 import {
@@ -44,7 +45,7 @@ export default function StudentsTab() {
   const styles = useStyles();
   const user = useCurrentUser();
   const { has } = useAddons();
-  const { students, isLoading } = useStudents();
+  const { students, isLoading, reload } = useStudents();
   const {
     groups,
     isLoading: isLoadingGroups,
@@ -54,7 +55,11 @@ export default function StudentsTab() {
     remove,
     addMember,
     removeMember,
+    reload: reloadGroups,
   } = useGroups();
+
+  // Both halves of this screen come from the server, so a pull refreshes both.
+  const { isRefreshing, refresh } = useRefresh([reload, reloadGroups]);
 
   const [view, setView] = useState<RosterView>('students');
   const [editing, setEditing] = useState<{ student: Student | null } | null>(null);
@@ -72,7 +77,12 @@ export default function StudentsTab() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={() => void refresh()} />
+        }
+      >
         <ScreenHeader
           testID="screen-students"
           title={t('tabs.students')}

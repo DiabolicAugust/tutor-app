@@ -68,6 +68,8 @@ export function GroupFormSheet({
   const [state, setState] = useState(() => ({
     key: group?.id ?? null,
     draft: draftFor(group),
+    /** Students picked for a group that does not exist yet. */
+    pending: [] as string[],
   }));
   const [isSaving, setIsSaving] = useState(false);
   const [isPicking, setIsPicking] = useState(false);
@@ -75,8 +77,24 @@ export function GroupFormSheet({
   // Reseeded during render rather than in an effect, so editing a second group
   // never shows the first one's name for a frame.
   const key = group?.id ?? null;
-  const current = state.key === key ? state : { key, draft: draftFor(group) };
+  const current =
+    state.key === key ? state : { key, draft: draftFor(group), pending: [] };
   if (state.key !== key) setState(current);
+
+  /**
+   * Students chosen before the group exists.
+   *
+   * Membership needs a group id, so for a new group the picks are held with the
+   * draft and applied the moment it is created. Without this, filling a group was
+   * two visits to the same sheet — create it, reopen it, add people — and the
+   * second visit is the one people forget.
+   *
+   * Reseeded with the draft, so reopening "new group" does not arrive carrying
+   * the last one's picks.
+   */
+  const pending = current.pending;
+  const setPending = (next: (previous: string[]) => string[]) =>
+    setState((previous) => ({ ...previous, pending: next(previous.pending) }));
 
   const { draft } = current;
   const set = (field: keyof typeof emptyDraft, value: string) =>
@@ -85,7 +103,11 @@ export function GroupFormSheet({
       draft: { ...previous.draft, [field]: value },
     }));
 
-  const members = group ? membersOf(group) : [];
+  const members = group
+    ? membersOf(group)
+    : // Rendered from the roster, so a picked student is visible immediately
+      // rather than only after the group is saved.
+      students.filter((student) => pending.includes(student.id));
   const memberIds = new Set(members.map((student) => student.id));
   // Only students this tutor can actually add — the server refuses a colleague's.
   const addable = [...students]
@@ -108,7 +130,14 @@ export function GroupFormSheet({
       if (group) {
         await onUpdate(group.id, input);
       } else {
-        await onCreate(input);
+        const created = await onCreate(input);
+        // Applied in the order they were picked, and only once the group has an
+        // id to attach them to.
+        if (created) {
+          for (const studentId of pending) {
+            await onAddMember(created.id, studentId);
+          }
+        }
       }
       if (!hasError) onClose();
     } finally {
@@ -160,10 +189,11 @@ export function GroupFormSheet({
         ) : null}
       </View>
 
-      {/* Nothing to put anybody into until the group exists. */}
-      {group ? (
-        <View style={styles.section}>
-          <Text variant="label">{t('groups.members')}</Text>
+      {/* Shown for a new group too. The picks are held until it has an id — see
+          `pending` — because asking somebody to create a group and then come back
+          to fill it is asking them to do it twice. */}
+      <View style={styles.section}>
+        <Text variant="label">{t('groups.members')}</Text>
 
           {members.length === 0 ? (
             <Text variant="bodySm" color="textMuted">
@@ -187,7 +217,10 @@ export function GroupFormSheet({
                 <IconButton
                   name={icons.close}
                   accessibilityLabel={t('groups.removeMember')}
-                  onPress={() => void onRemoveMember(group.id, student.id)}
+                  onPress={() => {
+                    if (group) void onRemoveMember(group.id, student.id);
+                    else setPending((current) => current.filter((id) => id !== student.id));
+                  }}
                 />
               </Animated.View>
             ))
@@ -205,7 +238,8 @@ export function GroupFormSheet({
                   label={student.name}
                   description={student.subject}
                   onPress={() => {
-                    void onAddMember(group.id, student.id);
+                    if (group) void onAddMember(group.id, student.id);
+                    else setPending((current) => [...current, student.id]);
                     setIsPicking(false);
                   }}
                 />
@@ -221,20 +255,24 @@ export function GroupFormSheet({
             />
           )}
 
-          <Button
-            label={t('groups.remove')}
-            variant="ghost"
-            fullWidth
-            onPress={() => {
-              void onRemove(group.id);
-              onClose();
-            }}
-          />
-          <Text variant="caption" color="textMuted">
-            {t('groups.removeHint')}
-          </Text>
-        </View>
-      ) : null}
+        {/* Only for a group that exists; there is nothing to dissolve otherwise. */}
+        {group ? (
+          <>
+            <Button
+              label={t('groups.remove')}
+              variant="ghost"
+              fullWidth
+              onPress={() => {
+                void onRemove(group.id);
+                onClose();
+              }}
+            />
+            <Text variant="caption" color="textMuted">
+              {t('groups.removeHint')}
+            </Text>
+          </>
+        ) : null}
+      </View>
     </ModalSheet>
   );
 }

@@ -10,6 +10,8 @@ export type GroupsState = {
   groups: Group[];
   isLoading: boolean;
   hasError: boolean;
+  /** Re-reads the list, for pull-to-refresh. */
+  reload: () => Promise<void>;
   create: (input: NewGroupInput) => Promise<Group | null>;
   update: (id: string, patch: GroupPatch) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -34,6 +36,15 @@ export function useGroups(client: GroupsClient = apiClients.groups): GroupsState
   const { data, isLoading, setData } = useAsyncData('groups', async () =>
     (await client.list()).sort(byGroupName),
   );
+
+  const reload = useCallback(async () => {
+    setHasError(false);
+    try {
+      setData((await client.list()).sort(byGroupName));
+    } catch {
+      setHasError(true);
+    }
+  }, [client, setData]);
 
   const groups = useMemo(() => data ?? [], [data]);
 
@@ -119,6 +130,7 @@ export function useGroups(client: GroupsClient = apiClients.groups): GroupsState
     groups,
     isLoading,
     hasError,
+    reload,
     create,
     update,
     remove,

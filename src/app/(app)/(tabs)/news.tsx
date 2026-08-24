@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { ScrollView } from 'react-native';
+import { RefreshControl, ScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LessonJournalSheet } from '@/shared/gradebook';
 import { useFormat, useT } from '@/shared/i18n';
 import { useLessons, type Lesson } from '@/shared/lessons';
+import { useRefresh } from '@/shared/lib/use-refresh';
 import { NotificationCard, useNotifications } from '@/shared/notifications';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, Icon, ScreenHeader, Text, icons, motion } from '@/shared/ui';
@@ -21,9 +22,20 @@ export default function NewsScreen() {
   const { t } = useT();
   const format = useFormat();
   const styles = useStyles();
-  const { notifications, unreadCount, isRead, markRead, markAllRead, runAction } =
-    useNotifications();
-  const { lessons } = useLessons();
+  const {
+    notifications,
+    unreadCount,
+    isRead,
+    markRead,
+    markAllRead,
+    runAction,
+    refresh: refreshFeed,
+  } = useNotifications();
+  const { lessons, reload: reloadLessons } = useLessons();
+
+  // Half the feed is derived from the schedule, so both are refreshed together
+  // or the derived items would be answering a question already out of date.
+  const { isRefreshing, refresh: pullToRefresh } = useRefresh([refreshFeed, reloadLessons]);
 
   const [writingUp, setWritingUp] = useState<Lesson | null>(null);
 
@@ -45,7 +57,12 @@ export default function NewsScreen() {
         }
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={() => void pullToRefresh()} />
+        }
+      >
         {notifications.length === 0 ? (
           <Card style={styles.empty}>
             <Icon name={icons.inbox} size={28} color="textMuted" />

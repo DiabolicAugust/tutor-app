@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { useAddons } from '@/shared/addons';
@@ -59,8 +59,8 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const format = useFormat();
   const styles = useStyles();
   const { addLesson } = useLessons();
-  const { ownStudents, find, addStudent } = useStudents();
-  const { groups } = useGroups();
+  const { ownStudents, find, addStudent, reload: reloadStudents } = useStudents();
+  const { groups, reload: reloadGroups } = useGroups();
   const { has } = useAddons();
   const ownId = useOwnCalendarId();
 
@@ -75,6 +75,20 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const [startMinutes, setStartMinutes] = useState(String(9 * 60));
   const [duration, setDuration] = useState('60');
   const [showError, setShowError] = useState(false);
+
+  /**
+   * Re-reads both lists when the sheet opens.
+   *
+   * A student added on another device — or by an admin, or on this device before
+   * the roster last loaded — was otherwise invisible here, and the form insisted
+   * there was nobody to book for. Cheap: two requests, only when somebody is
+   * actually about to book.
+   */
+  useEffect(() => {
+    if (!visible) return;
+    void reloadStudents();
+    void reloadGroups();
+  }, [visible, reloadStudents, reloadGroups]);
 
   const baseDay = useMemo(() => startOfDay(initialDay), [initialDay]);
 

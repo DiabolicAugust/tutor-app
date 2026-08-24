@@ -28,6 +28,14 @@ export type StudentsStore = {
   find: (id: string) => Student | undefined;
   /** Resolves a name for display; falls back to the id so nothing renders blank. */
   nameOf: (id: string) => string;
+  /**
+   * Re-reads the roster.
+   *
+   * Called by pull-to-refresh, and by the booking form when it opens: a student
+   * added on another device — or by an admin — is otherwise invisible until the
+   * app is relaunched, and the form then insists there is nobody to book for.
+   */
+  reload: () => Promise<void>;
   /** Registers a student met for the first time while booking a lesson. */
   addStudent: (name: string, subject: string) => Promise<Student>;
   /**
@@ -83,6 +91,14 @@ export function StudentsProvider({
     };
   }, [client, toast, t]);
 
+  const reload = useCallback(async () => {
+    try {
+      setStudents([...(await client.list())].sort(byName));
+    } catch {
+      toast.show(t('errors.loadStudents'));
+    }
+  }, [client, toast, t]);
+
   const addStudent = useCallback(
     async (name: string, subject: string) => {
       const created = await client.create({ name, subject });
@@ -119,12 +135,13 @@ export function StudentsProvider({
       ownStudents: students.filter((student) => student.tutorId === ownId),
       find: (id) => byId.get(id),
       nameOf: (id) => byId.get(id)?.name ?? id,
+      reload,
       addStudent,
       updateStudent,
       removeStudent,
       isLoading,
     };
-  }, [students, ownId, addStudent, updateStudent, removeStudent, isLoading]);
+  }, [students, ownId, reload, addStudent, updateStudent, removeStudent, isLoading]);
 
   return <StudentsContext.Provider value={value}>{children}</StudentsContext.Provider>;
 }

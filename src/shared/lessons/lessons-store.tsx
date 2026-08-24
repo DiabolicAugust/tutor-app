@@ -29,6 +29,14 @@ export type LessonsStore = {
    */
   addLesson: (draft: NewLesson) => Promise<Lesson | null>;
   /**
+   * Re-reads the window from the server.
+   *
+   * Exposed for pull-to-refresh: the schedule is the one thing a colleague can
+   * change while somebody is looking at it, so "did anything move?" needs an
+   * answer that is not "relaunch the app".
+   */
+  reload: () => Promise<void>;
+  /**
    * Confirming or cancelling a lesson after the fact — driven from the news
    * feed, which is why the schedule lives above both tabs.
    */
@@ -58,6 +66,25 @@ export function LessonsProvider({
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useT();
   const toast = useToast();
+
+  /** The window the calendar keeps loaded, recomputed per fetch. */
+  const load = useCallback(async () => {
+    const now = new Date();
+    const from = new Date(now);
+    from.setDate(from.getDate() - WINDOW_DAYS);
+    const to = new Date(now);
+    to.setDate(to.getDate() + WINDOW_DAYS);
+
+    return client.list({ from: from.toISOString(), to: to.toISOString() });
+  }, [client]);
+
+  const reload = useCallback(async () => {
+    try {
+      setLessons(await load());
+    } catch {
+      toast.show(t('errors.loadSchedule'));
+    }
+  }, [load, toast, t]);
 
   useEffect(() => {
     let active = true;
@@ -145,8 +172,8 @@ export function LessonsProvider({
   );
 
   const value = useMemo<LessonsStore>(
-    () => ({ lessons, isLoading, addLesson, setLessonStatus }),
-    [lessons, isLoading, addLesson, setLessonStatus],
+    () => ({ lessons, isLoading, addLesson, setLessonStatus, reload }),
+    [lessons, isLoading, addLesson, setLessonStatus, reload],
   );
 
   return <LessonsContext.Provider value={value}>{children}</LessonsContext.Provider>;
