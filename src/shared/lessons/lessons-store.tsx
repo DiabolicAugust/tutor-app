@@ -123,7 +123,9 @@ export function LessonsProvider({
         ...(draft.group
           ? { groupId: draft.group.id }
           : { studentId: draft.studentId ?? undefined }),
-        subject: draft.subject,
+        // The draft carries the whole subject row so the new block can render
+        // before anything is refetched; the wire wants only the id.
+        subjectId: draft.subject?.id,
         startsAt: draft.startsAt,
         durationMinutes: draft.durationMinutes,
       });

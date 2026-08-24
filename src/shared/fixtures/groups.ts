@@ -1,6 +1,7 @@
 import type { Group } from '@/shared/groups/group';
 
 import { fixtureStudents } from './students';
+import { fixtureSubject } from './subjects';
 
 /**
  * Test groups.
@@ -29,7 +30,7 @@ export const fixtureGroups: Group[] = [
   {
     id: 'group-b1',
     name: 'B1 Tuesdays',
-    subject: 'Mathematics',
+    subject: fixtureSubject('Mathematics'),
     level: 'B1',
     tutorId: 'me',
     members: [
@@ -41,7 +42,7 @@ export const fixtureGroups: Group[] = [
   {
     id: 'group-exam',
     name: 'Exam prep',
-    subject: 'Mathematics',
+    subject: fixtureSubject('Mathematics'),
     level: 'Year 9',
     tutorId: 'me',
     members: [member('student-ivan'), member('student-maksym')],
@@ -51,7 +52,7 @@ export const fixtureGroups: Group[] = [
   {
     id: 'group-new',
     name: 'Conversation club',
-    subject: 'Mathematics',
+    subject: fixtureSubject('Mathematics'),
     level: null,
     tutorId: 'me',
     members: [],

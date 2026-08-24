@@ -1,0 +1,35 @@
+# Chooses a subject in a `SubjectPicker`, adding it if the school has none yet.
+#
+# Expects PICKER — the picker's testID — and SUBJECT.
+#
+# A school that has just been registered teaches nothing at all, so the first
+# time a subject is needed it has to be created. The picker lets an admin do that
+# without leaving the form, which exists precisely so the first student is not
+# blocked on finding the school panel. Every later use finds the chip already
+# there, which is why this is a subflow with two branches rather than two
+# different sets of steps in five flows.
+appId: com.foxacademy.app
+---
+- runFlow:
+    when:
+      visible: ${SUBJECT}
+    commands:
+      - tapOn: ${SUBJECT}
+
+- runFlow:
+    when:
+      notVisible: ${SUBJECT}
+    commands:
+      - tapOn:
+          id: '${PICKER}-add'
+      # The field takes focus itself. Its placeholder is a subject name, which is
+      # exactly why the branch above is evaluated first: with the field open,
+      # "Mathematics" is on screen whether or not the school teaches it.
+      - inputText: ${SUBJECT}
+      - runFlow: dismiss-keyboard.yaml
+      - tapOn:
+          id: '${PICKER}-save'
+      # Selected by the picker the moment it exists, so nothing else is tapped.
+      - extendedWaitUntil:
+          visible: ${SUBJECT}
+          timeout: 30000

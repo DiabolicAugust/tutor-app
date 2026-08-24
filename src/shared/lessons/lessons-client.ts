@@ -1,6 +1,7 @@
 import { http } from '@/shared/api/http';
 import { fixtures } from '@/shared/fixtures';
 import { toDomainAttendance, type WireAttendance } from '@/shared/gradebook/attendance';
+import type { Subject } from '@/shared/subjects/subject';
 
 
 import type { Lesson, LessonStatus, StudentLesson } from './lesson';
@@ -9,7 +10,7 @@ import type { Lesson, LessonStatus, StudentLesson } from './lesson';
 type WireLessonGroup = {
   id: string;
   name: string;
-  subject: string;
+  subject: Subject | null;
   level: string | null;
   members: { student: { id: string; name: string } }[];
 };
@@ -23,7 +24,14 @@ type WireLessonGroup = {
 export type NewLessonInput = {
   studentId?: string;
   groupId?: string;
-  subject: string;
+  /**
+   * What is being taught, as an id from the school's list.
+   *
+   * Optional, because a lesson has always been bookable without one and the
+   * calendar shows such a lesson as simply a lesson. The form asks for a subject;
+   * the wire does not insist on it.
+   */
+  subjectId?: string;
   /** ISO instant. */
   startsAt: string;
   durationMinutes: number;
@@ -64,7 +72,7 @@ type WireStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
 type WireLesson = {
   id: string;
   tutorId: string;
-  subject: string;
+  subject: Subject | null;
   startsAt: string;
   durationMinutes: number;
   status: WireStatus;
@@ -162,7 +170,7 @@ export const mockLessonsClient: LessonsClient = {
       id: `local-${localId}`,
       tutorId: 'me',
       studentId: input.studentId ?? null,
-      subject: input.subject,
+      subject: fixtures.subjects.find((s) => s.id === input.subjectId) ?? null,
       startsAt: input.startsAt,
       durationMinutes: input.durationMinutes,
       status: 'scheduled',

@@ -130,7 +130,7 @@ export default function NewsScreen() {
         lesson={writingUp}
         title={
           writingUp
-            ? `${writingUp.subject} · ${format.dayTitle(new Date(writingUp.startsAt))}`
+            ? `${writingUp.subject?.name ?? t('lessons.title')} · ${format.dayTitle(new Date(writingUp.startsAt))}`
             : ''
         }
         onClose={() => setWritingUp(null)}

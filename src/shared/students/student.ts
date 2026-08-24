@@ -1,3 +1,5 @@
+import type { Subject } from '@/shared/subjects/subject';
+
 /**
  * A student the tutor teaches.
  *
@@ -13,8 +15,14 @@ export type Student = {
    */
   tutorId: string;
   name: string;
-  /** What they usually study; prefills the subject when booking. */
-  subject: string;
+  /**
+   * What they usually study; prefills the subject when booking.
+   *
+   * The row rather than its name, so a form can preselect it and a screen can
+   * show it without a second lookup. Null is a real state: a student can be on
+   * the books before anybody has settled what they are studying.
+   */
+  subject: Subject | null;
   /**
    * Lessons remaining on their current package. Drives the payment reminders in
    * the news feed.

@@ -12,10 +12,11 @@ appId: com.foxacademy.app
     id: 'student-name'
 - inputText: ${STUDENT}
 - runFlow: dismiss-keyboard.yaml
-- tapOn:
-    id: 'student-subject'
-- inputText: ${SUBJECT}
-- runFlow: dismiss-keyboard.yaml
+- runFlow:
+    file: pick-subject.yaml
+    env:
+      PICKER: 'student-subject'
+      SUBJECT: ${SUBJECT}
 - tapOn:
     id: 'student-save'
 # The roster comes back from the server, so this is also the check that the write

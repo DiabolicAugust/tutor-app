@@ -314,11 +314,52 @@ export const en = {
       other: '{{count}} students',
     },
   },
+  subjects: {
+    title: 'Subjects',
+    hint: 'What your school teaches. Everything a student, a group or a lesson studies is chosen from this list.',
+    empty: 'Nothing here yet. Add the subjects your school teaches.',
+    emptyForTutor: 'Your school has not set up its subjects yet. An admin adds them in school management.',
+    add: 'Add a subject',
+    name: 'Name',
+    namePlaceholder: 'Mathematics',
+    none: 'Not set',
+    retired: 'No longer taught',
+    retiredCount: {
+      one: '{{count}} no longer taught',
+      other: '{{count}} no longer taught',
+    },
+    showRetired: 'Show what you no longer teach',
+    hideRetired: 'Hide those',
+    rename: 'Rename',
+    retire: 'Stop teaching this',
+    retireHint:
+      'It stops being offered anywhere. Lessons already taught keep it and read exactly as they do now.',
+    restore: 'Teach it again',
+    exists: 'Your school already teaches that.',
+    existsRetired:
+      'You used to teach that. Bring it back rather than adding a second one with the same name — the old lessons are attached to it.',
+    bringBack: 'Bring it back',
+    inUseTitle: 'Move these first',
+    inUseHint:
+      'A subject can only be retired once nothing is studying it. Reassign what is listed here, then try again.',
+    inUseStudents: 'Students',
+    inUseGroups: 'Groups',
+    inUseLessons: {
+      one: '{{count}} lesson still booked',
+      other: '{{count}} lessons still booked',
+    },
+    keepsLessons: {
+      one: 'Keeps {{count}} lesson already taught',
+      other: 'Keeps {{count}} lessons already taught',
+    },
+  },
   errors: {
     loadSchedule: 'Could not load your schedule. Check your connection and pull to refresh.',
     bookLesson: 'That lesson was not saved. Please try booking it again.',
     saveLesson: 'Could not save that change to the server.',
     loadStudents: 'Could not load your students.',
+    loadSubjects: 'Could not load your school’s subjects.',
+    saveSubject: 'Could not save that subject.',
     generic: 'Something went wrong. Please try again.',
   },
   gradebook: {

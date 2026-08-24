@@ -109,7 +109,12 @@ export default function StudentScreen() {
             <Text testID="student-title" variant="titleLg">
               {student.name}
             </Text>
-            <Text color="textSecondary">{student.subject}</Text>
+            {/* Omitted entirely when there is none, rather than showing an
+                empty line where a subject should be. A retired subject is still
+                shown: it is what this student studies. */}
+            {student.subject ? (
+              <Text color="textSecondary">{student.subject.name}</Text>
+            ) : null}
             <Text variant="bodySm" color={student.paidLessonsLeft <= 2 ? 'warning' : 'textMuted'}>
               {t('event.lessonsLeft', { count: student.paidLessonsLeft })}
             </Text>
@@ -162,7 +167,7 @@ export default function StudentScreen() {
                   description={[
                     // The topic is what makes the history readable; the group
                     // name is what tells a shared lesson from a private one.
-                    lesson.topic ?? lesson.subject,
+                    lesson.topic ?? lesson.subject?.name,
                     lesson.group?.name,
                     t(statusKeys[lesson.status]),
                   ]
@@ -193,7 +198,7 @@ export default function StudentScreen() {
         lesson={openLesson}
         title={
           openLesson
-            ? `${openLesson.subject} · ${format.dayTitle(new Date(openLesson.startsAt))}`
+            ? `${openLesson.subject?.name ?? t('lessons.title')} · ${format.dayTitle(new Date(openLesson.startsAt))}`
             : ''
         }
         onClose={() => setOpenLesson(null)}

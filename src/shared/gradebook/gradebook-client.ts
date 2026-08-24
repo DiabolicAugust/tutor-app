@@ -10,6 +10,7 @@ import type { Grade, GradeInput, GradeKind, GradeSubject } from './grade';
 import type { ProgressSummary } from './progress';
 
 import type { Lesson, LessonStatus } from '@/shared/lessons/lesson';
+import type { Subject } from '@/shared/subjects/subject';
 
 /** One student's line, as a write-up sends it. */
 export type AttendanceMark = {
@@ -57,7 +58,7 @@ type WireGrade = Omit<Grade, 'kind'> & { kind: WireKind };
 type WireLesson = {
   id: string;
   tutorId: string;
-  subject: string;
+  subject: Subject | null;
   startsAt: string;
   durationMinutes: number;
   status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
@@ -71,7 +72,7 @@ type WireLesson = {
 type WireGroup = {
   id: string;
   name: string;
-  subject: string;
+  subject: Subject | null;
   level: string | null;
   members: { student: { id: string; name: string } }[];
 };

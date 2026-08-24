@@ -7,6 +7,7 @@ import { useFormat, useT } from '@/shared/i18n';
 import { useLessons, type NewLesson } from '@/shared/lessons';
 import { addDays, startOfDay } from '@/shared/lib/date';
 import { useStudents } from '@/shared/students';
+import { SubjectPicker, useSubjects } from '@/shared/subjects';
 import { createStyles } from '@/shared/theme';
 import { useOwnCalendarId } from '@/shared/tutors';
 import {
@@ -61,6 +62,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const { addLesson } = useLessons();
   const { ownStudents, find, addStudent, reload: reloadStudents } = useStudents();
   const { groups, reload: reloadGroups } = useGroups();
+  const { find: findSubject } = useSubjects();
   const { has } = useAddons();
   const ownId = useOwnCalendarId();
 
@@ -70,7 +72,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const [studentId, setStudentId] = useState<string | null>(null);
   const [addingStudent, setAddingStudent] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
-  const [subject, setSubject] = useState('');
+  const [subjectId, setSubjectId] = useState<string | null>(null);
   const [dayOffset, setDayOffset] = useState('0');
   const [startMinutes, setStartMinutes] = useState(String(9 * 60));
   const [duration, setDuration] = useState('60');
@@ -127,14 +129,14 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     setStudentId(id);
     setAddingStudent(false);
     setShowError(false);
-    // Their usual subject is the likely answer; still editable below.
-    setSubject(find(id)?.subject ?? '');
+    // Their usual subject is the likely answer; still changeable below.
+    setSubjectId(find(id)?.subject?.id ?? null);
   };
 
   const selectGroup = (id: string) => {
     setGroupId(id);
     setShowError(false);
-    setSubject(groups.find((group) => group.id === id)?.subject ?? '');
+    setSubjectId(groups.find((group) => group.id === id)?.subject?.id ?? null);
   };
 
   const reset = () => {
@@ -143,7 +145,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     setStudentId(null);
     setAddingStudent(false);
     setNewStudentName('');
-    setSubject('');
+    setSubjectId(null);
     setShowError(false);
   };
 
@@ -159,7 +161,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
       ? null
       : addingStudent
         ? newStudentName.trim()
-          ? (await addStudent(newStudentName, subject)).id
+          ? (await addStudent(newStudentName, subjectId)).id
           : null
         : studentId;
 
@@ -190,9 +192,10 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
             })),
           }
         : null,
-      // Subject is optional in the form; the grid reads better with a fallback
-      // than with an empty second line.
-      subject: subject.trim() || t('lessons.title'),
+      // Null when none was chosen, rather than a subject called "Lesson". The
+      // grid supplies that word when it has nothing to show; inventing a row for
+      // it would put it in the school's list.
+      subject: findSubject(subjectId ?? '') ?? null,
       startsAt: startsAt.toISOString(),
       durationMinutes: Number(duration),
       status: 'scheduled',
@@ -290,7 +293,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
                 key={student.id}
                 testID={`event-student-${index}`}
                 label={student.name}
-                description={student.subject}
+                description={student.subject?.name}
                 value={t('event.lessonsLeft', { count: student.paidLessonsLeft })}
                 selectable
                 selected={student.id === studentId}
@@ -322,12 +325,11 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
         ) : null}
       </View>
 
-      <TextField
+      <SubjectPicker
         testID="event-subject"
         label={t('event.subject')}
-        value={subject}
-        onChangeText={setSubject}
-        placeholder={t('event.subjectPlaceholder')}
+        value={subjectId}
+        onChange={setSubjectId}
       />
 
       <View style={styles.section}>

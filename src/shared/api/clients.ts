@@ -44,6 +44,11 @@ import {
   type StudentsClient,
 } from '@/shared/students/students-client';
 import {
+  httpSubjectsClient,
+  mockSubjectsClient,
+  type SubjectsClient,
+} from '@/shared/subjects/subjects-client';
+import {
   httpSupportClient,
   mockSupportClient,
   type SupportClient,
@@ -61,6 +66,7 @@ export type ApiClients = {
   school: SchoolClient;
   lessons: LessonsClient;
   students: StudentsClient;
+  subjects: SubjectsClient;
   notifications: NotificationsClient;
   notes: NotesClient;
   gradebook: GradebookClient;
@@ -89,6 +95,7 @@ export const apiClients: ApiClients = useMockClients
       school: mockSchoolClient,
       lessons: mockLessonsClient,
       students: mockStudentsClient,
+      subjects: mockSubjectsClient,
       notifications: mockNotificationsClient,
       notes: mockNotesClient,
       gradebook: mockGradebookClient,
@@ -104,6 +111,7 @@ export const apiClients: ApiClients = useMockClients
         school: httpSchoolClient,
         lessons: httpLessonsClient,
         students: httpStudentsClient,
+        subjects: httpSubjectsClient,
         notifications: httpNotificationsClient,
         notes: httpNotesClient,
         gradebook: httpGradebookClient,
@@ -118,6 +126,7 @@ export const apiClients: ApiClients = useMockClients
         school: mockSchoolClient,
         lessons: mockLessonsClient,
         students: mockStudentsClient,
+        subjects: mockSubjectsClient,
         notifications: mockNotificationsClient,
         notes: mockNotesClient,
         gradebook: mockGradebookClient,

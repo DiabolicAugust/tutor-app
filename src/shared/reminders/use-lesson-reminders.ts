@@ -71,7 +71,10 @@ export function useLessonReminders(): void {
           title: t('reminders.title', { name: lessonLabel(lesson, nameOf) }),
           body: t('reminders.body', {
             time: format.time(startsAt),
-            subject: lesson.subject,
+            // A lesson booked without a subject still deserves a reminder, so
+            // the generic word stands in rather than the notification reading
+            // "at 15:00 for null".
+            subject: lesson.subject?.name ?? t('lessons.title'),
           }),
         }),
         ownId,

@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 
 import { useT } from '@/shared/i18n';
 import { byName, useStudents } from '@/shared/students';
+import { SubjectPicker } from '@/shared/subjects';
 import { createStyles } from '@/shared/theme';
 import {
   Button,
@@ -33,7 +34,7 @@ export type GroupFormSheetProps = {
   hasError: boolean;
 };
 
-const emptyDraft = { name: '', subject: '', level: '' };
+const emptyDraft = { name: '', subjectId: null as string | null, level: '' };
 
 /**
  * What the sheet is currently pointed at, as something that changes when it is
@@ -50,7 +51,11 @@ const keyFor = (editing: { group: Group | null } | null): string | null =>
 /** An existing group as form fields, or a blank form for a new one. */
 const draftFor = (group: Group | null): typeof emptyDraft =>
   group
-    ? { name: group.name, subject: group.subject, level: group.level ?? '' }
+    ? {
+        name: group.name,
+        subjectId: group.subject?.id ?? null,
+        level: group.level ?? '',
+      }
     : emptyDraft;
 
 /**
@@ -109,7 +114,7 @@ export function GroupFormSheet({
     setState((previous) => ({ ...previous, pending: next(previous.pending) }));
 
   const { draft } = current;
-  const set = (field: keyof typeof emptyDraft, value: string) =>
+  const set = <K extends keyof typeof emptyDraft>(field: K, value: (typeof emptyDraft)[K]) =>
     setState((previous) => ({
       ...previous,
       draft: { ...previous.draft, [field]: value },
@@ -126,8 +131,9 @@ export function GroupFormSheet({
     .sort(byName)
     .filter((student) => !memberIds.has(student.id));
 
-  const canSubmit =
-    draft.name.trim().length > 0 && draft.subject.trim().length > 0;
+  // A group is defined by what it studies, so a subject is required here even
+  // though the column tolerates its absence for records made before this.
+  const canSubmit = draft.name.trim().length > 0 && draft.subjectId !== null;
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -136,7 +142,8 @@ export function GroupFormSheet({
     try {
       const input = {
         name: draft.name,
-        subject: draft.subject,
+        // Non-null by `canSubmit`, which is what the disabled button enforces.
+        subjectId: draft.subjectId!,
         level: draft.level,
       };
       if (group) {
@@ -182,11 +189,13 @@ export function GroupFormSheet({
           onChangeText={(value) => set('name', value)}
           placeholder={t('groups.nameHint')}
         />
-        <TextField
+        <SubjectPicker
           testID="group-subject"
           label={t('groups.subject')}
-          value={draft.subject}
-          onChangeText={(value) => set('subject', value)}
+          value={draft.subjectId}
+          onChange={(next) => set('subjectId', next)}
+          current={group?.subject ?? null}
+          allowNone={false}
         />
         <TextField
           testID="group-level"
@@ -253,7 +262,7 @@ export function GroupFormSheet({
                   key={student.id}
                   testID={`group-pick-${index}`}
                   label={student.name}
-                  description={student.subject}
+                  description={student.subject?.name}
                   onPress={() => {
                     if (group) void onAddMember(group.id, student.id);
                     else setPending((current) => [...current, student.id]);

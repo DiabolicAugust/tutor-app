@@ -104,6 +104,18 @@ The exception is the bottom tab bar. It is a native Android view built by
 platform draws — so `subflows/open-tab.yaml` taps the label, which is the reason
 the language is pinned.
 
+**Subjects are chips, not typed text.** A school teaches from a list, so the
+three forms that used to take a subject as free text now offer the school's own.
+`subflows/pick-subject.yaml` handles both cases with one selector: a newly
+registered school teaches nothing, so the first subject is created from inside
+the form, and every later use finds the chip already there. The order of its two
+branches matters — the add field's placeholder *is* a subject name, so with the
+field open "Mathematics" is on screen whether or not the school teaches it.
+
+Chips are tapped by their label rather than a handle, and here that is not a
+compromise: `ChipGroup` builds each handle from the option's value, which for a
+subject is a server-generated id no flow can know.
+
 **Two things a flow cannot assert.** Where a spotlight is drawn, and whether a
 refresh spinner is still turning. The tour flows take a screenshot per step into
 `artifacts/` instead; the refresh flow taps something a stuck spinner would have

@@ -5,9 +5,10 @@
 # is always in that list, which is why the empty state here belongs to invitations
 # rather than to tutors.
 appId: com.foxacademy.app
-name: Invite a tutor and announce something
+name: Run the school — subjects, an invitation, an announcement
 tags:
   - school
+  - subjects
 ---
 - runFlow: subflows/wait-for-app.yaml
 - runFlow:
@@ -31,6 +32,14 @@ tags:
     id: 'school-no-invitations'
 
 # --- an invitation ---
+# Scrolled to rather than tapped where it used to be: the subjects card sits
+# above these buttons, so the screen is longer than it was and `tapOn` does not
+# scroll.
+- scrollUntilVisible:
+    element:
+      id: 'school-invite'
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'school-invite'
 - assertVisible:
@@ -62,6 +71,11 @@ tags:
 - assertVisible: 'Pending'
 
 # --- an announcement ---
+- scrollUntilVisible:
+    element:
+      id: 'school-announce'
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'school-announce'
 - assertVisible:
@@ -85,6 +99,134 @@ tags:
     visible:
       id: 'announcement-sent'
     timeout: 60000
+
+# --- the subject list, which is what every record is written in ---
+#
+# Earlier flows put Mathematics here by adding a student, so the list is not
+# empty by the time this runs. Everything below happens to a subject created
+# here, because it is the only one nothing else in the suite is studying — and
+# then the refusal is checked against Mathematics, which two students are.
+- scrollUntilVisible:
+    element:
+      id: 'subjects-add'
+    direction: DOWN
+    timeout: 30000
+- assertVisible: 'Mathematics'
+
+- tapOn:
+    id: 'subjects-add'
+- assertVisible:
+    id: 'subject-add-sheet'
+- tapOn:
+    id: 'subject-add-name'
+- inputText: 'Latin'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'subject-add-save'
+- extendedWaitUntil:
+    notVisible:
+      id: 'subject-add-sheet'
+    timeout: 30000
+- extendedWaitUntil:
+    visible: 'Latin'
+    timeout: 30000
+
+# The same name again is refused, and says so rather than making a second one.
+- tapOn:
+    id: 'subjects-add'
+- tapOn:
+    id: 'subject-add-name'
+- inputText: 'Latin'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'subject-add-save'
+- extendedWaitUntil:
+    visible: 'Your school already teaches that.'
+    timeout: 30000
+- tapOn:
+    id: 'subject-add-sheet-close'
+# Waited out, not assumed. Tapping a row while a sheet is still animating away
+# resolves coordinates that belong to where a row *was*: the run that caught this
+# opened Mathematics instead of Latin and renamed it, and the flow only noticed
+# three steps later when retiring it was refused.
+- extendedWaitUntil:
+    notVisible:
+      id: 'subject-add-sheet'
+    timeout: 30000
+
+# Renaming corrects it everywhere at once, which is the reason this is a list and
+# not a word typed onto each record.
+- tapOn: 'Latin'
+- assertVisible:
+    id: 'subject-edit-sheet'
+# The field, before anything is typed into it: a sheet still animating open
+# swallows input the same way a closing one misplaces taps. This does not prove
+# the *right* subject was opened — nothing on this sheet distinguishes them by
+# handle — which is why the retire below asserts no refusal appeared, and that is
+# what catches a mis-tap.
+- assertVisible:
+    id: 'subject-rename-name'
+- tapOn:
+    id: 'subject-rename-name'
+- eraseText
+- inputText: 'Latin B'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'subject-rename-save'
+- extendedWaitUntil:
+    visible: 'Latin B'
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: 'subject-edit-sheet'
+    timeout: 30000
+
+# Retiring one that nothing studies goes through, and it leaves the list without
+# being deleted — which the restore below is the proof of.
+- tapOn: 'Latin B'
+- assertVisible:
+    id: 'subject-edit-sheet'
+- tapOn:
+    id: 'subject-retire'
+# Gone from the sheet *and* from the list. Asserting only that the name has
+# vanished is not enough: a refusal opens a sheet of its own on top, and the name
+# disappears behind it either way.
+- extendedWaitUntil:
+    notVisible:
+      id: 'subject-edit-sheet'
+    timeout: 30000
+- assertNotVisible:
+    id: 'subject-in-use-sheet'
+- assertNotVisible: 'Latin B'
+
+- tapOn:
+    id: 'subjects-toggle-retired'
+- assertVisible:
+    id: 'subject-retired-0'
+- assertVisible: 'Latin B'
+- tapOn:
+    id: 'subject-retired-0'
+- extendedWaitUntil:
+    visible: 'Latin B'
+    timeout: 30000
+
+# And the rule the whole model exists for: a subject somebody is studying cannot
+# be taken off the list, and the refusal says who has to be moved first.
+- extendedWaitUntil:
+    visible: 'Mathematics'
+    timeout: 30000
+- tapOn: 'Mathematics'
+- assertVisible:
+    id: 'subject-edit-sheet'
+- tapOn:
+    id: 'subject-retire'
+- extendedWaitUntil:
+    visible:
+      id: 'subject-in-use-sheet'
+    timeout: 30000
+- assertVisible: ${STUDENT}
+- tapOn:
+    id: 'subject-in-use-close'
 
 # It appears in News for every member of the school, which is where the sender
 # sees it too — and is the only part of this a test can verify end to end.

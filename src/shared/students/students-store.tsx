@@ -36,8 +36,13 @@ export type StudentsStore = {
    * app is relaunched, and the form then insists there is nobody to book for.
    */
   reload: () => Promise<void>;
-  /** Registers a student met for the first time while booking a lesson. */
-  addStudent: (name: string, subject: string) => Promise<Student>;
+  /**
+   * Registers a student met for the first time while booking a lesson.
+   *
+   * The subject is an id from the school's list, and null is allowed: somebody
+   * can be taken on before anybody has settled what they will study.
+   */
+  addStudent: (name: string, subjectId: string | null) => Promise<Student>;
   /**
    * Edits a student. Whether the caller may edit *this* student is the server's
    * decision — a tutor their own, an admin the whole school — so a rejection
@@ -100,8 +105,8 @@ export function StudentsProvider({
   }, [client, toast, t]);
 
   const addStudent = useCallback(
-    async (name: string, subject: string) => {
-      const created = await client.create({ name, subject });
+    async (name: string, subjectId: string | null) => {
+      const created = await client.create({ name, subjectId: subjectId ?? undefined });
       setStudents((current) => [...current, created].sort(byName));
       return created;
     },

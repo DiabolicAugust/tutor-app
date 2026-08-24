@@ -33,11 +33,13 @@ tags:
     id: 'event-sheet'
 
 - tapOn: ${STUDENT}
-- tapOn:
-    id: 'event-subject'
-- eraseText
-- inputText: 'Algebra'
-- runFlow: subflows/dismiss-keyboard.yaml
+# Picking the student prefills their usual subject; this changes it, and Algebra
+# does not exist yet, so it also books through a subject created on the spot.
+- runFlow:
+    file: subflows/pick-subject.yaml
+    env:
+      PICKER: 'event-subject'
+      SUBJECT: 'Algebra'
 - tapOn:
     id: 'event-time-450'
 - tapOn:

@@ -87,6 +87,15 @@ tags:
     id: 'student-notes-draft'
 - inputText: 'Prefers worked examples before rules.'
 - runFlow: subflows/dismiss-keyboard.yaml
+# Scrolled to rather than tapped where it was: by this point the page carries two
+# marks and a note composer, and the save button is below the fold. It fitted
+# until every tab kept its label and the bar grew — which is the kind of thing
+# that moves a button off screen without changing a line of the screen's own code.
+- scrollUntilVisible:
+    element:
+      id: 'student-notes-save'
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'student-notes-save'
 - extendedWaitUntil:

@@ -5,13 +5,20 @@ import type { Student } from './student';
 
 export type NewStudentInput = {
   name: string;
-  subject: string;
+  /**
+   * An id from the school's subject list.
+   *
+   * Optional: a student can be taken on before anybody has settled what they
+   * are studying, which is how the free-text field behaved too.
+   */
+  subjectId?: string;
 };
 
 /** Only the fields being changed. */
 export type StudentPatch = {
   name?: string;
-  subject?: string;
+  /** An id moves them; an explicit `null` clears the subject. */
+  subjectId?: string | null;
   paidLessonsLeft?: number;
 };
 
@@ -39,6 +46,12 @@ export const httpStudentsClient: StudentsClient = {
 
 let localId = 0;
 
+/** The subject row a form named by id. Null for none and for an unknown one. */
+function subjectById(id: string | null | undefined) {
+  if (!id) return null;
+  return fixtures.subjects.find((subject) => subject.id === id) ?? null;
+}
+
 export const mockStudentsClient: StudentsClient = {
   async list() {
     return [...fixtures.students];
@@ -50,24 +63,29 @@ export const mockStudentsClient: StudentsClient = {
       id: `local-student-${localId}`,
       tutorId: 'me',
       name: input.name.trim(),
-      subject: input.subject.trim(),
+      subject: subjectById(input.subjectId),
       paidLessonsLeft: 0,
     };
   },
 
   async update(id, patch) {
     const existing = fixtures.students.find((student) => student.id === id);
+    const base = existing ?? {
+      id,
+      tutorId: 'me',
+      name: '',
+      subject: null,
+      paidLessonsLeft: 0,
+    };
+
     // The store applies the result, so echoing the merge is enough for the UI to
-    // behave exactly as it will against a server.
+    // behave exactly as it will against a server. `subjectId` is translated back
+    // into the row here, the way the server answers with it.
+    const { subjectId, ...rest } = patch;
     return {
-      ...(existing ?? {
-        id,
-        tutorId: 'me',
-        name: '',
-        subject: '',
-        paidLessonsLeft: 0,
-      }),
-      ...patch,
+      ...base,
+      ...rest,
+      ...(subjectId === undefined ? {} : { subject: subjectById(subjectId) }),
     };
   },
 

@@ -50,10 +50,11 @@ tags:
     id: 'group-name'
 - inputText: ${GROUP}
 - runFlow: subflows/dismiss-keyboard.yaml
-- tapOn:
-    id: 'group-subject'
-- inputText: 'Mathematics'
-- runFlow: subflows/dismiss-keyboard.yaml
+- runFlow:
+    file: subflows/pick-subject.yaml
+    env:
+      PICKER: 'group-subject'
+      SUBJECT: 'Mathematics'
 - tapOn:
     id: 'group-level'
 - inputText: 'B1'

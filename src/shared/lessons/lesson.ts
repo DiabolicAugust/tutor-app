@@ -1,5 +1,6 @@
 import type { AttendanceStatus } from '@/shared/gradebook/attendance';
 import { addMinutes, isSameDay } from '@/shared/lib/date';
+import type { Subject } from '@/shared/subjects/subject';
 
 /**
  * The core scheduling entity. Defined before any backend exists so screens are
@@ -21,7 +22,14 @@ export type Lesson = {
   studentId: string | null;
   /** The group taught, for a group lesson. Null for a one-to-one lesson. */
   group?: LessonGroup | null;
-  subject: string;
+  /**
+   * What was taught.
+   *
+   * Kept as the row, which is what lets a lesson from last term still name a
+   * subject the school has since retired. Null for a lesson booked without one
+   * — the calendar shows those as simply a lesson.
+   */
+  subject: Subject | null;
   /** ISO 8601 — the wire format, parsed at the edges. */
   startsAt: string;
   durationMinutes: number;
@@ -51,7 +59,7 @@ export type Lesson = {
 export type LessonGroup = {
   id: string;
   name: string;
-  subject: string;
+  subject: Subject | null;
   level: string | null;
   members: { student: { id: string; name: string } }[];
 };

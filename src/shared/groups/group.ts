@@ -1,3 +1,5 @@
+import type { Subject } from '@/shared/subjects/subject';
+
 /**
  * A set of students taught together.
  *
@@ -12,7 +14,7 @@ export type GroupMember = {
   student: {
     id: string;
     name: string;
-    subject: string;
+    subject: Subject | null;
     paidLessonsLeft: number;
   };
 };
@@ -20,7 +22,14 @@ export type GroupMember = {
 export type Group = {
   id: string;
   name: string;
-  subject: string;
+  /**
+   * What the group studies.
+   *
+   * Nullable on the wire like everywhere else, though a group created through
+   * this app always has one — the form requires it, and a group is defined by
+   * its subject.
+   */
+  subject: Subject | null;
   /** Free text — "B1", "Beginners", "Year 9". Null when the school does not use one. */
   level: string | null;
   /** Whose group it is; a tutor sees their own, an admin the school's. */
@@ -30,7 +39,8 @@ export type Group = {
 
 export type NewGroupInput = {
   name: string;
-  subject: string;
+  /** An id from the school's list, not a name typed in. */
+  subjectId: string;
   level?: string;
 };
 
@@ -51,7 +61,13 @@ export function membersOf(group: Group): GroupMember['student'][] {
  *
  * The level is worth showing when there is one, because two groups called
  * "Tuesdays" are told apart by it and by nothing else.
+ *
+ * Returns an empty string for a group with neither, rather than the word "null":
+ * callers put this straight into a description, and a group created through this
+ * app always has a subject, so the empty case is only ever data from elsewhere.
  */
 export function describeGroup(group: Group): string {
-  return group.level ? `${group.subject} · ${group.level}` : group.subject;
+  const subject = group.subject?.name ?? '';
+  if (!group.level) return subject;
+  return subject ? `${subject} · ${group.level}` : group.level;
 }

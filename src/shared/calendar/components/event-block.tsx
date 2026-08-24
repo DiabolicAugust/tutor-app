@@ -94,7 +94,9 @@ export function EventBlock({
       accessibilityLabel={[
         format.time(lessonStart(lesson)),
         label,
-        isGroup ? t('gradebook.journal.groupOf', { count: members.length }) : lesson.subject,
+        isGroup
+          ? t('gradebook.journal.groupOf', { count: members.length })
+          : (lesson.subject?.name ?? t('lessons.title')),
         // Spoken, because a coloured dot is invisible to a screen reader and this
         // one carries the only information on the block that asks for action.
         unwritten ? t('gradebook.journal.needsWriteUp') : undefined,
@@ -129,7 +131,7 @@ export function EventBlock({
             {format.time(lessonStart(lesson))} ·{' '}
             {isGroup
               ? t('gradebook.journal.groupOf', { count: members.length })
-              : lesson.subject}
+              : (lesson.subject?.name ?? t('lessons.title'))}
           </Text>
         ) : null}
 

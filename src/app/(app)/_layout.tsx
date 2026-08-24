@@ -8,6 +8,7 @@ import { usePushReceiver, usePushRegistration } from '@/shared/push';
 import { useLessonReminders } from '@/shared/reminders';
 import { SchoolProvider } from '@/shared/school';
 import { StudentsProvider } from '@/shared/students';
+import { SubjectsProvider } from '@/shared/subjects';
 import { useTheme } from '@/shared/theme';
 import { TutorialOverlay, TutorialProvider } from '@/shared/tutorial';
 import { UserConfigProvider } from '@/shared/user-config';
@@ -37,21 +38,26 @@ export default function AppLayout() {
     // lesson refers to a student and the feed needs their names.
     <UserConfigProvider>
       <SchoolProvider>
-        <StudentsProvider>
-          <LessonsProvider>
-            <NotificationsProvider>
-              <TabPreferencesProvider>
-                <TutorialProvider>
-                  <AppStack />
-                  {/* After the stack, not before: later siblings paint on top,
-                      and a tour underneath the app it explains explains
-                      nothing. */}
-                  <TutorialOverlay />
-                </TutorialProvider>
-              </TabPreferencesProvider>
-            </NotificationsProvider>
-          </LessonsProvider>
-        </StudentsProvider>
+        {/* Above students and lessons: what the school teaches is a property of
+            the school, and every form that takes somebody on or books an hour
+            needs the list before it can offer anything. */}
+        <SubjectsProvider>
+          <StudentsProvider>
+            <LessonsProvider>
+              <NotificationsProvider>
+                <TabPreferencesProvider>
+                  <TutorialProvider>
+                    <AppStack />
+                    {/* After the stack, not before: later siblings paint on top,
+                        and a tour underneath the app it explains explains
+                        nothing. */}
+                    <TutorialOverlay />
+                  </TutorialProvider>
+                </TabPreferencesProvider>
+              </NotificationsProvider>
+            </LessonsProvider>
+          </StudentsProvider>
+        </SubjectsProvider>
       </SchoolProvider>
     </UserConfigProvider>
   );

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { useT } from '@/shared/i18n';
+import { SubjectPicker } from '@/shared/subjects';
 import { createStyles } from '@/shared/theme';
 import { Button, ModalSheet, Text, TextField, motion } from '@/shared/ui';
 
@@ -32,11 +33,11 @@ export type StudentFormSheetProps = {
  * removal warns you about.
  */
 /** The fields, as one value so reseeding them is one assignment. */
-type Draft = { name: string; subject: string; paidLessons: string };
+type Draft = { name: string; subjectId: string | null; paidLessons: string };
 
 const draftFor = (student: Student | null): Draft => ({
   name: student?.name ?? '',
-  subject: student?.subject ?? '',
+  subjectId: student?.subject?.id ?? null,
   paidLessons: String(student?.paidLessonsLeft ?? 0),
 });
 
@@ -63,8 +64,8 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
   const current = state.key === key ? state : { key, draft: draftFor(student) };
   if (state.key !== key) setState(current);
 
-  const { name, subject, paidLessons } = current.draft;
-  const set = (field: keyof Draft, value: string) =>
+  const { name, subjectId, paidLessons } = current.draft;
+  const set = <K extends keyof Draft>(field: K, value: Draft[K]) =>
     setState((previous) => ({
       ...previous,
       draft: { ...previous.draft, [field]: value },
@@ -87,11 +88,14 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
       if (student) {
         await updateStudent(student.id, {
           name: name.trim(),
-          subject: subject.trim(),
+          // Sent even when unchanged, and `null` when cleared: the form owns the
+          // whole record while it is open, so "not mentioned" would mean this
+          // field could never be emptied.
+          subjectId,
           paidLessonsLeft: Number(paidLessons) || 0,
         });
       } else {
-        await addStudent(name, subject);
+        await addStudent(name, subjectId);
       }
       onClose();
     } catch {
@@ -153,12 +157,14 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
         autoFocus
       />
 
-      <TextField
+      <SubjectPicker
         testID="student-subject"
         label={t('studentsAdmin.subject')}
-        value={subject}
-        onChangeText={(value) => set('subject', value)}
-        placeholder={t('studentsAdmin.subjectPlaceholder')}
+        value={subjectId}
+        onChange={(next) => set('subjectId', next)}
+        // Offered even if the school has retired it, so editing this student's
+        // name does not quietly move them off it.
+        current={student?.subject ?? null}
       />
 
       {/* Only when editing: a new student has no balance yet, and a field

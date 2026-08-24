@@ -158,7 +158,9 @@ export default function StudentsTab() {
                   <ListRow
                     testID={`student-row-${index}`}
                     label={student.name}
-                    description={student.subject}
+                    // Undefined rather than a placeholder: a student with no
+                    // subject yet gets one line, not a line saying nothing.
+                    description={student.subject?.name}
                     value={t('event.lessonsLeft', { count: student.paidLessonsLeft })}
                     // The object form rather than an interpolated path: typed
                     // routes only accept the literal, and this is also what

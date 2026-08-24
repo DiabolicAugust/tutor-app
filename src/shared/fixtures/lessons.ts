@@ -3,6 +3,7 @@ import type { AttendanceStatus } from '@/shared/gradebook/attendance';
 import type { Lesson, LessonGroup } from '@/shared/lessons/lesson';
 
 import { fixtureGroups } from './groups';
+import { fixtureSubject } from './subjects';
 import { fixtureOwnCalendarId } from '@/shared/tutors/tutor';
 
 /**
@@ -71,6 +72,7 @@ let sequence = 0;
 function lesson(
   tutorId: string,
   studentId: string,
+  /** A subject *name*, resolved to the school's row. */
   subject: string,
   startsAt: string,
   durationMinutes: number,
@@ -82,7 +84,7 @@ function lesson(
     id: `fixture-${sequence}`,
     tutorId,
     studentId,
-    subject,
+    subject: fixtureSubject(subject),
     startsAt,
     durationMinutes,
     status,
@@ -120,7 +122,7 @@ function groupLesson(
     tutorId: fixtureOwnCalendarId,
     studentId: null,
     group,
-    subject,
+    subject: fixtureSubject(subject),
     startsAt,
     durationMinutes,
     status,
@@ -179,7 +181,10 @@ export const fixtureLessons: Lesson[] = [
   lesson(fixtureOwnCalendarId, 'student-ivan', 'Mathematics', onDay(1, 9, 30), 60),
   lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(1, 15), 60),
   lesson('tutor-2', 'student-kateryna', 'English', onDay(1, 10), 45),
-  lesson('tutor-4', 'student-oleh', 'Chemistry', onDay(1, 13), 60),
+  // Chemistry is retired, so this one is history: hiding a subject is refused
+  // while anything is still booked in it, and fixtures that contradict the
+  // server teach the wrong thing.
+  lesson('tutor-4', 'student-oleh', 'Chemistry', onDay(-4, 13), 60, 'completed'),
   lesson(fixtureOwnCalendarId, 'student-sofia', 'Geometry', onDay(2, 11), 60),
   lesson('tutor-3', 'student-ihor', 'Physics', onDay(2, 17), 90),
   lesson(fixtureOwnCalendarId, 'student-petro', 'Algebra', onDay(4, 12), 45),

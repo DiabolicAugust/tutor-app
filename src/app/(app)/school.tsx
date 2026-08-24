@@ -6,6 +6,7 @@ import { allAddons, describeAddon, useAddons, type AddonKey } from '@/shared/add
 import { useCurrentUser } from '@/shared/auth';
 import { useFormat, useT } from '@/shared/i18n';
 import { useSchool, type SchoolMember } from '@/shared/school';
+import { SubjectsCard } from '@/shared/subjects';
 import { createStyles } from '@/shared/theme';
 import { Button, Card, Icon, ListRow, ModalSheet, Text, TextField, motion } from '@/shared/ui';
 
@@ -177,6 +178,11 @@ export default function SchoolScreen() {
             ))
           )}
         </Card>
+
+        {/* Admin-only, and by role rather than by capability: what a school
+            teaches is the vocabulary every record is written in, so changing it
+            is not a job to hand out. */}
+        {isAdmin ? <SubjectsCard /> : null}
 
         {/* Each action appears only for the capability that permits it. */}
         {canInvite ? (

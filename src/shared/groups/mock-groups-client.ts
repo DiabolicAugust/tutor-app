@@ -27,6 +27,16 @@ function find(id: string): Group {
   return group;
 }
 
+/**
+ * The subject row a form named by id.
+ *
+ * Null for an id the fixtures do not hold, which is what the server would
+ * effectively answer too — it refuses an unknown id outright.
+ */
+function subjectById(id: string) {
+  return fixtures.subjects.find((subject) => subject.id === id) ?? null;
+}
+
 function replace(updated: Group): Group {
   live = groups().map((group) => (group.id === updated.id ? updated : group));
   return updated;
@@ -42,7 +52,7 @@ export const mockGroupsClient: GroupsClient = {
     const group: Group = {
       id: `local-group-${localId}`,
       name: input.name.trim(),
-      subject: input.subject.trim(),
+      subject: subjectById(input.subjectId),
       level: input.level?.trim() || null,
       tutorId: 'me',
       members: [],
@@ -56,7 +66,9 @@ export const mockGroupsClient: GroupsClient = {
     return replace({
       ...group,
       name: patch.name?.trim() ?? group.name,
-      subject: patch.subject?.trim() ?? group.subject,
+      // A group is defined by what it studies, so an absent id means unchanged
+      // rather than cleared — the same rule the API applies.
+      subject: patch.subjectId ? subjectById(patch.subjectId) : group.subject,
       // Distinguishes "not mentioned" from "cleared", the same way the API does.
       level: patch.level === undefined ? group.level : patch.level.trim() || null,
     });
