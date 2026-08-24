@@ -42,3 +42,9 @@ example
 # generated native folders
 /ios
 /android
+
+# Local environment. `EXPO_PUBLIC_*` values are inlined into the bundle and so
+# are public by definition, but the file is the wrong place to discover that
+# something private was put in it.
+.env
+.env.local
