@@ -84,6 +84,9 @@ export function EventBlock({
 
   return (
     <Pressable
+      // Every block carries the same handle, so a flow can count what is on a
+      // day; the label text is what identifies one lesson from another.
+      testID="event-block"
       style={[styles.block, { backgroundColor: background }]}
       onPress={handlePress}
       accessibilityRole={handlePress ? 'button' : undefined}

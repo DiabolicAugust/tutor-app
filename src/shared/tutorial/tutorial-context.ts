@@ -23,18 +23,14 @@ export type TutorialValue = {
    */
   measureAnchor: (anchor: TutorialAnchor, rect: AnchorRect | null) => void;
   /**
-   * Where the current step's anchor is, **relative to the overlay**.
+   * Where the current step's anchor is, in window coordinates.
    *
-   * Anchors measure themselves in window coordinates, because that is the only
-   * frame they can know about from inside a scroll view. The overlay is not the
-   * window, though — it is a child of the signed-in layout, which on Android sits
-   * below the status bar unless the app is drawing edge to edge. Reporting the
-   * overlay's own origin lets the difference be subtracted rather than assumed to
-   * be zero, which is what made every highlight land low by a status bar.
+   * Passed through as measured. The overlay is drawn edge to edge from the
+   * window's origin, so its coordinates and the window's are the same ones —
+   * a fact worth stating, because correcting for a difference that is not there
+   * is what put every highlight a status bar away from its control.
    */
   anchorRect: AnchorRect | null;
-  /** Called by the overlay once it knows where it is in the window. */
-  setOverlayOrigin: (origin: { x: number; y: number }) => void;
 };
 
 export const TutorialContext = createContext<TutorialValue | null>(null);

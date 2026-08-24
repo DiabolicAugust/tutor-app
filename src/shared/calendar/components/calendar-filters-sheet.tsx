@@ -26,7 +26,12 @@ export function CalendarFiltersSheet({
   const visibleCount = calendarOwners.filter((tutor) => isCalendarVisible(tutor.id)).length;
 
   return (
-    <ModalSheet visible={visible} onClose={onClose} title={t('filters.title')}>
+    <ModalSheet
+      visible={visible}
+      onClose={onClose}
+      title={t('filters.title')}
+      testID="filters-sheet"
+    >
       <Text variant="label" color="textSecondary">
         {t('filters.calendars')}
       </Text>
@@ -34,9 +39,10 @@ export function CalendarFiltersSheet({
         {t('filters.calendarsHint')}
       </Text>
 
-      {calendarOwners.map((tutor) => (
+      {calendarOwners.map((tutor, index) => (
         <ListRow
           key={tutor.id}
+          testID={`filters-calendar-${index}`}
           label={tutor.name}
           description={tutor.speciality}
           swatchColor={eventColors[tutor.colorIndex % eventColors.length].solid}
@@ -46,7 +52,7 @@ export function CalendarFiltersSheet({
         />
       ))}
 
-      <Text variant="caption" color="textMuted">
+      <Text testID="filters-visible-count" variant="caption" color="textMuted">
         {/* Counted against the calendars that exist, not the ids in storage.
             The visible list is persisted, so it outlives the calendars it names
             — a build that once had colleagues left their ids behind, and the

@@ -1,0 +1,20 @@
+# Pins the app to English for the run.
+#
+# Every flow that asserts on visible text would otherwise depend on the device's
+# language, and the emulator's is not the phone's. The switcher on the sign-in
+# screen is the only place this can be set before an account exists, and the
+# choice is persisted — so one call, after the state has been cleared, holds for
+# every flow that follows.
+#
+# Scrolled to rather than tapped blind: it sits in the sign-in screen's footer,
+# which is below the fold on a short screen and above it on a tall one.
+appId: com.foxacademy.app
+---
+- scrollUntilVisible:
+    element:
+      id: 'settings-language-en'
+    direction: DOWN
+    timeout: 20000
+- tapOn:
+    id: 'settings-language-en'
+- assertVisible: 'Welcome back'

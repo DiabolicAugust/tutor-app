@@ -1,4 +1,25 @@
-# Flows run in this order. `01-` and `02-` are deliberately first: they establish
-# the account the later flows need, and they cover the path that broke.
+# The suite, in the order it has to run.
+#
+# Listed one by one rather than as `*.yaml`, because the order is load-bearing:
+# every flow after 02 works inside the school that 02 opened, and the numbering
+# is the dependency. A glob sorts the same way today and stops doing so the first
+# time somebody adds `10-…` next to `09-…`.
+#
+# Everything under `subflows/` is deliberately absent: those are called with
+# `runFlow`, and running them on their own would fail for want of the arguments
+# their callers pass.
 flows:
-  - '*.yaml'
+  - 01-first-launch.yaml
+  - 02-open-a-school.yaml
+  - 03-tour-again.yaml
+  - 04-sign-out-and-in.yaml
+  - 05-students.yaml
+  - 06-groups.yaml
+  - 07-book-a-lesson.yaml
+  - 08-calendar.yaml
+  - 09-write-up-a-lesson.yaml
+  - 10-grades-and-notes.yaml
+  - 11-settings.yaml
+  - 12-school-management.yaml
+  - 13-files.yaml
+  - 14-refresh.yaml

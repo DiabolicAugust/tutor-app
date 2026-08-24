@@ -1,0 +1,108 @@
+# Groups: made, filled in one pass, edited, and emptied.
+#
+# Filling a group used to be two visits to the same sheet — create it, reopen it,
+# add people — and the second visit is the one people forget. The picks are now
+# held with the draft and applied the moment the group has an id, so the first
+# half of this flow creates a group *with* somebody in it and the count on the
+# roster is what proves the membership was actually written.
+appId: com.foxacademy.app
+name: Create a group with members, then change it
+tags:
+  - roster
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- assertVisible:
+    id: 'screen-students'
+
+# A second student, so a group has more than one person to be about.
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+- runFlow:
+    file: subflows/add-student.yaml
+    env:
+      STUDENT: ${STUDENT_TWO}
+      SUBJECT: 'Mathematics'
+
+- tapOn:
+    id: 'roster-view-groups'
+- extendedWaitUntil:
+    visible:
+      id: 'groups-empty'
+    timeout: 60000
+
+- tapOn:
+    id: 'students-add'
+- assertVisible:
+    id: 'group-sheet'
+# Name and subject are both required, so the button stays disabled until there is
+# something to save. Tapping it must do nothing rather than send a blank group.
+- tapOn:
+    id: 'group-save'
+- assertVisible:
+    id: 'group-sheet'
+
+- tapOn:
+    id: 'group-name'
+- inputText: ${GROUP}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'group-subject'
+- inputText: 'Mathematics'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'group-level'
+- inputText: 'B1'
+- runFlow: subflows/dismiss-keyboard.yaml
+
+# Picked before the group exists — the part that used to be impossible.
+- assertVisible:
+    id: 'group-members-empty'
+- tapOn:
+    id: 'group-add-member'
+- tapOn:
+    id: 'group-pick-0'
+- assertVisible:
+    id: 'group-member-0'
+- tapOn:
+    id: 'group-add-member'
+- tapOn:
+    id: 'group-pick-0'
+- assertVisible:
+    id: 'group-member-1'
+
+- tapOn:
+    id: 'group-save'
+- extendedWaitUntil:
+    visible: ${GROUP}
+    timeout: 60000
+# The count comes from the server's own membership rows, so this is the assertion
+# that the picks were applied rather than merely shown.
+- assertVisible: '2 students'
+
+# Reopening a *new* group must not carry the last one's picks.
+- tapOn:
+    id: 'students-add'
+- assertVisible:
+    id: 'group-members-empty'
+- tapOn:
+    id: 'group-sheet-close'
+
+# Editing the group: take one student out, and the roster follows. The first is
+# removed rather than the second, so the group is left holding the student who has
+# no lesson of their own — which is what makes flow 08's expanded block prove
+# something rather than repeat what is already on screen.
+- tapOn: ${GROUP}
+- assertVisible:
+    id: 'group-sheet'
+- tapOn:
+    id: 'group-member-remove-0'
+- tapOn:
+    id: 'group-sheet-close'
+- extendedWaitUntil:
+    visible: '1 student'
+    timeout: 30000

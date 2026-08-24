@@ -1,0 +1,72 @@
+# Pulling to refresh, and leaving mid-refresh.
+#
+# The second half is the reported bug: a refresh that finishes while the screen is
+# off-stage never reached the native control, so coming back showed a spinner over
+# data that had already arrived. There is no handle on a `RefreshControl` to assert
+# against, so the check is that the screen is usable — a stuck spinner sits over
+# the top of the list and swallows the first tap.
+appId: com.foxacademy.app
+name: Pull to refresh, and leave while it runs
+tags:
+  - navigation
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+
+- swipe:
+    start: '50%,35%'
+    end: '50%,85%'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+
+# Away and back while it is still running.
+- swipe:
+    start: '50%,35%'
+    end: '50%,85%'
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+# The tap that a stuck spinner would have eaten.
+- tapOn: ${STUDENT}
+- assertVisible:
+    id: 'screen-student'
+- back
+
+# And the same on the news feed, where half the items are derived from the
+# schedule and both have to be refreshed together.
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'News'
+- assertVisible:
+    id: 'screen-news'
+- swipe:
+    start: '50%,35%'
+    end: '50%,85%'
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'News'
+- assertVisible:
+    id: 'screen-news'
+- tapOn:
+    id: 'notification-adminAnnouncement'

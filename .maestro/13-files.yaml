@@ -1,0 +1,100 @@
+# Adding a real file, opening it, sending it on, and taking it away.
+#
+# The picker is another app's UI, which is why this was left out of the suite for
+# a while — and why the upload failing on a device went unnoticed. Driving it is
+# worth the fragility: the picker is the only way a file gets in, so a flow that
+# stops at "the button exists" tests the one part that was never broken.
+#
+# The runner pushes the file this expects into the device's Downloads before the
+# suite starts, and passes its name as UPLOAD.
+appId: com.foxacademy.app
+name: Add a file to the library and to a student
+tags:
+  - files
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-files'
+- assertVisible:
+    id: 'screen-files'
+- assertVisible: 'My files'
+
+# An empty shelf, said plainly. A failed load would show an error instead, so
+# asserting the empty state is asserting the request succeeded.
+- extendedWaitUntil:
+    visible:
+      id: 'library-empty'
+    timeout: 60000
+
+- tapOn:
+    id: 'library-add'
+- runFlow:
+    file: subflows/pick-a-file.yaml
+    env:
+      UPLOAD: ${UPLOAD}
+
+# The row comes back from the server with the size it actually stored, so its
+# presence is the proof the bytes arrived — and the absence of the error line is
+# the assertion the reported failure is gone.
+#
+# `library-open-0` first, and it matters: the file's name is also on screen while
+# the picker is still up, so asserting the name alone passed once while nothing
+# had been uploaded at all.
+- extendedWaitUntil:
+    visible:
+      id: 'library-open-0'
+    timeout: 90000
+- assertNotVisible:
+    id: 'library-error'
+# The name the server stored, which is the picked one and not the cache's
+# generated one — `File.upload` sends the name on disk.
+- assertVisible: ${UPLOAD}
+- assertVisible:
+    id: 'library-share-0'
+
+# Opening a text file has no preview in the app, so it goes to the OS. Asserting
+# the app did not report a failure is as far as a flow can follow it.
+- assertNotVisible:
+    id: 'library-open-error'
+
+# Removal is offered only for what you added, which is everything here.
+- tapOn:
+    id: 'library-remove-0'
+- extendedWaitUntil:
+    visible:
+      id: 'library-empty'
+    timeout: 60000
+
+# --- the same file, against a student ---
+# The library is pushed over the tab bar, so leaving it is the only way back to
+# the tabs — the bar is not there to tap while this screen is up.
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+- tapOn: ${STUDENT}
+- scrollUntilVisible:
+    element:
+      id: 'student-files-add'
+    direction: DOWN
+- tapOn:
+    id: 'student-files-add'
+- runFlow:
+    file: subflows/pick-a-file-for-student.yaml
+    env:
+      UPLOAD: ${UPLOAD}
+- extendedWaitUntil:
+    visible:
+      id: 'student-files-open-0'
+    timeout: 90000
+- assertNotVisible:
+    id: 'student-files-error'
+- assertVisible: ${UPLOAD}

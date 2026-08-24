@@ -1,0 +1,15 @@
+# Signs in from the sign-in screen. Expects EMAIL and PASSWORD.
+appId: com.foxacademy.app
+---
+- assertVisible:
+    id: 'signin-email'
+- tapOn:
+    id: 'signin-email'
+- inputText: ${EMAIL}
+- runFlow: dismiss-keyboard.yaml
+- tapOn:
+    id: 'signin-password'
+- inputText: ${PASSWORD}
+- runFlow: dismiss-keyboard.yaml
+- tapOn:
+    id: 'signin-submit'

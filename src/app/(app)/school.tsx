@@ -103,10 +103,10 @@ export default function SchoolScreen() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} testID="screen-school">
         {sentTo !== null ? (
           <Animated.View entering={motion.listEnter()} exiting={motion.messageExit()}>
-            <Card style={styles.confirmation}>
+            <Card style={styles.confirmation} testID="announcement-sent">
               <Text variant="bodySm" color="success">
                 {t('announcement.sent', { count: sentTo })}
               </Text>
@@ -120,13 +120,14 @@ export default function SchoolScreen() {
           ) : tutors.length === 0 ? (
             // "Loading" for a school that simply has nobody in it yet is the
             // app saying it is working when it has finished.
-            <Text variant="bodySm" color="textMuted">
+            <Text testID="school-tutors-empty" variant="bodySm" color="textMuted">
               {t('school.tutorsEmpty')}
             </Text>
           ) : (
-            tutors.map((tutor) => (
+            tutors.map((tutor, index) => (
               <ListRow
                 key={tutor.id}
+                testID={`school-tutor-${index}`}
                 label={tutor.id === user.id ? t('school.you', { name: tutor.name }) : tutor.name}
                 description={tutor.email}
                 value={
@@ -153,11 +154,14 @@ export default function SchoolScreen() {
           </Text>
 
           {invitations.length === 0 ? (
-            <Text color="textSecondary">{t('school.noInvitations')}</Text>
+            <Text testID="school-no-invitations" color="textSecondary">
+              {t('school.noInvitations')}
+            </Text>
           ) : (
-            invitations.map((invitation) => (
+            invitations.map((invitation, index) => (
               <Animated.View
                 key={invitation.id}
+                testID={`school-invitation-${index}`}
                 entering={motion.listEnter()}
                 layout={motion.listReflow()}
               >
@@ -176,11 +180,17 @@ export default function SchoolScreen() {
 
         {/* Each action appears only for the capability that permits it. */}
         {canInvite ? (
-          <Button label={t('school.inviteTutor')} fullWidth onPress={() => setSheet('invite')} />
+          <Button
+            testID="school-invite"
+            label={t('school.inviteTutor')}
+            fullWidth
+            onPress={() => setSheet('invite')}
+          />
         ) : null}
 
         {canAnnounce ? (
           <Button
+            testID="school-announce"
             label={t('announcement.compose')}
             variant="secondary"
             fullWidth
@@ -193,8 +203,10 @@ export default function SchoolScreen() {
         visible={sheet === 'invite'}
         onClose={closeSheet}
         title={t('school.inviteTutor')}
+        testID="invite-sheet"
         footer={
           <Button
+            testID="invite-send"
             label={t('school.sendInvite')}
             fullWidth
             size="lg"
@@ -208,6 +220,7 @@ export default function SchoolScreen() {
         </Text>
 
         <TextField
+          testID="invite-email"
           label={t('auth.email')}
           value={email}
           onChangeText={(value) => {
@@ -227,8 +240,10 @@ export default function SchoolScreen() {
         visible={sheet === 'announce'}
         onClose={closeSheet}
         title={t('announcement.compose')}
+        testID="announce-sheet"
         footer={
           <Button
+            testID="announce-send"
             label={t('announcement.send')}
             fullWidth
             size="lg"
@@ -242,6 +257,7 @@ export default function SchoolScreen() {
         </Text>
 
         <TextField
+          testID="announce-message"
           label={t('announcement.message')}
           value={message}
           onChangeText={(value) => {
@@ -261,6 +277,7 @@ export default function SchoolScreen() {
         visible={sheet === 'member' && member !== null}
         onClose={closeSheet}
         title={member?.name ?? ''}
+        testID="member-sheet"
       >
         <Text variant="label" color="textSecondary">
           {t('addons.title')}
@@ -280,6 +297,10 @@ export default function SchoolScreen() {
                     color={member.addons.includes(key) ? 'brand' : 'textMuted'}
                   />
                   <ListRow
+                    testID={`member-addon-${key}`}
+                    // This row shares its line with the icon beside it, so
+                    // reaching outwards would paint the highlight over it.
+                    edgeToEdge={false}
                     label={t(descriptor.titleKey)}
                     description={t(descriptor.descriptionKey)}
                     selectable

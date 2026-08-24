@@ -1,0 +1,103 @@
+# Booking, for a student and for a group — and refusing to book for nobody.
+#
+# The lesson that appears on the grid is the assertion that matters. Every lesson
+# used to be filed against a fixture constant instead of the signed-in tutor, so
+# bookings were created, accepted, and then filtered off the calendar by the very
+# filter that decides whose schedule is shown: the request succeeded and the app
+# looked like it had done nothing.
+appId: com.foxacademy.app
+name: Book a lesson for a student and for a group
+tags:
+  - calendar
+---
+- runFlow: subflows/wait-for-app.yaml
+
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+
+# The form re-reads the roster when it opens, so a student added on the previous
+# screen is here — it used to insist there was nobody to book for.
+- extendedWaitUntil:
+    visible:
+      id: 'event-student-0'
+    timeout: 60000
+
+# Nobody picked is a refusal with a reason, not a lesson filed against no one.
+- tapOn:
+    id: 'event-create'
+- assertVisible:
+    id: 'event-error'
+- assertVisible:
+    id: 'event-sheet'
+
+- tapOn: ${STUDENT}
+- tapOn:
+    id: 'event-subject'
+- eraseText
+- inputText: 'Algebra'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'event-time-450'
+- tapOn:
+    id: 'event-duration-45'
+- tapOn:
+    id: 'event-create'
+- assertNotVisible:
+    id: 'event-sheet'
+
+# 07:30 is the first half-hour the grid renders, so it is reliably above wherever
+# the view opened — the grid starts near the current hour.
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 30000
+
+# --- the same again, for a group ---
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+- tapOn:
+    id: 'event-taught-group'
+- extendedWaitUntil:
+    visible:
+      id: 'event-group-0'
+    timeout: 30000
+
+# Switching to groups clears the student, so creating now has nothing to file.
+- tapOn:
+    id: 'event-create'
+- assertVisible:
+    id: 'event-error'
+
+- tapOn:
+    id: 'event-group-0'
+- tapOn:
+    id: 'event-time-480'
+- tapOn:
+    id: 'event-create'
+- assertNotVisible:
+    id: 'event-sheet'
+
+- scrollUntilVisible:
+    element:
+      text: ${GROUP}
+    direction: UP
+    timeout: 30000
+
+# And the booking has to have reached the server, not just the screen.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 60000
+- assertVisible: ${GROUP}

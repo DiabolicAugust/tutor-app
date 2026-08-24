@@ -28,6 +28,12 @@ export type FileSectionProps = {
   /** Card heading. A student's documents read differently from a shelf. */
   title?: string;
   emptyHint?: string;
+  /**
+   * Test handle prefix. Two of these can be on one screen — a student's page
+   * shows their documents, and the library shows the shelf — so the handles are
+   * namespaced by the caller rather than fixed here.
+   */
+  testID?: string;
 };
 
 /**
@@ -39,7 +45,12 @@ export type FileSectionProps = {
  * contracts and spreadsheets and this app has no business rendering a `.docx`
  * when the device already knows which app does.
  */
-export function FileSection({ source, title, emptyHint }: FileSectionProps) {
+export function FileSection({
+  source,
+  title,
+  emptyHint,
+  testID = 'files',
+}: FileSectionProps) {
   const { t } = useT();
   const format = useFormat();
   const styles = useStyles();
@@ -106,15 +117,17 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
   };
 
   return (
-    <Card title={title ?? t('files.title')}>
+    <Card title={title ?? t('files.title')} testID={testID}>
       {isLoading ? (
-        <Text color="textSecondary">{t('common.loading')}</Text>
+        <Text testID={`${testID}-loading`} color="textSecondary">
+          {t('common.loading')}
+        </Text>
       ) : files.length === 0 ? (
-        <Text variant="bodySm" color="textMuted">
+        <Text testID={`${testID}-empty`} variant="bodySm" color="textMuted">
           {emptyHint ?? t('files.empty')}
         </Text>
       ) : (
-        files.map((file) => (
+        files.map((file, index) => (
           <Animated.View
             key={file.id}
             style={styles.row}
@@ -123,6 +136,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
             layout={motion.listReflow()}
           >
             <Pressable
+              testID={`${testID}-open-${index}`}
               style={styles.open}
               onPress={() => void open(file)}
               accessibilityRole="button"
@@ -142,6 +156,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
               </View>
             </Pressable>
             <IconButton
+              testID={`${testID}-share-${index}`}
               name={icons.share}
               accessibilityLabel={t('files.share', { name: file.originalName })}
               onPress={() => void share(file)}
@@ -151,6 +166,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
                 action that fails is worse than one that is not offered. */}
             {file.uploadedById === user.id ? (
               <IconButton
+                testID={`${testID}-remove-${index}`}
                 name={icons.close}
                 accessibilityLabel={t('files.remove')}
                 onPress={() => void remove(file.id)}
@@ -161,6 +177,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
       )}
 
       <Button
+        testID={`${testID}-add`}
         label={t('files.add')}
         variant="secondary"
         fullWidth
@@ -173,7 +190,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
           {/* Named rather than generic: the three common reasons need three
               different responses, and one message for all of them tells nobody
               what to do next. */}
-          <Text variant="caption" color="danger">
+          <Text testID={`${testID}-error`} variant="caption" color="danger">
             {t(failureKeys[failure ?? 'unknown'])}
           </Text>
         </Animated.View>
@@ -181,7 +198,11 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
 
       {openFailed ? (
         <Animated.View entering={motion.messageEnter()}>
-          <Text variant="caption" color={openFailed === 'unavailable' ? 'warning' : 'danger'}>
+          <Text
+            testID={`${testID}-open-error`}
+            variant="caption"
+            color={openFailed === 'unavailable' ? 'warning' : 'danger'}
+          >
             {t(openFailed === 'unavailable' ? 'files.openUnavailable' : 'files.openFailed')}
           </Text>
         </Animated.View>

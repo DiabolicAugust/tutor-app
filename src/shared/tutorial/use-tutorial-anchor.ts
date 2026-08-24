@@ -5,17 +5,30 @@ import type { TutorialAnchor } from './tutorial';
 import { useTutorial } from './use-tutorial';
 
 /**
+ * When to measure, after a step changes.
+ *
+ * A step can change screen, and a screen that is still arriving reports the
+ * position it is passing through — so one measurement on the way in is not
+ * enough. Waiting for `onLayout` is not enough either: it does not fire for a
+ * view that has not moved. So the anchor is measured a few times across the
+ * transition and the last word wins. Identical rectangles are discarded by the
+ * provider, so the extra passes cost nothing but a comparison.
+ */
+const SETTLE_MS = [0, 120, 350, 700] as const;
+
+/**
  * Marks a view as something the tour can point at.
  *
  * Returns props to spread onto the view. Measuring happens only while a tour is
  * running, so a screen carrying anchors costs nothing on the many more occasions
  * when nobody is being shown around.
  *
- * Measured on **two** occasions, and both are needed. On layout, which covers
- * scrolling, rotation and a screen appearing; and when the current step changes,
- * because starting a tour is not a layout change — the view is already sitting
- * where it was, so waiting for `onLayout` alone meant the first step had nothing
- * to highlight until something happened to move.
+ * Window coordinates, reported as they come and **not** corrected against the
+ * overlay's own position. The overlay is drawn edge to edge from the window's
+ * origin, so the two frames are the same one; subtracting a separately measured
+ * overlay origin was an attempt to fix a status-bar-sized error that put a
+ * status-bar-sized error back in the other direction. Verified against the app:
+ * the overlay measures at 0,0 and every highlight lands on its control.
  *
  * @example
  * const anchor = useTutorialAnchor('calendar.add');
@@ -29,20 +42,23 @@ export function useTutorialAnchor(anchor: TutorialAnchor) {
   const measure = useCallback(() => {
     if (!isRunning) return;
 
-    // Window coordinates, not parent-relative: the overlay is a sibling of the
-    // whole screen, so anything relative to a scroll container would be wrong by
-    // however far that container had scrolled. The overlay subtracts its own
-    // origin to get back to its coordinates.
     ref.current?.measureInWindow((x, y, width, height) => {
+      // A view mid-transition can report no size at all, and a zero-sized
+      // highlight is worse than none: it draws a ring around a point.
       if (width === 0 && height === 0) return;
       measureAnchor(anchor, { x, y, width, height });
     });
   }, [anchor, isRunning, measureAnchor]);
 
-  // `measure` writes state only from `measureInWindow`'s callback, which runs
-  // after this effect has returned — so nothing is set synchronously here.
-  useEffect(measure, [measure, step?.id]);
+  // Nothing is set synchronously here: `measureInWindow` answers in a callback.
+  useEffect(() => {
+    if (!isRunning) return;
 
+    const timers = SETTLE_MS.map((delay) => setTimeout(measure, delay));
+    return () => timers.forEach(clearTimeout);
+  }, [measure, isRunning, step?.id]);
+
+  // Covers scrolling and rotation, which move an anchor without changing steps.
   const onLayout = useCallback((_event: LayoutChangeEvent) => measure(), [measure]);
 
   return { ref, onLayout, collapsable: false } as const;

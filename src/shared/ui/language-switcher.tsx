@@ -29,6 +29,7 @@ export function LanguageSwitcher() {
 
   return (
     <SegmentedControl<LanguageValue>
+      testID="settings-language"
       options={options}
       value={override ?? 'system'}
       onChange={(value) => setLocale(value === 'system' ? null : value)}

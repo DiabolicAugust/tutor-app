@@ -27,6 +27,11 @@ export default function AppTabs() {
       backgroundColor={colors.surfaceElevated}
       iconColor={{ default: colors.textMuted, selected: colors.brand }}
       indicatorColor={colors.brandSoft}
+      // Every tab keeps its name, not just the selected one. Android's default
+      // for four items is to label only the current tab, which leaves three
+      // icons to be guessed at — and made the tab bar read differently depending
+      // on where you happened to be.
+      labelVisibilityMode="labeled"
       // Both states must be given explicitly. `labelStyle` accepts either a
       // plain style or a { default, selected } pair — mixing the two silently
       // drops the top-level color, leaving unselected labels the platform
@@ -37,7 +42,12 @@ export default function AppTabs() {
       }}
     >
       {orderedTabs.map((tab) => (
-        <NativeTabs.Trigger key={tab.key} name={tab.key} hidden={!isVisible(tab.key)}>
+        <NativeTabs.Trigger
+          key={tab.key}
+          name={tab.key}
+          hidden={!isVisible(tab.key)}
+          testID={`tab-${tab.key}`}
+        >
           <NativeTabs.Trigger.Icon sf={tab.icon.ios} md={tab.icon.android} />
           <NativeTabs.Trigger.Label>{t(tab.labelKey)}</NativeTabs.Trigger.Label>
           {/* The badge is the point of a news tab: the only way the app can say

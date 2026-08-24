@@ -55,12 +55,14 @@ export function TabSettings() {
             <Text style={styles.label}>{label}</Text>
 
             <IconButton
+              testID={`settings-tab-${tab.key}-up`}
               name={icons.arrowUp}
               accessibilityLabel={`${label}: ${t('settings.navigation.moveUp')}`}
               onPress={() => move(tab.key, -1)}
               color={index === 0 ? 'textMuted' : 'textSecondary'}
             />
             <IconButton
+              testID={`settings-tab-${tab.key}-down`}
               name={icons.arrowDown}
               accessibilityLabel={`${label}: ${t('settings.navigation.moveDown')}`}
               onPress={() => move(tab.key, 1)}
@@ -73,6 +75,7 @@ export function TabSettings() {
               </View>
             ) : (
               <IconButton
+                testID={`settings-tab-${tab.key}-toggle`}
                 name={visible ? icons.check : icons.eyeOff}
                 accessibilityLabel={`${label}: ${t('settings.navigation.toggle')}`}
                 active={visible}
@@ -84,7 +87,12 @@ export function TabSettings() {
         );
       })}
 
-      <Button label={t('settings.navigation.reset')} variant="ghost" onPress={reset} />
+      <Button
+        testID="settings-tab-reset"
+        label={t('settings.navigation.reset')}
+        variant="ghost"
+        onPress={reset}
+      />
     </>
   );
 }

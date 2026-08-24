@@ -13,6 +13,8 @@ import {
 export type AttendancePickerProps = {
   value: AttendanceStatus | null;
   onChange: (value: AttendanceStatus) => void;
+  /** Test handle. Each answer becomes `${testID}-${status}`. */
+  testID?: string;
 };
 
 /**
@@ -37,7 +39,7 @@ const tone = {
  * labels are phrases, not words, and four of them squeezed across a phone are
  * four things to squint at when the point is one confident tap.
  */
-export function AttendancePicker({ value, onChange }: AttendancePickerProps) {
+export function AttendancePicker({ value, onChange, testID }: AttendancePickerProps) {
   const { t } = useT();
   const styles = useStyles();
   const { colors } = useTheme();
@@ -51,6 +53,7 @@ export function AttendancePicker({ value, onChange }: AttendancePickerProps) {
         return (
           <Pressable
             key={status}
+            testID={testID ? `${testID}-${status}` : undefined}
             onPress={() => onChange(status)}
             accessibilityRole="radio"
             accessibilityState={{ selected }}

@@ -1,0 +1,109 @@
+# Running the school: who is in it, who has been asked, and telling them things.
+#
+# The tutor list showing "Loading…" for a school that simply has nobody else in it
+# was the app claiming to be working after it had finished. The admin themselves
+# is always in that list, which is why the empty state here belongs to invitations
+# rather than to tutors.
+appId: com.foxacademy.app
+name: Invite a tutor and announce something
+tags:
+  - school
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-school'
+- assertVisible:
+    id: 'screen-school'
+
+# A school with one person in it lists nobody: the endpoint returns colleagues,
+# not the caller. Which is the assertion worth making — this said "Loading…" for a
+# school that had finished loading and simply had nobody else in it, and an empty
+# list that claims to be working is how an app looks broken.
+- extendedWaitUntil:
+    visible:
+      id: 'school-tutors-empty'
+    timeout: 60000
+- assertVisible:
+    id: 'school-no-invitations'
+
+# --- an invitation ---
+- tapOn:
+    id: 'school-invite'
+- assertVisible:
+    id: 'invite-sheet'
+- tapOn:
+    id: 'invite-email'
+- inputText: 'not-an-address'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'invite-send'
+- assertVisible: 'Enter a valid email address.'
+
+- tapOn:
+    id: 'invite-email'
+- eraseText
+- inputText: ${INVITEE}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'invite-send'
+- extendedWaitUntil:
+    notVisible:
+      id: 'invite-sheet'
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: 'school-invitation-0'
+    timeout: 30000
+- assertVisible: ${INVITEE}
+- assertVisible: 'Pending'
+
+# --- an announcement ---
+- tapOn:
+    id: 'school-announce'
+- assertVisible:
+    id: 'announce-sheet'
+- tapOn:
+    id: 'announce-message'
+- inputText: 'Hi'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'announce-send'
+- assertVisible: 'Write at least a few words.'
+
+- tapOn:
+    id: 'announce-message'
+- eraseText
+- inputText: 'Term ends on the 20th. Please confirm your last lessons.'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'announce-send'
+- extendedWaitUntil:
+    visible:
+      id: 'announcement-sent'
+    timeout: 60000
+
+# It appears in News for every member of the school, which is where the sender
+# sees it too — and is the only part of this a test can verify end to end.
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'News'
+- extendedWaitUntil:
+    visible: 'Term ends on the 20th. Please confirm your last lessons.'
+    timeout: 60000
+- assertVisible:
+    id: 'notification-adminAnnouncement'
+
+# Marking the feed read has to leave the button with nothing to do, which is also
+# its own confirmation.
+- assertVisible:
+    id: 'news-mark-all-read'
+- tapOn:
+    id: 'news-mark-all-read'
+- assertNotVisible:
+    id: 'news-mark-all-read'

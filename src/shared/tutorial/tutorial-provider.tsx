@@ -41,7 +41,6 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     pendingStore.read() === true && seenStore.read() !== true ? 0 : null,
   );
   const [anchors, setAnchors] = useState<Partial<Record<TutorialAnchor, AnchorRect>>>({});
-  const [overlayOrigin, setOverlayOrigin] = useState({ x: 0, y: 0 });
 
   const step = index === null ? null : (tour[index] ?? null);
 
@@ -113,24 +112,9 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const reportOverlayOrigin = useCallback((origin: { x: number; y: number }) => {
-    setOverlayOrigin((current) =>
-      current.x === origin.x && current.y === origin.y ? current : origin,
-    );
-  }, []);
-
-  const anchorRect = useMemo(() => {
-    const measured = step?.anchor ? anchors[step.anchor] : undefined;
-    if (!measured) return null;
-
-    // Window coordinates minus the overlay's own origin. Zero for a full-screen
-    // overlay, a status bar's worth on Android when it is not.
-    return {
-      ...measured,
-      x: measured.x - overlayOrigin.x,
-      y: measured.y - overlayOrigin.y,
-    };
-  }, [step, anchors, overlayOrigin]);
+  // As measured. See the note on `anchorRect` in the context: the overlay and the
+  // window share an origin, so there is nothing to correct for.
+  const anchorRect = step?.anchor ? (anchors[step.anchor] ?? null) : null;
 
   const value = useMemo<TutorialValue>(
     () => ({
@@ -144,9 +128,8 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       finish,
       measureAnchor,
       anchorRect,
-      setOverlayOrigin: reportOverlayOrigin,
     }),
-    [step, index, start, next, back, finish, measureAnchor, anchorRect, reportOverlayOrigin],
+    [step, index, start, next, back, finish, measureAnchor, anchorRect],
   );
 
   return <TutorialContext.Provider value={value}>{children}</TutorialContext.Provider>;

@@ -103,6 +103,9 @@ export function NotificationCard({
       style={readStyle}
     >
       <Pressable
+        // Named by kind rather than by id: a flow cares that "a lesson needs
+        // writing up" is on the feed, not which lesson generated it.
+        testID={`notification-${notification.kind}`}
         accessibilityRole="button"
         accessibilityLabel={t(descriptor.titleKey, params)}
         onPress={() => onPress(notification)}
@@ -133,6 +136,7 @@ export function NotificationCard({
               {descriptor.actions.map((action) => (
                 <View key={action.id} style={styles.action}>
                   <Button
+                    testID={`notification-action-${action.id}`}
                     label={t(action.labelKey)}
                     variant={action.variant}
                     onPress={() => onAction(notification, action)}

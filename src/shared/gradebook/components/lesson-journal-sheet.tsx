@@ -81,8 +81,10 @@ export function LessonJournalSheet({
       visible={lesson !== null}
       onClose={onClose}
       title={title}
+      testID="journal-sheet"
       footer={
         <Button
+          testID="journal-save"
           label={t('gradebook.journal.save')}
           onPress={() => void submit()}
           loading={isSaving}
@@ -99,13 +101,14 @@ export function LessonJournalSheet({
           </Text>
 
           {draft.register.length === 0 ? (
-            <Text variant="bodySm" color="textMuted">
+            <Text testID="journal-register-empty" variant="bodySm" color="textMuted">
               {t('gradebook.journal.registerEmpty')}
             </Text>
           ) : (
-            draft.register.map((line) => (
+            draft.register.map((line, index) => (
               <RegisterRow
                 key={line.studentId}
+                testID={`journal-register-${index}`}
                 line={line}
                 name={nameFromLesson.get(line.studentId) ?? nameOf(line.studentId)}
                 showName={isGroup}
@@ -122,6 +125,7 @@ export function LessonJournalSheet({
         </View>
 
         <TextField
+          testID="journal-topic"
           label={t('gradebook.journal.topic')}
           value={draft.topic}
           onChangeText={(value) => set('topic', value)}
@@ -130,6 +134,7 @@ export function LessonJournalSheet({
         />
 
         <TextField
+          testID="journal-homework"
           label={t('gradebook.journal.homework')}
           value={draft.homework}
           onChangeText={(value) => set('homework', value)}
@@ -138,7 +143,7 @@ export function LessonJournalSheet({
         />
 
         {hasError ? (
-          <Text variant="bodySm" color="danger">
+          <Text testID="journal-error" variant="bodySm" color="danger">
             {t('gradebook.journal.failed')}
           </Text>
         ) : null}
@@ -149,6 +154,7 @@ export function LessonJournalSheet({
           student in a group happens from their own page. */}
       {lesson && !isGroup && lessonStudentIds(lesson).length === 1 ? (
         <GradeSection
+          testID="journal-grades"
           subject={{ kind: 'lesson', id: lesson.id }}
           title={t('gradebook.journal.marks')}
           emptyHint={t('gradebook.journal.marksEmpty')}
@@ -157,6 +163,7 @@ export function LessonJournalSheet({
       ) : null}
 
       <NoteSection
+        testID="journal-notes"
         subject={lesson ? { kind: 'lesson', id: lesson.id } : null}
         title={t('notes.lessonTitle')}
         emptyHint={t('notes.lessonEmpty')}

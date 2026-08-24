@@ -67,6 +67,7 @@ export function PaletteVariantSwitcher({ style }: { style?: StyleProp<ViewStyle>
         return (
           <Pressable
             key={option}
+            testID={`settings-accent-${option}`}
             onPress={() => setVariant(option)}
             accessibilityRole="radio"
             accessibilityState={{ selected }}

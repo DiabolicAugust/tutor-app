@@ -41,7 +41,7 @@ export type TutorialStep = {
   placement?: TutorialPlacement;
 };
 
-/** A measured anchor, in window coordinates. */
+/** A measured anchor, in the tutorial overlay's coordinates. */
 export type AnchorRect = {
   x: number;
   y: number;

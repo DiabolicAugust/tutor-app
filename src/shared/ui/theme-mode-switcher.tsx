@@ -18,6 +18,7 @@ export function ThemeModeSwitcher() {
 
   return (
     <SegmentedControl
+      testID="settings-theme"
       options={options}
       value={mode}
       onChange={setMode}

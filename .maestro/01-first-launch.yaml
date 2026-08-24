@@ -1,0 +1,128 @@
+# A first launch, and what the app must refuse to do on one.
+#
+# Two things are covered and they are related. Nothing on the sign-in screen may
+# fail: with no session there is nothing to load, and the app used to try anyway —
+# four background requests, four 401s, and a stack of "could not load" toasts over
+# a screen where the user has not done anything yet.
+#
+# And the registration form has to hold the line on every field, in order. Each
+# step validates on the way out, so nobody discovers on the last screen that the
+# first one was wrong — this walks each refusal and then goes back out without
+# creating anything, which flow 02 does with a real address.
+appId: com.foxacademy.app
+name: First launch refuses nothing and demands everything
+tags:
+  - auth
+---
+- clearState
+- launchApp
+
+- assertVisible:
+    id: 'signin-email'
+- runFlow: subflows/use-english.yaml
+
+# The whole point of the flow. Given a moment for a request that should not exist
+# to fail, and then asserting that nothing announced itself.
+- extendedWaitUntil:
+    visible:
+      id: 'signin-submit'
+    timeout: 10000
+- assertNotVisible:
+    id: 'toast'
+
+# Signing in with nothing typed is a request the server refuses, not a crash.
+- tapOn:
+    id: 'signin-submit'
+- extendedWaitUntil:
+    visible:
+      id: 'signin-error'
+    timeout: 60000
+
+- tapOn:
+    id: 'signin-create-account'
+- assertVisible:
+    id: 'join-open-school'
+- assertVisible:
+    id: 'join-existing'
+
+# Joining an existing school is by invitation and has no form. Worth asserting,
+# because "there is deliberately nothing here" is easy to mistake for a screen
+# that failed to load.
+- tapOn:
+    id: 'join-existing'
+- assertVisible: 'Your school invites you'
+- back
+
+# Settled before tapping, and not for tidiness: a tap during the pop animation
+# lands on a view that is still moving and is swallowed, so the flow went on
+# looking for the next screen while sitting on this one.
+- tapOn:
+    id: 'join-open-school'
+
+# Step one: the school. Empty, then too short, then acceptable.
+#
+# The screen is asserted before it is tapped, and that is not belt and braces:
+# `tapOn` gives up on a missing element far sooner than `assertVisible` waits for
+# one, so a tap that follows a navigation straight away fails on the transition
+# rather than on the app.
+- assertVisible:
+    id: 'school-continue'
+- tapOn:
+    id: 'school-continue'
+- assertVisible: 'Please give the school a name.'
+- tapOn:
+    id: 'school-name'
+- inputText: 'A'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-continue'
+- assertVisible: 'Please give the school a name.'
+- tapOn:
+    id: 'school-name'
+- eraseText
+- inputText: 'Abandoned-Draft'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-continue'
+
+# Step two: the admin. One refusal per field, in the order the form checks them.
+- assertVisible:
+    id: 'admin-name'
+- tapOn:
+    id: 'school-create'
+- assertVisible: 'Please enter your name.'
+
+- tapOn:
+    id: 'admin-name'
+- inputText: 'Validation Admin'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-create'
+- assertVisible: 'Please enter a valid email address.'
+
+- tapOn:
+    id: 'admin-email'
+- inputText: 'not-an-address'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-create'
+- assertVisible: 'Please enter a valid email address.'
+
+- tapOn:
+    id: 'admin-email'
+- eraseText
+- inputText: 'validation@example.test'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'admin-password'
+- inputText: 'short'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-create'
+- assertVisible: 'Use at least 8 characters.'
+
+# Going back must not lose what was typed: two steps only help if the first one
+# is still there when you return to it.
+- tapOn:
+    id: 'school-back'
+- assertVisible: 'Abandoned-Draft'

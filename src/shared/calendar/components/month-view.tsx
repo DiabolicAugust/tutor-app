@@ -98,6 +98,9 @@ export function MonthView({
             return (
               <Pressable
                 key={day.toISOString()}
+                // Only today's cell is named: it is the one day a test can be
+                // sure of without doing date arithmetic in a flow file.
+                testID={today ? 'month-today' : undefined}
                 onPress={() => onSelectDay(day)}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}

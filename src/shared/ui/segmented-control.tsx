@@ -21,6 +21,12 @@ export type SegmentedControlProps<T extends string> = {
   onChange: (value: T) => void;
   /** Announced to screen readers as the group's purpose. */
   accessibilityLabel?: string;
+  /**
+   * Test handle. Each segment gets `${testID}-${value}`, so a flow taps the
+   * option it means rather than the position it happens to be in — reordering
+   * the options cannot then silently change what a test asserts.
+   */
+  testID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -65,6 +71,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   accessibilityLabel,
+  testID,
   style,
 }: SegmentedControlProps<T>) {
   const styles = useStyles();
@@ -74,12 +81,14 @@ export function SegmentedControl<T extends string>({
       style={[styles.container, style]}
       accessibilityRole="tablist"
       accessibilityLabel={accessibilityLabel}
+      testID={testID}
     >
       {options.map((option) => {
         const selected = option.value === value;
         return (
           <Pressable
             key={option.value}
+            testID={testID ? `${testID}-${option.value}` : undefined}
             onPress={() => onChange(option.value)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}

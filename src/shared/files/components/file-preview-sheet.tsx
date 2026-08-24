@@ -33,7 +33,12 @@ export function FilePreviewSheet({ file, onClose }: FilePreviewSheetProps) {
   const { data: uri, isLoading } = useAsyncData(file?.id ?? null, () => downloadFile(file!));
 
   return (
-    <ModalSheet visible={file !== null} onClose={onClose} title={file?.originalName ?? ''}>
+    <ModalSheet
+      visible={file !== null}
+      onClose={onClose}
+      title={file?.originalName ?? ''}
+      testID="file-preview-sheet"
+    >
       {uri ? (
         <Image
           source={{ uri }}

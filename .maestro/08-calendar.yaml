@@ -1,0 +1,122 @@
+# The calendar's own controls: paging, views, filters, and the day agenda.
+#
+# Two reported bugs live here. The filter counted the calendar ids it had in
+# storage rather than the calendars that exist, so a build that once had
+# colleagues went on claiming two calendars where there was one. And the group
+# block on the grid has to open to show who is in it — that is the only place the
+# membership of a booked lesson is visible.
+appId: com.foxacademy.app
+name: Page, switch views, filter and open a day
+tags:
+  - calendar
+---
+- runFlow: subflows/wait-for-app.yaml
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 60000
+
+# Paging away must take the lesson with it, and "today" must bring it back. That
+# is a stronger statement than reading the title, which only says what the header
+# thinks the date is.
+- tapOn:
+    id: 'calendar-next'
+- assertNotVisible: ${STUDENT}
+- tapOn:
+    id: 'calendar-previous'
+- tapOn:
+    id: 'calendar-previous'
+- assertNotVisible: ${STUDENT}
+- tapOn:
+    id: 'calendar-today'
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 30000
+
+# --- filters ---
+- tapOn:
+    id: 'calendar-filters'
+- assertVisible:
+    id: 'filters-sheet'
+# One tutor in a new school means one calendar. The count is the bug.
+- assertVisible: '1 calendar shown'
+- assertVisible:
+    id: 'filters-calendar-0'
+
+# Hiding the only calendar has to empty the grid, which is what proves the filter
+# is applied rather than merely remembered.
+- tapOn:
+    id: 'filters-calendar-0'
+- assertVisible: 'No calendars shown'
+- tapOn:
+    id: 'filters-sheet-close'
+- assertNotVisible: ${STUDENT}
+
+- tapOn:
+    id: 'calendar-filters'
+- tapOn:
+    id: 'filters-calendar-0'
+- assertVisible: '1 calendar shown'
+# Dismissed by tapping outside it this time — a different path from the button.
+- tapOn:
+    id: 'filters-sheet-backdrop'
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 30000
+
+# --- views ---
+- tapOn:
+    id: 'calendar-settings'
+- assertVisible:
+    id: 'calendar-settings-sheet'
+- tapOn:
+    id: 'calendar-view-threeDays'
+- tapOn:
+    id: 'calendar-settings-sheet-close'
+- scrollUntilVisible:
+    element:
+      text: ${STUDENT}
+    direction: UP
+    timeout: 30000
+
+- tapOn:
+    id: 'calendar-settings'
+- tapOn:
+    id: 'calendar-view-month'
+- tapOn:
+    id: 'calendar-settings-sheet-close'
+
+# No floating button in the month view — it would cover the last row of dates —
+# so booking from here goes through a day's agenda instead.
+- assertNotVisible:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'month-today'
+- tapOn:
+    id: 'month-today'
+- assertVisible:
+    id: 'agenda-sheet'
+- assertVisible: ${STUDENT}
+
+# The group block opens here and only here: a list has the vertical room a
+# twenty-pixel grid cell does not.
+- tapOn: ${GROUP}
+- assertVisible: ${STUDENT_TWO}
+- tapOn:
+    id: 'agenda-sheet-close'
+
+# Back to the day view, so the flows after this one find the calendar as they
+# expect it.
+- tapOn:
+    id: 'calendar-settings'
+- tapOn:
+    id: 'calendar-view-day'
+- tapOn:
+    id: 'calendar-settings-sheet-close'
+- assertVisible:
+    id: 'calendar-add'

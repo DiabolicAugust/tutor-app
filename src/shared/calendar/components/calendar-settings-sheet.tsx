@@ -27,11 +27,17 @@ export function CalendarSettingsSheet({
   }));
 
   return (
-    <ModalSheet visible={visible} onClose={onClose} title={t('calendarSettings.title')}>
+    <ModalSheet
+      visible={visible}
+      onClose={onClose}
+      title={t('calendarSettings.title')}
+      testID="calendar-settings-sheet"
+    >
       <Text variant="label" color="textSecondary">
         {t('calendarSettings.view')}
       </Text>
       <SegmentedControl
+        testID="calendar-view"
         options={options}
         value={viewMode}
         onChange={setViewMode}

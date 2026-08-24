@@ -7,7 +7,8 @@ import { isRegistration, requestPushToken, type PushUnavailable } from '../push-
 const reasonKeys = {
   denied: 'notificationSettings.pushDenied',
   unsupported: 'notificationSettings.pushUnsupported',
-  'not-configured': 'notificationSettings.pushNotConfigured',
+  // The same copy for both, because from the outside they are the same thing: no
+  // notifications will arrive and it is not the user's doing.
   failed: 'notificationSettings.pushNotConfigured',
 } as const satisfies Record<PushUnavailable['reason'], string>;
 

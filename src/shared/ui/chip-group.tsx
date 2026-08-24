@@ -16,6 +16,8 @@ export type ChipGroupProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   accessibilityLabel?: string;
+  /** Test handle. Each chip gets `${testID}-${value}` — see `SegmentedControl`. */
+  testID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -52,6 +54,7 @@ export function ChipGroup<T extends string>({
   value,
   onChange,
   accessibilityLabel,
+  testID,
   style,
 }: ChipGroupProps<T>) {
   const styles = useStyles();
@@ -63,12 +66,14 @@ export function ChipGroup<T extends string>({
       style={[styles.scroll, style]}
       contentContainerStyle={styles.content}
       accessibilityLabel={accessibilityLabel}
+      testID={testID}
     >
       {options.map((option) => {
         const selected = option.value === value;
         return (
           <Pressable
             key={option.value}
+            testID={testID ? `${testID}-${option.value}` : undefined}
             onPress={() => onChange(option.value)}
             accessibilityRole="radio"
             accessibilityState={{ selected }}

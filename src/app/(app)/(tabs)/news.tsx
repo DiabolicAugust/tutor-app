@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -35,7 +36,25 @@ export default function NewsScreen() {
 
   // Half the feed is derived from the schedule, so both are refreshed together
   // or the derived items would be answering a question already out of date.
-  const { isRefreshing, refresh: pullToRefresh } = useRefresh([refreshFeed, reloadLessons]);
+  const {
+    isRefreshing,
+    refresh: pullToRefresh,
+    controlKey,
+  } = useRefresh([refreshFeed, reloadLessons]);
+
+  /**
+   * Refetched whenever this tab is opened.
+   *
+   * The store already refetches when the app returns to the foreground, which
+   * does not cover the commonest case: an announcement sent from the school
+   * screen a moment ago, in this same session. It was in the database and not on
+   * the feed, and only a pull-to-refresh would show it.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      void refreshFeed();
+    }, [refreshFeed]),
+  );
 
   const [writingUp, setWritingUp] = useState<Lesson | null>(null);
 
@@ -51,7 +70,12 @@ export default function NewsScreen() {
           // confirmation that it worked.
           unreadCount > 0 ? (
             <Animated.View entering={motion.messageEnter()} exiting={motion.messageExit()}>
-              <Button label={t('news.markAllRead')} variant="ghost" onPress={markAllRead} />
+              <Button
+                testID="news-mark-all-read"
+                label={t('news.markAllRead')}
+                variant="ghost"
+                onPress={markAllRead}
+              />
             </Animated.View>
           ) : null
         }
@@ -60,11 +84,15 @@ export default function NewsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => void pullToRefresh()} />
+          <RefreshControl
+            key={controlKey}
+            refreshing={isRefreshing}
+            onRefresh={() => void pullToRefresh()}
+          />
         }
       >
         {notifications.length === 0 ? (
-          <Card style={styles.empty}>
+          <Card style={styles.empty} testID="news-empty">
             <Icon name={icons.inbox} size={28} color="textMuted" />
             <Text variant="titleSm">{t('news.empty')}</Text>
             <Text variant="bodySm" color="textSecondary" style={styles.emptyHint}>

@@ -16,6 +16,8 @@ export type NoteSectionProps = {
   title: string;
   /** Shown when there are none yet. */
   emptyHint: string;
+  /** Test handle prefix — a student's notes and a lesson's can share a screen. */
+  testID?: string;
 };
 
 /**
@@ -25,7 +27,12 @@ export type NoteSectionProps = {
  * interaction — read what was written, add to it, remove your own. Only the
  * heading and the empty hint differ, and those are props rather than a branch.
  */
-export function NoteSection({ subject, title, emptyHint }: NoteSectionProps) {
+export function NoteSection({
+  subject,
+  title,
+  emptyHint,
+  testID = 'notes',
+}: NoteSectionProps) {
   const { t } = useT();
   const format = useFormat();
   const styles = useStyles();
@@ -48,15 +55,15 @@ export function NoteSection({ subject, title, emptyHint }: NoteSectionProps) {
   };
 
   return (
-    <Card title={title}>
+    <Card title={title} testID={testID}>
       {isLoading ? (
         <Text color="textSecondary">{t('common.loading')}</Text>
       ) : notes.length === 0 ? (
-        <Text variant="bodySm" color="textMuted">
+        <Text testID={`${testID}-empty`} variant="bodySm" color="textMuted">
           {emptyHint}
         </Text>
       ) : (
-        notes.map((note) => (
+        notes.map((note, index) => (
           <Animated.View
             key={note.id}
             style={styles.note}
@@ -76,6 +83,7 @@ export function NoteSection({ subject, title, emptyHint }: NoteSectionProps) {
                   student is a different feature, and the server refuses it. */}
               {note.author.id === user.id ? (
                 <IconButton
+                  testID={`${testID}-remove-${index}`}
                   name={icons.close}
                   accessibilityLabel={t('notes.remove')}
                   onPress={() => void remove(note.id)}
@@ -89,6 +97,7 @@ export function NoteSection({ subject, title, emptyHint }: NoteSectionProps) {
 
       <View style={styles.composer}>
         <TextField
+          testID={`${testID}-draft`}
           label={t('notes.add')}
           value={draft}
           onChangeText={setDraft}
@@ -97,6 +106,7 @@ export function NoteSection({ subject, title, emptyHint }: NoteSectionProps) {
           error={hasError ? t('notes.failed') : undefined}
         />
         <Button
+          testID={`${testID}-save`}
           label={t('notes.save')}
           onPress={() => void submit()}
           loading={isSaving}

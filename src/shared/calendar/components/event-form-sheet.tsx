@@ -214,8 +214,10 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
         onClose();
       }}
       title={t('event.add')}
+      testID="event-sheet"
       footer={
         <Button
+          testID="event-create"
           label={t('event.create')}
           fullWidth
           size="lg"
@@ -227,6 +229,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           one-to-one only should not have to look past a control it never uses. */}
       {groups.length > 0 ? (
         <SegmentedControl
+          testID="event-taught"
           options={[
             { value: 'student', label: t('event.forStudent') },
             { value: 'group', label: t('event.forGroup') },
@@ -247,9 +250,10 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
 
         {forGroup ? (
           <View style={styles.students}>
-            {groups.map((group) => (
+            {groups.map((group, index) => (
               <ListRow
                 key={group.id}
+                testID={`event-group-${index}`}
                 label={group.name}
                 description={describeGroup(group)}
                 value={t('groups.count', { count: group.members.length })}
@@ -260,13 +264,14 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
             ))}
 
             {showError ? (
-              <Text variant="caption" color="danger">
+              <Text testID="event-error" variant="caption" color="danger">
                 {t('event.missingGroup')}
               </Text>
             ) : null}
           </View>
         ) : addingStudent ? (
           <TextField
+            testID="event-new-student-name"
             label={t('event.newStudentName')}
             value={newStudentName}
             onChangeText={(value) => {
@@ -280,9 +285,10 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           />
         ) : (
           <View style={styles.students}>
-            {ownStudents.map((student) => (
+            {ownStudents.map((student, index) => (
               <ListRow
                 key={student.id}
+                testID={`event-student-${index}`}
                 label={student.name}
                 description={student.subject}
                 value={t('event.lessonsLeft', { count: student.paidLessonsLeft })}
@@ -293,7 +299,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
             ))}
 
             {showError ? (
-              <Text variant="caption" color="danger">
+              <Text testID="event-error" variant="caption" color="danger">
                 {t('event.missingStudent')}
               </Text>
             ) : null}
@@ -305,6 +311,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
             booking for a group, whose membership is edited on the roster. */}
         {!forGroup && has('MANAGE_STUDENTS') ? (
           <Button
+            testID="event-toggle-new-student"
             label={addingStudent ? t('event.pickExisting') : t('event.newStudent')}
             variant="ghost"
             onPress={() => {
@@ -316,6 +323,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
       </View>
 
       <TextField
+        testID="event-subject"
         label={t('event.subject')}
         value={subject}
         onChangeText={setSubject}
@@ -327,6 +335,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           {t('event.date')}
         </Text>
         <ChipGroup
+          testID="event-date"
           options={dateOptions}
           value={dayOffset}
           onChange={setDayOffset}
@@ -339,6 +348,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           {t('event.startTime')}
         </Text>
         <ChipGroup
+          testID="event-time"
           options={timeOptions}
           value={startMinutes}
           onChange={setStartMinutes}
@@ -351,6 +361,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
           {t('event.duration')}
         </Text>
         <SegmentedControl
+          testID="event-duration"
           options={durationOptions}
           value={duration}
           onChange={setDuration}

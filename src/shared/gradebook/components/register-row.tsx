@@ -18,6 +18,8 @@ export type RegisterRowProps = {
   askHomework: boolean;
   onMark: (status: AttendanceStatus) => void;
   onHomeworkDone: (done: boolean | null) => void;
+  /** Test handle prefix. One row per student, so the caller supplies the index. */
+  testID?: string;
 };
 
 /**
@@ -35,19 +37,24 @@ export function RegisterRow({
   askHomework,
   onMark,
   onHomeworkDone,
+  testID,
 }: RegisterRowProps) {
   const { t } = useT();
   const styles = useStyles();
 
   return (
-    <View style={[styles.row, showName && styles.separated]}>
+    <View style={[styles.row, showName && styles.separated]} testID={testID}>
       {showName ? (
         <Text variant="label" numberOfLines={1}>
           {name}
         </Text>
       ) : null}
 
-      <AttendancePicker value={line.status} onChange={onMark} />
+      <AttendancePicker
+        value={line.status}
+        onChange={onMark}
+        testID={testID ? `${testID}-mark` : undefined}
+      />
 
       {/* Only once something has been set, and only once somebody has been
           marked: "did they do it?" about a student who was not there yet is a
@@ -58,6 +65,7 @@ export function RegisterRow({
             {t('gradebook.journal.homeworkDone')}
           </Text>
           <SegmentedControl
+            testID={testID ? `${testID}-homework` : undefined}
             options={[
               { value: 'unchecked', label: t('gradebook.journal.homeworkUnchecked') },
               { value: 'done', label: t('gradebook.journal.homeworkYes') },

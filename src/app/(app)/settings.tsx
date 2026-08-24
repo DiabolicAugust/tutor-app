@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   const { start } = useTutorial();
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} testID="screen-settings">
       <Card title={t('settings.appearance.title')}>
         <View style={styles.group}>
           <ThemeModeSwitcher />
@@ -71,7 +71,13 @@ export default function SettingsScreen() {
         <Text variant="caption" color="textSecondary">
           {t('settings.tour.hint')}
         </Text>
-        <Button label={t('settings.tour.action')} variant="secondary" fullWidth onPress={start} />
+        <Button
+          testID="settings-tour-start"
+          label={t('settings.tour.action')}
+          variant="secondary"
+          fullWidth
+          onPress={start}
+        />
       </Card>
     </ScrollView>
   );

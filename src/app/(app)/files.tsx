@@ -22,7 +22,7 @@ export default function FilesScreen() {
   const styles = useStyles();
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} testID="screen-files">
       <Card>
         <Text variant="titleSm">{t('library.title')}</Text>
         <Text variant="bodySm" color="textSecondary">
@@ -31,6 +31,7 @@ export default function FilesScreen() {
       </Card>
 
       <FileSection
+        testID="library"
         source={{ kind: 'library' }}
         title={t('library.files')}
         emptyHint={t('library.empty')}

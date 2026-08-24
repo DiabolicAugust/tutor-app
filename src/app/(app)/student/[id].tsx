@@ -78,7 +78,9 @@ export default function StudentScreen() {
     return (
       <ScrollView contentContainerStyle={styles.content}>
         <Card>
-          <Text color="textSecondary">{t('studentDetail.notFound')}</Text>
+          <Text testID="student-not-found" color="textSecondary">
+            {t('studentDetail.notFound')}
+          </Text>
         </Card>
       </ScrollView>
     );
@@ -101,10 +103,12 @@ export default function StudentScreen() {
 
   return (
     <>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} testID="screen-student">
         <Card>
           <View style={styles.header}>
-            <Text variant="titleLg">{student.name}</Text>
+            <Text testID="student-title" variant="titleLg">
+              {student.name}
+            </Text>
             <Text color="textSecondary">{student.subject}</Text>
             <Text variant="bodySm" color={student.paidLessonsLeft <= 2 ? 'warning' : 'textMuted'}>
               {t('event.lessonsLeft', { count: student.paidLessonsLeft })}
@@ -113,6 +117,7 @@ export default function StudentScreen() {
 
           {mayEdit ? (
             <Button
+              testID="student-edit"
               label={t('common.edit')}
               variant="secondary"
               fullWidth
@@ -124,6 +129,7 @@ export default function StudentScreen() {
         <ProgressCard progress={progress} isLoading={isLoadingProgress} />
 
         <GradeSection
+          testID="student-grades"
           subject={{ kind: 'student', id: student.id }}
           title={t('gradebook.grade.studentTitle')}
           emptyHint={t('gradebook.grade.studentEmpty')}
@@ -131,6 +137,7 @@ export default function StudentScreen() {
         />
 
         <NoteSection
+          testID="student-notes"
           subject={{ kind: 'student', id: student.id }}
           title={t('notes.studentTitle')}
           emptyHint={t('notes.studentEmpty')}
@@ -140,13 +147,14 @@ export default function StudentScreen() {
           {isLoadingLessons ? (
             <Text color="textSecondary">{t('common.loading')}</Text>
           ) : lessons.length === 0 ? (
-            <Text variant="bodySm" color="textMuted">
+            <Text testID="student-lessons-empty" variant="bodySm" color="textMuted">
               {t('studentDetail.lessonsEmpty')}
             </Text>
           ) : (
-            lessons.map((lesson) => (
+            lessons.map((lesson, index) => (
               <Animated.View key={lesson.id} layout={motion.listReflow()}>
                 <ListRow
+                  testID={`student-lesson-${index}`}
                   label={format.dayTitle(new Date(lesson.startsAt))}
                   // The topic is what makes the history readable: "Mathematics ·
                   // Took place" is the same line twenty times over, while what
@@ -170,7 +178,7 @@ export default function StudentScreen() {
           )}
         </Card>
 
-        <FileSection source={{ kind: 'student', id: student.id }} />
+        <FileSection testID="student-files" source={{ kind: 'student', id: student.id }} />
       </ScrollView>
 
       <StudentFormSheet

@@ -1,0 +1,27 @@
+# The same as pick-a-file, but returning to a student's page rather than the
+# library. Two files because the screen the picker returns to is the only way to
+# know it has closed, and it differs.
+#
+# Another app's UI, and the only way into ours: the picker is what hands back a
+# URI, so a flow that stops at "the button exists" tests the one part that was
+# never broken. That is exactly how the upload failing on a device went unnoticed.
+#
+# The picker opens on "Recent", where the runner's freshly pushed and indexed file
+# sits at the top, and one tap on its name returns it. Deliberately nothing
+# cleverer: navigating to Downloads through the drawer first put the picker into
+# multi-select, where the same tap ticks a checkbox instead — and the flow then
+# passed by matching the file's name *in the picker*, which is not a test of
+# anything.
+appId: com.foxacademy.app
+---
+- extendedWaitUntil:
+    visible: ${UPLOAD}
+    timeout: 20000
+- tapOn: ${UPLOAD}
+
+# The picker has to be gone. Without this the flow can go on asserting against
+# another app's window and believe it is looking at ours.
+- extendedWaitUntil:
+    visible:
+      id: 'screen-student'
+    timeout: 20000

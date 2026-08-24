@@ -178,7 +178,13 @@ export default function JoinSchoolScreen() {
                 onPress={() => void handleCreate()}
               />
 
-              <Button label={t('common.back')} variant="ghost" fullWidth onPress={steps.back} />
+              <Button
+                testID="school-back"
+                label={t('common.back')}
+                variant="ghost"
+                fullWidth
+                onPress={steps.back}
+              />
             </View>
           )}
 

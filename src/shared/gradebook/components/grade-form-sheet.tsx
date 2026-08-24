@@ -37,6 +37,16 @@ const emptyDraft = {
   weight: '1',
 };
 
+/**
+ * What the sheet is pointed at, as something that changes when it closes.
+ *
+ * Not the mark's id: for a new mark that is `null` every time, so the state below
+ * compared equal to itself and was never reseeded — giving a second mark opened
+ * the form still holding the first one's value and category.
+ */
+const keyFor = (editing: { grade: Grade | null } | null): string | null =>
+  editing ? (editing.grade?.id ?? 'new') : null;
+
 /** An existing mark as form fields, or a blank form for a new one. */
 const draftFor = (grade: Grade | null): typeof emptyDraft =>
   grade
@@ -67,13 +77,13 @@ export function GradeFormSheet({
 
   const grade = editing?.grade ?? null;
 
-  const [state, setState] = useState(() => ({ key: grade?.id ?? null, draft: draftFor(grade) }));
+  const [state, setState] = useState(() => ({ key: keyFor(editing), draft: draftFor(grade) }));
   const [isSaving, setIsSaving] = useState(false);
 
   // Reseeded when the sheet is pointed at a different mark — or at a new one.
   // Adjusted during render rather than in an effect, so a correction never opens
   // showing the previous mark for a frame.
-  const key = grade?.id ?? null;
+  const key = keyFor(editing);
   const current = state.key === key ? state : { key, draft: draftFor(grade) };
   if (state.key !== key) setState(current);
 
@@ -123,8 +133,10 @@ export function GradeFormSheet({
       visible={editing !== null}
       onClose={onClose}
       title={t(grade ? 'gradebook.grade.correct' : 'gradebook.grade.add')}
+      testID="grade-sheet"
       footer={
         <Button
+          testID="grade-save"
           label={t('common.save')}
           onPress={() => void submit()}
           loading={isSaving}
@@ -135,6 +147,7 @@ export function GradeFormSheet({
     >
       <View style={styles.form}>
         <SegmentedControl
+          testID="grade-kind"
           options={gradeKindOrder.map((kind) => ({
             value: kind,
             label: t(gradeKindKeys[kind]),
@@ -146,6 +159,7 @@ export function GradeFormSheet({
 
         {descriptive ? null : (
           <TextField
+            testID="grade-value"
             label={t(
               draft.kind === 'percentage'
                 ? 'gradebook.grade.valuePercent'
@@ -159,6 +173,7 @@ export function GradeFormSheet({
         )}
 
         <TextField
+          testID="grade-category"
           label={t('gradebook.grade.category')}
           value={draft.category}
           onChangeText={(value) => set('category', value)}
@@ -166,6 +181,7 @@ export function GradeFormSheet({
         />
 
         <TextField
+          testID="grade-comment"
           label={t(descriptive ? 'gradebook.grade.words' : 'gradebook.grade.remark')}
           value={draft.comment}
           onChangeText={(value) => set('comment', value)}

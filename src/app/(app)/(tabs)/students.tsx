@@ -59,7 +59,7 @@ export default function StudentsTab() {
   } = useGroups();
 
   // Both halves of this screen come from the server, so a pull refreshes both.
-  const { isRefreshing, refresh } = useRefresh([reload, reloadGroups]);
+  const { isRefreshing, refresh, controlKey } = useRefresh([reload, reloadGroups]);
 
   const [view, setView] = useState<RosterView>('students');
   const [editing, setEditing] = useState<{ student: Student | null } | null>(null);
@@ -80,7 +80,11 @@ export default function StudentsTab() {
       <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => void refresh()} />
+          <RefreshControl
+            key={controlKey}
+            refreshing={isRefreshing}
+            onRefresh={() => void refresh()}
+          />
         }
       >
         <ScreenHeader
@@ -92,6 +96,7 @@ export default function StudentsTab() {
         />
 
         <SegmentedControl
+          testID="roster-view"
           options={[
             { value: 'students', label: t('groups.students') },
             { value: 'groups', label: t('groups.tab') },
@@ -103,7 +108,7 @@ export default function StudentsTab() {
 
         {showingGroups ? (
           groups.length === 0 && !isLoadingGroups ? (
-            <Card style={styles.empty}>
+            <Card style={styles.empty} testID="groups-empty">
               <Text variant="titleSm">{t('groups.empty')}</Text>
               <Text variant="bodySm" color="textSecondary" style={styles.centered}>
                 {t('groups.emptyHint')}
@@ -114,9 +119,10 @@ export default function StudentsTab() {
               {isLoadingGroups ? (
                 <Text color="textSecondary">{t('common.loading')}</Text>
               ) : (
-                groups.map((group) => (
+                groups.map((group, index) => (
                   <Animated.View key={group.id} layout={motion.listReflow()}>
                     <ListRow
+                      testID={`group-row-${index}`}
                       label={group.name}
                       description={describeGroup(group)}
                       value={t('groups.count', { count: group.members.length })}
@@ -136,7 +142,7 @@ export default function StudentsTab() {
             </Card>
           )
         ) : sorted.length === 0 && !isLoading ? (
-          <Card style={styles.empty}>
+          <Card style={styles.empty} testID="students-empty">
             <Text variant="titleSm">{t('studentsAdmin.empty')}</Text>
             <Text variant="bodySm" color="textSecondary" style={styles.centered}>
               {t('studentsAdmin.emptyHint')}
@@ -147,9 +153,10 @@ export default function StudentsTab() {
             {isLoading ? (
               <Text color="textSecondary">{t('common.loading')}</Text>
             ) : (
-              sorted.map((student) => (
+              sorted.map((student, index) => (
                 <Animated.View key={student.id} layout={motion.listReflow()}>
                   <ListRow
+                    testID={`student-row-${index}`}
                     label={student.name}
                     description={student.subject}
                     value={t('event.lessonsLeft', { count: student.paidLessonsLeft })}

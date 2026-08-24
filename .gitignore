@@ -48,3 +48,13 @@ example
 # something private was put in it.
 .env
 .env.local
+
+# End-to-end run output: the JUnit report and the file the upload flow stages.
+# Maestro's own screenshots and hierarchy dumps go to ~/.maestro/tests.
+.maestro/artifacts/
+
+# Google service-account keys. Never in a repository: this one is the private key
+# to a Firebase project, and it belongs on the server that sends notifications —
+# as an environment variable, not as a file.
+*-firebase-adminsdk-*.json
+*service-account*.json

@@ -28,7 +28,7 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} testID="screen-more">
         <Card title={t('more.account')}>
           <Text variant="titleSm">{user.name}</Text>
           <Text variant="bodySm" color="textSecondary">
@@ -41,7 +41,11 @@ export default function MoreScreen() {
               screen too, or the grant would be unreachable. Both role and addons
               arrive with the session, so this costs no request. */}
           {user.role === 'admin' || granted.length > 0 ? (
-            <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
+            <ListRow
+              testID="more-school"
+              label={t('more.school')}
+              onPress={() => router.push('/school')}
+            />
           ) : null}
           <ListRow
             testID="more-files"
@@ -49,9 +53,17 @@ export default function MoreScreen() {
             onPress={() => router.push('/files')}
           />
           <View {...settingsAnchor}>
-            <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
+            <ListRow
+              testID="more-settings"
+              label={t('more.settings')}
+              onPress={() => router.push('/settings')}
+            />
           </View>
-          <ListRow label={t('more.support')} onPress={() => setIsSupportOpen(true)} />
+          <ListRow
+            testID="more-support"
+            label={t('more.support')}
+            onPress={() => setIsSupportOpen(true)}
+          />
         </Card>
 
         <Button

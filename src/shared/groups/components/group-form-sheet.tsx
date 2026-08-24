@@ -35,6 +35,18 @@ export type GroupFormSheetProps = {
 
 const emptyDraft = { name: '', subject: '', level: '' };
 
+/**
+ * What the sheet is currently pointed at, as something that changes when it is
+ * closed and reopened.
+ *
+ * Not the group's id: for a new group that is `null` both times, so the state
+ * below compared equal to itself and was never reseeded — the second "new group"
+ * opened holding the first one's name, subject and chosen students. Closing is
+ * part of the identity, which is what `null` for "no sheet" carries.
+ */
+const keyFor = (editing: { group: Group | null } | null): string | null =>
+  editing ? (editing.group?.id ?? 'new') : null;
+
 /** An existing group as form fields, or a blank form for a new one. */
 const draftFor = (group: Group | null): typeof emptyDraft =>
   group
@@ -66,7 +78,7 @@ export function GroupFormSheet({
   const group = editing?.group ?? null;
 
   const [state, setState] = useState(() => ({
-    key: group?.id ?? null,
+    key: keyFor(editing),
     draft: draftFor(group),
     /** Students picked for a group that does not exist yet. */
     pending: [] as string[],
@@ -76,7 +88,7 @@ export function GroupFormSheet({
 
   // Reseeded during render rather than in an effect, so editing a second group
   // never shows the first one's name for a frame.
-  const key = group?.id ?? null;
+  const key = keyFor(editing);
   const current =
     state.key === key ? state : { key, draft: draftFor(group), pending: [] };
   if (state.key !== key) setState(current);
@@ -150,6 +162,7 @@ export function GroupFormSheet({
       visible={editing !== null}
       onClose={onClose}
       title={t(group ? 'groups.edit' : 'groups.create')}
+      testID="group-sheet"
       footer={
         <Button
           testID="group-save"
@@ -176,6 +189,7 @@ export function GroupFormSheet({
           onChangeText={(value) => set('subject', value)}
         />
         <TextField
+          testID="group-level"
           label={t('groups.level')}
           value={draft.level}
           onChangeText={(value) => set('level', value)}
@@ -183,7 +197,7 @@ export function GroupFormSheet({
         />
 
         {hasError ? (
-          <Text variant="bodySm" color="danger">
+          <Text testID="group-error" variant="bodySm" color="danger">
             {t('groups.failed')}
           </Text>
         ) : null}
@@ -196,13 +210,14 @@ export function GroupFormSheet({
         <Text variant="label">{t('groups.members')}</Text>
 
           {members.length === 0 ? (
-            <Text variant="bodySm" color="textMuted">
+            <Text testID="group-members-empty" variant="bodySm" color="textMuted">
               {t('groups.membersEmpty')}
             </Text>
           ) : (
-            members.map((student) => (
+            members.map((student, index) => (
               <Animated.View
                 key={student.id}
+                testID={`group-member-${index}`}
                 style={styles.member}
                 entering={motion.listEnter()}
                 exiting={motion.listResolve()}
@@ -215,6 +230,7 @@ export function GroupFormSheet({
                   </Text>
                 </View>
                 <IconButton
+                  testID={`group-member-remove-${index}`}
                   name={icons.close}
                   accessibilityLabel={t('groups.removeMember')}
                   onPress={() => {
@@ -228,13 +244,14 @@ export function GroupFormSheet({
 
           {isPicking ? (
             addable.length === 0 ? (
-              <Text variant="bodySm" color="textMuted">
+              <Text testID="group-nobody-left" variant="bodySm" color="textMuted">
                 {t('groups.nobodyLeft')}
               </Text>
             ) : (
-              addable.map((student) => (
+              addable.map((student, index) => (
                 <ListRow
                   key={student.id}
+                  testID={`group-pick-${index}`}
                   label={student.name}
                   description={student.subject}
                   onPress={() => {
@@ -259,6 +276,7 @@ export function GroupFormSheet({
         {group ? (
           <>
             <Button
+              testID="group-remove"
               label={t('groups.remove')}
               variant="ghost"
               fullWidth

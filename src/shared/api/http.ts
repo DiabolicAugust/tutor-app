@@ -129,6 +129,14 @@ export const http = {
    * put in a path.
    */
   delete: <T>(path: string, body?: unknown) => request<T>(path, { method: 'DELETE', body }),
-  /** Multipart upload. The caller builds the form; this adds auth and the rest. */
-  upload: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', body: form }),
 };
+
+/*
+ * There is deliberately no `upload` here.
+ *
+ * React Native no longer accepts a `{ uri, name, type }` file part in `FormData`
+ * — it rejects the request before it leaves the device — so uploads go through
+ * `shared/files/upload.ts`, which streams from disk natively. The multipart
+ * branch above stays because `FormData` is still valid for text-only forms, and
+ * because a body that is one is the one case `Content-Type` must not be set on.
+ */

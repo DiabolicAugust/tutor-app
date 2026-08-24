@@ -2,6 +2,7 @@ import { http } from '@/shared/api/http';
 import { fixtures } from '@/shared/fixtures';
 
 import type { FileToUpload, StoredFile } from './stored-file';
+import { uploadFile } from './upload';
 
 export type FilesClient = {
   listForStudent: (studentId: string) => Promise<StoredFile[]>;
@@ -15,31 +16,17 @@ export type FilesClient = {
   remove: (id: string) => Promise<void>;
 };
 
-/**
- * React Native's `FormData` accepts this shape for a local file URI.
- *
- * Not a browser `File`, which is why the cast is needed rather than avoidable —
- * and why it lives here once rather than at each upload site.
- */
-function formFor(file: FileToUpload): FormData {
-  const form = new FormData();
-  form.append('file', {
-    uri: file.uri,
-    name: file.name,
-    type: file.mimeType,
-  } as unknown as Blob);
-  return form;
-}
-
 export const httpFilesClient: FilesClient = {
   listForStudent: (studentId) => http.get<StoredFile[]>(`/students/${studentId}/files`),
 
+  // Uploads go through `uploadFile` rather than `http`: see the note there on why
+  // a `FormData` file part cannot be used any more.
   uploadForStudent: (studentId, file) =>
-    http.upload<StoredFile>(`/students/${studentId}/files`, formFor(file)),
+    uploadFile<StoredFile>(`/students/${studentId}/files`, file),
 
   listLibrary: () => http.get<StoredFile[]>('/files'),
 
-  uploadToLibrary: (file) => http.upload<StoredFile>('/files', formFor(file)),
+  uploadToLibrary: (file) => uploadFile<StoredFile>('/files', file),
 
   remove: async (id) => {
     await http.delete<void>(`/files/${id}`);

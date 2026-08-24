@@ -65,7 +65,7 @@ export default function SignInScreen() {
             />
 
             {errorKey && (
-              <Text variant="caption" color="danger">
+              <Text testID="signin-error" variant="caption" color="danger">
                 {t(errorKey)}
               </Text>
             )}

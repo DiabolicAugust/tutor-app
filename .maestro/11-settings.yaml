@@ -1,0 +1,144 @@
+# Settings, and the only question that matters about them: do they survive?
+#
+# Two of these are stored on the server against the account and two are stored on
+# the device, and both kinds looked like they saved and then reverted on the next
+# launch. So every change here is made, restarted, and checked again.
+appId: com.foxacademy.app
+name: Change settings and restart
+tags:
+  - settings
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- assertVisible:
+    id: 'screen-settings'
+
+# Appearance and accent are device settings, applied immediately.
+- tapOn:
+    id: 'settings-theme-dark'
+- tapOn:
+    id: 'settings-accent-forest'
+
+# Reminders ask for permission at the moment they are switched on, which is the
+# one place a system dialog can interrupt a flow — hence the optional tap.
+- scrollUntilVisible:
+    element:
+      id: 'settings-reminders'
+    direction: DOWN
+- tapOn:
+    id: 'settings-reminders'
+- tapOn:
+    text: 'Allow'
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: 'settings-reminder-lead'
+    timeout: 30000
+- tapOn:
+    id: 'settings-reminder-lead-60'
+
+# Marking off, which is the one a tutor without marks notices most.
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades'
+    direction: DOWN
+- tapOn:
+    id: 'settings-grades'
+- assertVisible:
+    id: 'settings-grades-off'
+
+# Hiding a tab, and the one tab that may never be hidden — hiding "More" would
+# lock the user out of the screen that could bring it back.
+- scrollUntilVisible:
+    element:
+      id: 'settings-tab-news-toggle'
+    direction: DOWN
+- tapOn:
+    id: 'settings-tab-news-toggle'
+- assertNotVisible:
+    id: 'settings-tab-more-toggle'
+
+# Settings is pushed over the tab bar, so leaving it is the only way back to the
+# tabs — the bar is not there to tap while this screen is up.
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+- assertVisible:
+    id: 'screen-calendar'
+- assertNotVisible: 'News'
+
+# --- and now the only assertion that counts ---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+- assertNotVisible: 'News'
+
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades'
+    direction: DOWN
+- assertVisible:
+    id: 'settings-grades-off'
+- scrollUntilVisible:
+    element:
+      id: 'settings-reminder-lead'
+    direction: UP
+- assertVisible:
+    id: 'settings-reminder-lead'
+
+# Put it all back, so the flows after this one find the app as they expect it —
+# and so this one can be run twice. Reminders included: leaving them on meant a
+# second run toggled them *off*, and the lead-time row it then looked for was
+# correctly absent.
+- scrollUntilVisible:
+    element:
+      id: 'settings-reminders'
+    direction: UP
+- tapOn:
+    id: 'settings-reminders'
+- extendedWaitUntil:
+    notVisible:
+      id: 'settings-reminder-lead'
+    timeout: 30000
+
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades'
+    direction: DOWN
+- tapOn:
+    id: 'settings-grades'
+- scrollUntilVisible:
+    element:
+      id: 'settings-tab-reset'
+    direction: DOWN
+- tapOn:
+    id: 'settings-tab-reset'
+- scrollUntilVisible:
+    element:
+      id: 'settings-theme-system'
+    direction: UP
+- tapOn:
+    id: 'settings-theme-system'
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'News'
+- assertVisible:
+    id: 'screen-news'

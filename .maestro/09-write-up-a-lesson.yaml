@@ -1,0 +1,90 @@
+# Writing up a lesson: the register, the topic, the homework.
+#
+# The whole design target for this sheet is one minute, so the flow is the same
+# order a tutor would touch it in — who turned up, what was covered, what was set.
+# Reached from the student's own page rather than from the news feed, because the
+# feed only carries a lesson once it has ended and a flow cannot wait for that.
+appId: com.foxacademy.app
+name: Write up a lesson from a student's page
+tags:
+  - gradebook
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+- tapOn: ${STUDENT}
+- assertVisible:
+    id: 'screen-student'
+
+# The lesson booked in flow 07 is the only one this student has.
+- extendedWaitUntil:
+    visible:
+      id: 'student-lesson-0'
+    timeout: 60000
+- tapOn:
+    id: 'student-lesson-0'
+- assertVisible:
+    id: 'journal-sheet'
+
+# Nothing typed is not a failure — the button simply has no work, so pressing it
+# must leave the sheet open rather than send an empty write-up.
+- tapOn:
+    id: 'journal-save'
+- assertVisible:
+    id: 'journal-sheet'
+
+# An individual lesson has one line in the register and hides the name: the
+# sheet's title already says whose lesson it is.
+- assertVisible:
+    id: 'journal-register-0'
+- tapOn:
+    id: 'journal-register-0-mark-present'
+
+- tapOn:
+    id: 'journal-topic'
+- inputText: 'Quadratic equations'
+- runFlow: subflows/dismiss-keyboard.yaml
+
+# Homework is what makes "did they do it?" worth asking, so the check only
+# appears once something has been set.
+- assertNotVisible:
+    id: 'journal-register-0-homework'
+- tapOn:
+    id: 'journal-homework'
+- inputText: 'Exercises 4 to 9'
+- runFlow: subflows/dismiss-keyboard.yaml
+- assertVisible:
+    id: 'journal-register-0-homework'
+- tapOn:
+    id: 'journal-register-0-homework-done'
+
+- tapOn:
+    id: 'journal-save'
+
+# Left open on purpose, unlike the same sheet opened from the news feed: marks
+# and notes for this lesson are below the save button, and closing would send
+# somebody who wanted to add one back through two taps to return.
+- assertVisible:
+    id: 'journal-sheet'
+- tapOn:
+    id: 'journal-sheet-close'
+
+# The topic is what makes the history readable, so it replaces the subject on the
+# row — and it is the proof the write-up was stored.
+- extendedWaitUntil:
+    visible: 'Quadratic equations · Took place'
+    timeout: 30000
+- assertVisible: 'Was here'
+
+# Reopening has to show what was saved rather than an empty form.
+- tapOn:
+    id: 'student-lesson-0'
+- assertVisible: 'Quadratic equations'
+- assertVisible: 'Exercises 4 to 9'
+- tapOn:
+    id: 'journal-sheet-close'

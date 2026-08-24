@@ -29,6 +29,12 @@ export type ModalSheetProps = {
   children: React.ReactNode;
   /** Pinned below the scrollable body — the place for confirm/cancel. */
   footer?: React.ReactNode;
+  /**
+   * Test handle for the panel. The close control becomes `${testID}-close` and
+   * the backdrop `${testID}-backdrop` — both worth covering, since dismissing a
+   * sheet by tapping outside it is a different path from pressing its button.
+   */
+  testID?: string;
   contentStyle?: StyleProp<ViewStyle>;
 };
 
@@ -61,6 +67,16 @@ const useStyles = createStyles((t) => ({
     borderBottomWidth: 1,
     borderBottomColor: t.colors.border,
   },
+  /**
+   * Shrinkable, which is the whole reason the body scrolls at all.
+   *
+   * React Native defaults `flexShrink` to 0. In a column capped by the sheet's
+   * `maxHeight`, that let a tall form size itself to its content and then get
+   * clipped by the parent — a body taller than the sheet with a viewport the same
+   * height as its content, so there was nothing to scroll. The tallest form in
+   * the app is the booking sheet, which is exactly where it showed.
+   */
+  scroll: { flexShrink: 1 },
   body: { padding: t.spacing.lg, gap: t.spacing.md },
   footer: {
     padding: t.spacing.lg,
@@ -125,6 +141,7 @@ export function ModalSheet({
   title,
   children,
   footer,
+  testID,
   contentStyle,
 }: ModalSheetProps) {
   const { t } = useT();
@@ -145,20 +162,27 @@ export function ModalSheet({
           style={styles.backdrop}
           onPress={onClose}
           accessibilityLabel={t('common.close')}
+          testID={testID ? `${testID}-backdrop` : undefined}
         >
-          <Pressable style={styles.sheet} onPress={() => {}}>
+          <Pressable style={styles.sheet} onPress={() => {}} testID={testID}>
             <View style={styles.header}>
               <Text variant="titleSm">{title}</Text>
               <IconButton
                 name={icons.close}
                 accessibilityLabel={t('common.close')}
                 onPress={onClose}
+                testID={testID ? `${testID}-close` : undefined}
               />
             </View>
 
             <ScrollView
+              style={styles.scroll}
               contentContainerStyle={[styles.body, contentStyle]}
               keyboardShouldPersistTaps="handled"
+              // The date and time rows inside are horizontal scrollers; without
+              // this Android hands them the vertical drag as well and the form
+              // stops responding to it halfway down.
+              nestedScrollEnabled
             >
               {children}
             </ScrollView>

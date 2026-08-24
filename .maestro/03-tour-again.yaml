@@ -1,0 +1,84 @@
+# The tour, replayed from settings.
+#
+# A separate path from the one in flow 02 and worth its own flow: the first run
+# starts the tour on the screen it begins on, while this one starts it from
+# somewhere else entirely and has to navigate there. That difference is exactly
+# what broke the last step's highlight — anchors re-measured per step and the
+# overlay did not, so a screen whose layout had changed since the tour began was
+# compared against a stale origin.
+#
+# Ends with `tour-back` on purpose: walking backwards re-visits screens the tour
+# has already navigated away from, which is the case with the most layout history
+# behind it.
+appId: com.foxacademy.app
+name: Replay the tour from settings
+tags:
+  - tour
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- assertVisible:
+    id: 'screen-settings'
+- scrollUntilVisible:
+    element:
+      id: 'settings-tour-start'
+    direction: DOWN
+- tapOn:
+    id: 'settings-tour-start'
+
+# The first step lives on the calendar, so starting it from settings must move
+# the app there.
+- extendedWaitUntil:
+    visible:
+      id: 'tour-overlay'
+    timeout: 15000
+- assertVisible:
+    id: 'screen-calendar'
+- assertVisible: 'Your week, by the hour'
+- takeScreenshot: replay-1-calendar
+
+- tapOn:
+    id: 'tour-next'
+- tapOn:
+    id: 'tour-next'
+- assertVisible: 'Book a lesson'
+- takeScreenshot: replay-3-booking
+
+- tapOn:
+    id: 'tour-next'
+- assertVisible:
+    id: 'screen-news'
+- tapOn:
+    id: 'tour-next'
+- assertVisible:
+    id: 'screen-more'
+- takeScreenshot: replay-5-more
+
+# Backwards, all the way to the start. Each step must take the app back to the
+# screen it belongs to, not merely change the card.
+- tapOn:
+    id: 'tour-back'
+- assertVisible:
+    id: 'screen-news'
+- tapOn:
+    id: 'tour-back'
+- assertVisible:
+    id: 'screen-calendar'
+- assertVisible: 'Book a lesson'
+- takeScreenshot: replay-back-3-booking
+
+- tapOn:
+    id: 'tour-back'
+- tapOn:
+    id: 'tour-back'
+# Back on the first step, where the only way out is to skip.
+- assertVisible: 'Your week, by the hour'
+- tapOn:
+    id: 'tour-skip'
+- assertNotVisible:
+    id: 'tour-overlay'

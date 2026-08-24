@@ -1,0 +1,119 @@
+# Registering must leave you *inside* the app — and then explain it.
+#
+# This is the flow that would have caught the sign-in bug: registration always
+# returned a session and the app always adopted it, but the token reached the HTTP
+# layer one tick too late, the first request came back 401, and the session was
+# cleared before anything rendered. The assertion that matters is the last one:
+# "the request succeeded" was never the part that was broken.
+#
+# The tour is here rather than in its own flow because this is when it happens —
+# opening a school is the one moment it runs unasked. A screenshot per step, so a
+# highlight landing on the wrong control is visible afterwards; there is no
+# assertion that can be written about where a spotlight is drawn.
+appId: com.foxacademy.app
+name: Open a school, land inside it, and be shown around
+tags:
+  - auth
+  - tour
+---
+- clearState
+- launchApp
+
+# With no session the app opens on sign-in, not on registration — the root
+# guard's unauthenticated group lists sign-in first, so that is the entry point.
+- assertVisible:
+    id: 'signin-email'
+- runFlow: subflows/use-english.yaml
+- tapOn:
+    id: 'signin-create-account'
+
+- assertVisible:
+    id: 'join-open-school'
+- tapOn:
+    id: 'join-open-school'
+
+# Asserted before tapped: `tapOn` gives up on a missing element far sooner than
+# `assertVisible` waits for one, so a tap straight after a navigation fails on
+# the transition rather than on the app.
+- assertVisible:
+    id: 'school-name'
+- tapOn:
+    id: 'school-name'
+# SCHOOL and EMAIL come from the runner, stamped with the time: a school name and
+# an admin email can each be registered once, so a hard-coded pair would pass
+# exactly one run. Deliberately not declared in an `env:` block here — an empty
+# default there shadows the value passed with `-e` and submits a blank form.
+- inputText: ${SCHOOL}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-continue'
+
+- assertVisible:
+    id: 'admin-name'
+- tapOn:
+    id: 'admin-name'
+- inputText: 'Maestro Admin'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'admin-email'
+- inputText: ${EMAIL}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'admin-password'
+- inputText: ${PASSWORD}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'school-create'
+
+# Generous, and on purpose: see subflows/wait-for-app.yaml.
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+
+# --- the tour, which starts itself here ---
+- extendedWaitUntil:
+    visible:
+      id: 'tour-overlay'
+    timeout: 15000
+
+- assertVisible: 'Your week, by the hour'
+- takeScreenshot: tour-1-calendar
+- tapOn:
+    id: 'tour-next'
+
+- assertVisible: 'Move around'
+- takeScreenshot: tour-2-views
+- tapOn:
+    id: 'tour-next'
+
+- assertVisible: 'Book a lesson'
+- takeScreenshot: tour-3-booking
+- tapOn:
+    id: 'tour-next'
+
+# This step changes screen, which is the part of the tour most likely to break:
+# the card has to survive the navigation it performs.
+- assertVisible:
+    id: 'screen-news'
+- takeScreenshot: tour-4-news
+- tapOn:
+    id: 'tour-next'
+
+- assertVisible:
+    id: 'screen-more'
+- takeScreenshot: tour-5-more
+- tapOn:
+    id: 'tour-done'
+
+# Gone, and gone for good — the tour is a first-run thing and must not reappear.
+- assertNotVisible:
+    id: 'tour-overlay'
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+- assertVisible:
+    id: 'screen-calendar'
+- assertNotVisible:
+    id: 'tour-overlay'

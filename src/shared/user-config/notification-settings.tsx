@@ -65,6 +65,7 @@ export function NotificationSettings() {
   return (
     <>
       <ListRow
+        testID="settings-reminders"
         label={t('notificationSettings.lessonReminders')}
         description={t('notificationSettings.lessonRemindersHint')}
         selectable
@@ -78,6 +79,7 @@ export function NotificationSettings() {
             {t('notificationSettings.leadTime')}
           </Text>
           <ChipGroup
+            testID="settings-reminder-lead"
             options={options}
             value={String(config.lessonReminderMinutes)}
             onChange={(value) => void update({ lessonReminderMinutes: Number(value) })}

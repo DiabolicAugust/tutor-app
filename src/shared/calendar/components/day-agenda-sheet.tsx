@@ -46,14 +46,22 @@ export function DayAgendaSheet({
       visible={day !== null}
       onClose={onClose}
       title={day ? format.dayTitle(day) : ''}
+      testID="agenda-sheet"
       footer={
         day ? (
-          <Button label={t('event.add')} fullWidth onPress={() => onAddEvent(day)} />
+          <Button
+            testID="agenda-add"
+            label={t('event.add')}
+            fullWidth
+            onPress={() => onAddEvent(day)}
+          />
         ) : undefined
       }
     >
       {dayLessons.length === 0 ? (
-        <Text color="textSecondary">{t('calendar.empty')}</Text>
+        <Text testID="agenda-empty" color="textSecondary">
+          {t('calendar.empty')}
+        </Text>
       ) : (
         dayLessons.map((lesson) => (
           <View key={lesson.id} style={styles.row}>

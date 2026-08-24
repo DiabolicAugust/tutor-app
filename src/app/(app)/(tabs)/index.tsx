@@ -92,15 +92,22 @@ function CalendarScreen() {
           the padding and the width cap the other three screens use. */}
       <ScreenHeader pinned testID="screen-calendar">
         <View style={styles.titleRow} {...titleAnchor}>
-          <Text variant="titleMd" numberOfLines={1} style={styles.title}>
+          <Text
+            testID="calendar-title"
+            variant="titleMd"
+            numberOfLines={1}
+            style={styles.title}
+          >
             {title}
           </Text>
           <IconButton
+            testID="calendar-filters"
             name={icons.filters}
             accessibilityLabel={t('filters.title')}
             onPress={() => setSheet('filters')}
           />
           <IconButton
+            testID="calendar-settings"
             name={icons.settings}
             accessibilityLabel={t('calendarSettings.title')}
             onPress={() => setSheet('settings')}
@@ -109,17 +116,20 @@ function CalendarScreen() {
 
         <View style={styles.navRow} {...viewsAnchor}>
           <IconButton
+            testID="calendar-previous"
             name={icons.chevronLeft}
             accessibilityLabel={t('calendar.previous')}
             onPress={() => shift(-1)}
           />
           <IconButton
+            testID="calendar-today"
             name={icons.today}
             accessibilityLabel={t('calendar.today')}
             active={isToday(selectedDay)}
             onPress={() => setSelectedDay(startOfDay(new Date()))}
           />
           <IconButton
+            testID="calendar-next"
             name={icons.chevronRight}
             accessibilityLabel={t('calendar.next')}
             onPress={() => shift(1)}
@@ -159,6 +169,7 @@ function CalendarScreen() {
           which has its own "add" action. */}
       {viewMode !== 'month' ? (
         <Fab
+          testID="calendar-add"
           name={icons.add}
           accessibilityLabel={t('event.add')}
           onPress={() => openEventForm(selectedDay)}

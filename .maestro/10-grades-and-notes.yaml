@@ -1,0 +1,155 @@
+# Marks and notes on a student, and the setting that hides marking entirely.
+#
+# The setting is the reason these are one flow. A tutor who does not grade should
+# stop seeing a gradebook on every student — not see an empty one — and the only
+# way to assert "nothing at all" is to have put something there first.
+appId: com.foxacademy.app
+name: Give a mark, write a note, then turn marking off
+tags:
+  - gradebook
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+- tapOn: ${STUDENT}
+- assertVisible:
+    id: 'screen-student'
+
+# --- a mark ---
+- extendedWaitUntil:
+    visible:
+      id: 'student-grades-empty'
+    timeout: 60000
+- tapOn:
+    id: 'student-grades-add'
+- assertVisible:
+    id: 'grade-sheet'
+
+# A classic mark needs a number, and the form refuses a nonsense one rather than
+# sending it to be refused.
+- tapOn:
+    id: 'grade-value'
+- inputText: '-3'
+- runFlow: subflows/dismiss-keyboard.yaml
+- assertVisible: 'A mark cannot be negative.'
+- tapOn:
+    id: 'grade-value'
+- eraseText
+- inputText: '9'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'grade-category'
+- inputText: 'Test'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'grade-save'
+- extendedWaitUntil:
+    notVisible:
+      id: 'grade-sheet'
+    timeout: 60000
+- assertVisible: 'Test'
+
+# A percentage is a different kind with a different ceiling, which is the reason
+# the kind is chosen first.
+- tapOn:
+    id: 'student-grades-add'
+- tapOn:
+    id: 'grade-kind-percentage'
+- tapOn:
+    id: 'grade-value'
+- inputText: '140'
+- runFlow: subflows/dismiss-keyboard.yaml
+- assertVisible: 'A percentage cannot be over 100.'
+- tapOn:
+    id: 'grade-value'
+- eraseText
+- inputText: '82'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'grade-category'
+- inputText: 'Mock exam'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'grade-save'
+- extendedWaitUntil:
+    visible: 'Mock exam'
+    timeout: 60000
+
+# --- a note ---
+- assertVisible:
+    id: 'student-notes-empty'
+- tapOn:
+    id: 'student-notes-draft'
+- inputText: 'Prefers worked examples before rules.'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'student-notes-save'
+- extendedWaitUntil:
+    visible: 'Prefers worked examples before rules.'
+    timeout: 60000
+
+# --- marking, turned off ---
+# The student's page and the settings screen are both pushed over the tab bar,
+# so leaving is the only way back to the tabs — the bar is not there to tap.
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades'
+    direction: DOWN
+- tapOn:
+    id: 'settings-grades'
+- extendedWaitUntil:
+    visible:
+      id: 'settings-grades-off'
+    timeout: 60000
+
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- tapOn: ${STUDENT}
+# Nothing at all, not an empty card — and the marks are still on the server,
+# which the next step proves by turning the setting back on.
+- assertNotVisible:
+    id: 'student-grades'
+- assertVisible:
+    id: 'student-notes'
+
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades'
+    direction: DOWN
+- tapOn:
+    id: 'settings-grades'
+- extendedWaitUntil:
+    notVisible:
+      id: 'settings-grades-off'
+    timeout: 60000
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- tapOn: ${STUDENT}
+- extendedWaitUntil:
+    visible: 'Mock exam'
+    timeout: 60000

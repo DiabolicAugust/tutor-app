@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useWindowDimensions, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 
 import { useT } from '@/shared/i18n';
@@ -26,42 +26,31 @@ export function TutorialOverlay() {
   const { t } = useT();
   const styles = useStyles();
   const { height: screenHeight } = useWindowDimensions();
-  const { step, position, total, isLast, next, back, finish, anchorRect, setOverlayOrigin } =
-    useTutorial();
-
-  const root = useRef<View>(null);
+  const { step, position, total, isLast, next, back, finish, anchorRect } = useTutorial();
 
   /**
-   * Reports where this overlay sits in the window.
+   * This overlay's own height, for placing the card.
    *
-   * Anchors can only measure themselves against the window, so without this their
-   * coordinates are read as if the overlay filled it. On Android it does not
-   * unless the app draws edge to edge, and every highlight came out low by
-   * exactly the status bar.
+   * From `onLayout` rather than a measurement: the only thing needed is how tall
+   * the overlay is, and its layout event says so without asking where it is —
+   * which is the question that produced two rounds of highlights landing a status
+   * bar away from what they pointed at.
    */
   const [height, setHeight] = useState(0);
 
-  const measureSelf = useCallback(() => {
-    root.current?.measureInWindow((x, y, _width, measuredHeight) => {
-      setOverlayOrigin({ x, y });
-      setHeight(measuredHeight);
-    });
-  }, [setOverlayOrigin]);
-
-  /**
-   * Re-measured on every step, not only on layout.
-   *
-   * The anchors already re-measure per step, and the overlay did not — so a
-   * screen whose layout had changed since the tour began was compared against a
-   * stale origin, and the highlight landed off by the difference. The last step
-   * showed it worst, having the most navigation behind it.
-   */
-  useEffect(measureSelf, [measureSelf, step?.id]);
+  const onLayout = useCallback((event: LayoutChangeEvent) => {
+    setHeight(event.nativeEvent.layout.height);
+  }, []);
 
   if (!step) return null;
 
   return (
-    <View style={styles.container} pointerEvents="box-none" ref={root} onLayout={measureSelf}>
+    <View
+      testID="tour-overlay"
+      style={styles.container}
+      pointerEvents="box-none"
+      onLayout={onLayout}
+    >
       {/* Fades in rather than appearing: the screen going dark instantly reads
           as something breaking. */}
       <Animated.View
@@ -85,7 +74,9 @@ export function TutorialOverlay() {
         entering={FadeIn.duration(durations.normal)}
       >
         <View style={styles.header}>
-          <Text variant="titleSm">{t(step.titleKey)}</Text>
+          <Text testID="tour-title" variant="titleSm">
+            {t(step.titleKey)}
+          </Text>
           <Text color="textSecondary">{t(step.bodyKey)}</Text>
         </View>
 
@@ -94,14 +85,25 @@ export function TutorialOverlay() {
 
           <View style={styles.actions}>
             {position > 1 ? (
-              <Button label={t('tutorial.back')} variant="ghost" onPress={back} />
+              <Button
+                testID="tour-back"
+                label={t('tutorial.back')}
+                variant="ghost"
+                onPress={back}
+              />
             ) : (
               // Skipping is offered only on the first step. After that the tour
               // is nearly over, and "next" is the shorter way out.
-              <Button label={t('tutorial.skip')} variant="ghost" onPress={finish} />
+              <Button
+                testID="tour-skip"
+                label={t('tutorial.skip')}
+                variant="ghost"
+                onPress={finish}
+              />
             )}
 
             <Button
+              testID={isLast ? 'tour-done' : 'tour-next'}
               label={isLast ? t('tutorial.done') : t('tutorial.next')}
               onPress={isLast ? finish : next}
             />

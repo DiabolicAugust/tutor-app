@@ -20,6 +20,8 @@ export type GradeSectionProps = {
   emptyHint: string;
   /** Called after any write, so a progress card above can refresh its average. */
   onChanged?: () => void;
+  /** Test handle prefix — a student's record and a lesson's can share a screen. */
+  testID?: string;
 };
 
 /**
@@ -34,6 +36,7 @@ export function GradeSection({
   title,
   emptyHint,
   onChanged,
+  testID = 'grades',
 }: GradeSectionProps) {
   const { t } = useT();
   const format = useFormat();
@@ -66,15 +69,15 @@ export function GradeSection({
 
   return (
     <>
-      <Card title={title}>
+      <Card title={title} testID={testID}>
         {isLoading ? (
           <Text color="textSecondary">{t('common.loading')}</Text>
         ) : grades.length === 0 ? (
-          <Text variant="bodySm" color="textMuted">
+          <Text testID={`${testID}-empty`} variant="bodySm" color="textMuted">
             {emptyHint}
           </Text>
         ) : (
-          grades.map((grade) => (
+          grades.map((grade, index) => (
             <Animated.View
               key={grade.id}
               style={styles.row}
@@ -110,11 +113,13 @@ export function GradeSection({
               {grade.author.id === user.id ? (
                 <View style={styles.actions}>
                   <IconButton
+                    testID={`${testID}-edit-${index}`}
                     name={icons.pencil}
                     accessibilityLabel={t('gradebook.grade.correct')}
                     onPress={() => setEditing({ grade })}
                   />
                   <IconButton
+                    testID={`${testID}-remove-${index}`}
                     name={icons.trash}
                     accessibilityLabel={t('gradebook.grade.remove')}
                     onPress={() => {
@@ -129,6 +134,7 @@ export function GradeSection({
         )}
 
         <Button
+          testID={`${testID}-add`}
           label={t('gradebook.grade.add')}
           variant="secondary"
           fullWidth
@@ -137,7 +143,7 @@ export function GradeSection({
         />
 
         {hasError && editing === null ? (
-          <Text variant="bodySm" color="danger">
+          <Text testID={`${testID}-error`} variant="bodySm" color="danger">
             {t('gradebook.grade.failed')}
           </Text>
         ) : null}

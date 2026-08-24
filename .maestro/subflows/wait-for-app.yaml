@@ -1,0 +1,14 @@
+# Launches and waits until the app is actually usable.
+#
+# The timeout is generous on purpose: the API is on a host that spins down when
+# idle, so the first request of a run can spend the better part of a minute
+# waking it. A short timeout here fails as "the app is broken" when the truth is
+# "the server was asleep" — the runner warms it before the suite starts, and this
+# is the margin for the times that is not enough.
+appId: com.foxacademy.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000

@@ -20,6 +20,7 @@ export function GradebookSettings() {
   return (
     <>
       <ListRow
+        testID="settings-grades"
         label={t('gradebookSettings.enabled')}
         description={t('gradebookSettings.enabledHint')}
         selectable
@@ -28,7 +29,7 @@ export function GradebookSettings() {
       />
 
       {config.gradesEnabled ? null : (
-        <Text variant="caption" color="textSecondary">
+        <Text testID="settings-grades-off" variant="caption" color="textSecondary">
           {t('gradebookSettings.offHint')}
         </Text>
       )}

@@ -1,0 +1,25 @@
+# Adds one student from the roster. Expects STUDENT and SUBJECT.
+#
+# A subflow because four later flows need somebody to exist and none of them is
+# about the act of creating them.
+appId: com.foxacademy.app
+---
+- tapOn:
+    id: 'students-add'
+- assertVisible:
+    id: 'student-sheet'
+- tapOn:
+    id: 'student-name'
+- inputText: ${STUDENT}
+- runFlow: dismiss-keyboard.yaml
+- tapOn:
+    id: 'student-subject'
+- inputText: ${SUBJECT}
+- runFlow: dismiss-keyboard.yaml
+- tapOn:
+    id: 'student-save'
+# The roster comes back from the server, so this is also the check that the write
+# landed rather than only being accepted locally.
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 30000

@@ -1,0 +1,106 @@
+# The roster: an empty one, a refusal, an addition, an edit, and a removal.
+#
+# The order is the point. A school that has just opened has nobody in it, and
+# "no students yet" has to be distinguishable from a list that failed to load —
+# it was "Loading…" for both once. Then everything a tutor does to that list, in
+# the order they would do it.
+appId: com.foxacademy.app
+name: Add, edit and remove a student
+tags:
+  - roster
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- assertVisible:
+    id: 'screen-students'
+- extendedWaitUntil:
+    visible:
+      id: 'students-empty'
+    timeout: 60000
+
+# A student needs a name, and the sheet says so rather than saving a blank row.
+- tapOn:
+    id: 'students-add'
+- tapOn:
+    id: 'student-save'
+- assertVisible: 'Enter a name.'
+- tapOn:
+    id: 'student-sheet-close'
+- assertVisible:
+    id: 'students-empty'
+
+- runFlow:
+    file: subflows/add-student.yaml
+    env:
+      STUDENT: ${STUDENT}
+      SUBJECT: 'Mathematics'
+- assertNotVisible:
+    id: 'students-empty'
+
+# Reopening the sheet must not arrive carrying the last student's name. This is
+# the bug the render-phase reseed fixed, and it is invisible unless somebody adds
+# two people in a row.
+- tapOn:
+    id: 'students-add'
+- assertVisible:
+    id: 'student-sheet'
+- assertNotVisible: ${STUDENT}
+# Closed again before the subflow, which opens it itself.
+- tapOn:
+    id: 'student-sheet-close'
+- runFlow:
+    file: subflows/add-student.yaml
+    env:
+      STUDENT: ${STUDENT_TWO}
+      SUBJECT: 'Physics'
+
+# Editing goes through the student's own page, which is also the check that the
+# row opens it.
+- tapOn: ${STUDENT_TWO}
+- assertVisible:
+    id: 'screen-student'
+- assertVisible:
+    id: 'student-title'
+- tapOn:
+    id: 'student-edit'
+- tapOn:
+    id: 'student-paid-lessons'
+- eraseText
+- inputText: '8'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'student-save'
+- extendedWaitUntil:
+    visible: '8 lessons left'
+    timeout: 30000
+
+# Removal asks first. Declining has to leave the student alone — a destructive
+# action whose "keep" button also removes is worse than no confirmation at all.
+- tapOn:
+    id: 'student-edit'
+- tapOn:
+    id: 'student-remove'
+- tapOn:
+    id: 'student-remove-cancel'
+- tapOn:
+    id: 'student-sheet-close'
+- assertVisible:
+    id: 'student-title'
+
+- tapOn:
+    id: 'student-edit'
+- tapOn:
+    id: 'student-remove'
+- tapOn:
+    id: 'student-remove-confirm'
+# Removed from their own page, so there is nothing left to look at and the app
+# goes back on its own.
+- extendedWaitUntil:
+    visible:
+      id: 'screen-students'
+    timeout: 30000
+- assertNotVisible: ${STUDENT_TWO}
+- assertVisible: ${STUDENT}

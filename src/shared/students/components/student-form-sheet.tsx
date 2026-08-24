@@ -121,6 +121,7 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
       visible={editing !== null}
       onClose={onClose}
       title={student ? t('studentsAdmin.edit') : t('studentsAdmin.add')}
+      testID="student-sheet"
       footer={
         <Button
           testID="student-save"
@@ -164,6 +165,7 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
           starting at zero invites typing something meaningless. */}
       {student ? (
         <TextField
+          testID="student-paid-lessons"
           label={t('studentsAdmin.paidLessons')}
           value={paidLessons}
           onChangeText={(value) => set('paidLessons', value)}
@@ -179,11 +181,13 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
                 {t('studentsAdmin.removeConfirm', { name: student.name })}
               </Text>
               <Button
+                testID="student-remove-cancel"
                 label={t('studentsAdmin.removeCancel')}
                 variant="ghost"
                 onPress={() => setConfirmingRemoval(false)}
               />
               <Button
+                testID="student-remove-confirm"
                 label={t('common.delete')}
                 variant="danger"
                 loading={isSaving}
@@ -192,6 +196,7 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
             </Animated.View>
           ) : (
             <Button
+              testID="student-remove"
               label={t('studentsAdmin.remove')}
               variant="ghost"
               onPress={() => setConfirmingRemoval(true)}

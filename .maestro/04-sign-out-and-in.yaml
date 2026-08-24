@@ -1,0 +1,66 @@
+# Signing out, being refused, getting in, and staying in.
+#
+# Four separate things that all used to fail together. The wrong-password case is
+# here because the app must distinguish "refused" from "broken": a failed sign-in
+# leaves you on the form with a reason, and the reason is the same one for an
+# unknown address as for a wrong password — the server will not say which, and
+# neither will this.
+appId: com.foxacademy.app
+name: Sign out, fail, sign in, survive a restart
+tags:
+  - auth
+---
+- runFlow: subflows/wait-for-app.yaml
+
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- assertVisible:
+    id: 'screen-more'
+- tapOn:
+    id: 'more-sign-out'
+
+- assertVisible:
+    id: 'signin-email'
+# Signing out has to clear the session, not merely leave the screen: a stale
+# token would put the app straight back inside on the next launch.
+- assertNotVisible:
+    id: 'screen-calendar'
+
+# Wrong password, right address.
+- runFlow:
+    file: subflows/sign-in.yaml
+    env:
+      PASSWORD: 'wrong-password-000'
+- extendedWaitUntil:
+    visible:
+      id: 'signin-error'
+    timeout: 60000
+- assertVisible:
+    id: 'signin-email'
+
+# Right password. The assertion that failed before the fix: sign-in succeeded,
+# then a 401 on the first authenticated request signed the user straight back out.
+- tapOn:
+    id: 'signin-password'
+- eraseText
+- inputText: ${PASSWORD}
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'signin-submit'
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+
+# And it has to survive a restart, which is the other half of the same bug — the
+# restored token was published in an effect that ran after the first request.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+- assertNotVisible:
+    id: 'toast'

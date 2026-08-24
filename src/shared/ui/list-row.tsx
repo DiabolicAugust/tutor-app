@@ -25,6 +25,25 @@ export type ListRowProps = {
    * believed.
    */
   testID?: string;
+  /**
+   * Whether the row reaches its container's edges.
+   *
+   * On by default, and the reason is what a press looks like. A row has no
+   * horizontal padding of its own, so its highlight spanned the *content* width
+   * of whatever held it — and every container that holds one pads by `lg`. The
+   * result was a band floating a wide margin short of the card on both sides,
+   * which reads as a highlight around the text rather than a row being pressed.
+   *
+   * Cancelled with a negative margin and restored with padding, so the content
+   * does not move: only the pressable area and the highlight grow. That also
+   * makes the touch target the full width of the list, which is what a list row
+   * should be.
+   *
+   * Turn it off where the row is not the full width of its container — a row
+   * sharing a line with something else, where reaching outwards would paint over
+   * its neighbour.
+   */
+  edgeToEdge?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -36,6 +55,21 @@ const useStyles = createStyles((t) => ({
     minHeight: t.layout.minTouchSize,
     paddingVertical: t.spacing.sm,
     borderRadius: t.radius.sm,
+  },
+  /**
+   * The same token every container that holds a row pads by — `Card` and the
+   * body of `ModalSheet` both use `lg`. Stated here rather than passed in,
+   * because a row that had to be told its parent's padding would be told wrong
+   * on the first screen somebody added.
+   *
+   * No corner radius with it: at full width a rounded band reads as a floating
+   * pill, and a row is not one. The rows are inset vertically by the container's
+   * padding anyway, so the highlight never meets a rounded corner.
+   */
+  edgeToEdge: {
+    marginHorizontal: -t.spacing.lg,
+    paddingHorizontal: t.spacing.lg,
+    borderRadius: 0,
   },
   pressed: { backgroundColor: t.colors.surfaceActive },
   swatch: { width: 12, height: 12, borderRadius: t.radius.full },
@@ -58,6 +92,7 @@ export function ListRow({
   swatchColor,
   style,
   testID,
+  edgeToEdge = true,
 }: ListRowProps) {
   const styles = useStyles();
 
@@ -89,9 +124,13 @@ export function ListRow({
     </>
   );
 
+  // Applied to both variants, so a row that does nothing when tapped still lines
+  // its content up with one that does.
+  const bleed = edgeToEdge && styles.edgeToEdge;
+
   if (!onPress) {
     return (
-      <View style={[styles.row, style]} testID={testID}>
+      <View style={[styles.row, bleed, style]} testID={testID}>
         {content}
       </View>
     );
@@ -104,7 +143,7 @@ export function ListRow({
       accessibilityRole={selectable ? 'checkbox' : 'button'}
       accessibilityState={selectable ? { checked: selected } : undefined}
       accessibilityLabel={label}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed, style]}
+      style={({ pressed }) => [styles.row, bleed, pressed && styles.pressed, style]}
     >
       {content}
     </Pressable>

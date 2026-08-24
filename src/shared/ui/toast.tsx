@@ -101,6 +101,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           tappable, the space around them is not, so a toast never blocks the
           button somebody was reaching for. */}
       <View
+        testID="toast-layer"
         style={[styles.layer, { paddingTop: insets.top + 8 }]}
         pointerEvents="box-none"
         // Announced without interrupting, which is what a toast is.
@@ -126,6 +127,7 @@ function ToastCard({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
 
   return (
     <Pressable
+      testID="toast"
       onPress={onDismiss}
       accessibilityRole="button"
       style={({ pressed }) => [

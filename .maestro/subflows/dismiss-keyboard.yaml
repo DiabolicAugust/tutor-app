@@ -1,0 +1,20 @@
+# Puts the soft keyboard away, and only when one is actually up.
+#
+# `hideKeyboard` cannot be used on its own here. On Android it is a back press,
+# so when no soft keyboard is showing it navigates out of the screen under test
+# and the next step fails looking for something that was on screen a moment ago —
+# which reads as a bug in the app and is not one. That cost real time to find.
+#
+# Whether a keyboard appears depends on the device, not on the flow: this emulator
+# has a hardware keyboard, so text fields get none and password fields get one
+# anyway. So the condition is the keyboard's own view, which is in the hierarchy
+# exactly when it is on screen — and is also why nothing in the app is findable
+# while it is: the IME is its own window and Maestro reads the topmost one.
+appId: com.foxacademy.app
+---
+- runFlow:
+    when:
+      visible:
+        id: '.*inputmethod.*:id/keyboard_holder'
+    commands:
+      - hideKeyboard

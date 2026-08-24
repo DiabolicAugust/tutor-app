@@ -1,0 +1,20 @@
+# Switches bottom tab. Expects TAB — the English label.
+#
+# By label rather than by handle: the bar is a native Android view built by
+# `NativeTabs`, and the `testID` on a trigger does not reach the item the platform
+# draws. The label does — as the item's accessibility description, because the
+# visible label is only drawn for the *selected* tab once there are four of them.
+#
+# Hence the optional suffix. That description carries the badge: with anything
+# unread the news tab announces itself as "News, 2 new notifications", and
+# Maestro matches a whole string against the regex, so a bare `News` stopped
+# matching the moment the feed had something in it. Three flows failed on that at
+# once and it read as the tab having disappeared.
+#
+# One ambiguity is knowingly left in: the roster's own header is also "Students",
+# and screen content comes before the tab bar in the hierarchy. It is harmless —
+# the only flow that switches to Students while that header is up is already on
+# the roster — but a new flow doing it from elsewhere would need to look here.
+appId: com.foxacademy.app
+---
+- tapOn: '${TAB}(,.*)?'
