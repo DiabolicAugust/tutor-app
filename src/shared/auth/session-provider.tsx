@@ -2,14 +2,30 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 
 import { apiClients, setAccessToken, setUnauthorizedHandler } from '@/shared/api';
 import { useT } from '@/shared/i18n';
-import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
+import {
+  StorageKeys,
+  createPersistedValue,
+  secureStorage,
+} from '@/shared/lib/storage';
 import { useToast } from '@/shared/ui';
 
 import type { AuthClient, SignInCredentials } from './auth-client';
 import { SessionContext, type SessionValue } from './session-context';
 import { isSession, type Session } from './session';
 
-const sessionStore = createPersistedValue<Session>(StorageKeys.session, isSession);
+/**
+ * The session, in the platform's keystore rather than the ordinary store.
+ *
+ * It carries a bearer token, and that token is the account: anybody holding it
+ * reads every student, note and document the account can reach. Encrypted at
+ * rest and left out of device backups — which is what stops a session ending up
+ * in somebody's cloud backup and being restored onto another phone.
+ */
+const sessionStore = createPersistedValue<Session>(
+  StorageKeys.session,
+  isSession,
+  secureStorage,
+);
 
 /**
  * The persisted session, read at module load, with the token handed to the HTTP

@@ -1,4 +1,5 @@
 import { storage } from './storage';
+import type { SyncStorage } from './types';
 
 /**
  * A single validated, JSON-encoded preference.
@@ -8,6 +9,10 @@ import { storage } from './storage';
  * removed locale, a renamed theme mode) must degrade to `null` instead of
  * poisoning provider state.
  *
+ * The store is a parameter, defaulting to the ordinary one. The session passes
+ * `secureStorage` instead: it holds a bearer token, which is a credential rather
+ * than a preference and belongs in the platform's keystore.
+ *
  * @example
  * const themeModeStore = createPersistedValue(StorageKeys.themeMode, isThemeMode);
  * themeModeStore.read();        // ThemeMode | null
@@ -16,10 +21,11 @@ import { storage } from './storage';
 export function createPersistedValue<T>(
   key: string,
   isValid: (value: unknown) => value is T,
+  store: SyncStorage = storage,
 ) {
   return {
     read(): T | null {
-      const raw = storage.get(key);
+      const raw = store.get(key);
       if (raw === null) return null;
       try {
         const parsed: unknown = JSON.parse(raw);
@@ -29,10 +35,10 @@ export function createPersistedValue<T>(
       }
     },
     write(value: T): void {
-      storage.set(key, JSON.stringify(value));
+      store.set(key, JSON.stringify(value));
     },
     clear(): void {
-      storage.remove(key);
+      store.remove(key);
     },
   };
 }

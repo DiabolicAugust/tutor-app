@@ -16,7 +16,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.foxacademy.app",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "allowBackup": false
     },
     "web": {
       "output": "static",
@@ -51,7 +52,8 @@
         }
       ],
       "expo-sharing",
-      "./plugins/with-local-cleartext"
+      "./plugins/with-local-cleartext",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
