@@ -17,29 +17,44 @@ export type Tutor = {
   colorIndex: number;
 };
 
-export const ownCalendarId = 'me';
+/**
+ * The fixtures' id for the signed-in tutor.
+ *
+ * **Not** a stand-in for "whoever is signed in" — use `user.id` for that. It was
+ * used that way, and against a real server it was wrong in two expensive places:
+ * students carry a real tutor id, so "my students" matched nothing and the
+ * booking form said the school had none; and lessons carry one too, so the
+ * calendar filtered out every lesson that had just been created and they looked
+ * like they had failed to save.
+ *
+ * The mock auth client issues a user with this id, which is why fixture builds
+ * kept working and hid the problem.
+ */
+export const fixtureOwnCalendarId = 'me';
+
+/** The signed-in tutor's own calendar, built from the session. */
+export function ownCalendarFor(userId: string): Tutor {
+  return { id: userId, name: 'My calendar', speciality: '', colorIndex: 0 };
+}
 
 /**
- * The signed-in tutor's own calendar. Always present, fixtures or not — without
- * it there is nothing to show a schedule on.
+ * Own calendar first, then colleagues.
+ *
+ * A function of the session rather than a constant: which calendars exist
+ * depends on who is signed in and which school they are in, and neither is known
+ * at module load.
  */
-export const ownCalendar: Tutor = {
-  id: ownCalendarId,
-  name: 'My calendar',
-  speciality: '',
-  colorIndex: 0,
-};
-
-/** Own calendar first, then any colleagues. */
-export const calendarOwners: Tutor[] = [
-  ownCalendar,
-  ...(fixturesEnabled ? fixtureColleagues : []),
-];
-
-export function findTutor(id: string): Tutor | undefined {
-  return calendarOwners.find((tutor) => tutor.id === id);
+export function calendarOwnersFor(
+  userId: string,
+  colleagues: readonly Tutor[] = [],
+): Tutor[] {
+  return [
+    ownCalendarFor(userId),
+    ...(fixturesEnabled ? fixtureColleagues : colleagues),
+  ];
 }
 
 export function tutorColorIndex(id: string): number {
-  return findTutor(id)?.colorIndex ?? 0;
+  const colleague = fixtureColleagues.find((tutor) => tutor.id === id);
+  return colleague?.colorIndex ?? 0;
 }

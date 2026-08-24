@@ -90,7 +90,7 @@ function CalendarScreen() {
       {/* Children rather than props: this header is two rows of controls, and no
           title/action shape would have survived it. `ScreenHeader` is here for
           the padding and the width cap the other three screens use. */}
-      <ScreenHeader pinned>
+      <ScreenHeader pinned testID="screen-calendar">
         <View style={styles.titleRow} {...titleAnchor}>
           <Text variant="titleMd" numberOfLines={1} style={styles.title}>
             {title}

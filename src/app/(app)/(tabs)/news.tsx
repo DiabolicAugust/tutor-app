@@ -30,6 +30,7 @@ export default function NewsScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScreenHeader
+        testID="screen-news"
         pinned
         title={t('news.title')}
         subtitle={t('news.unread', { count: unreadCount })}

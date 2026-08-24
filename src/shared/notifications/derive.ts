@@ -1,5 +1,4 @@
 import { lessonEnd, lessonLabel, lessonStart, type Lesson } from '@/shared/lessons';
-import { ownCalendarId } from '@/shared/tutors';
 
 import type { Notification } from './notification';
 
@@ -23,12 +22,18 @@ export function deriveNotifications(
   now: Date,
   /** Resolves a student id to a display name. */
   nameOf: (studentId: string) => string,
+  /**
+   * Whose calendar counts as "mine". Passed in rather than imported: it comes
+   * from the session, and a constant here silently derived nothing on a real
+   * server.
+   */
+  ownId: string,
 ): Notification[] {
   const result: Notification[] = [];
   const nowMs = now.getTime();
 
   for (const lesson of lessons) {
-    if (lesson.tutorId !== ownCalendarId || lesson.status !== 'scheduled') continue;
+    if (lesson.tutorId !== ownId || lesson.status !== 'scheduled') continue;
 
     const startMs = lessonStart(lesson).getTime();
     const endMs = lessonEnd(lesson).getTime();

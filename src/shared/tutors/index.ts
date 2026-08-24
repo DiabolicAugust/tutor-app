@@ -1,8 +1,8 @@
 export {
-  calendarOwners,
-  findTutor,
-  ownCalendar,
-  ownCalendarId,
+  calendarOwnersFor,
+  fixtureOwnCalendarId,
+  ownCalendarFor,
   tutorColorIndex,
   type Tutor,
 } from './tutor';
+export { useCalendarOwners, useOwnCalendarId } from './use-calendar-owners';

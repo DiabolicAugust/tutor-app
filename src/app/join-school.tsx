@@ -99,6 +99,7 @@ export default function JoinSchoolScreen() {
           {steps.isFirst ? (
             <View style={styles.form}>
               <TextField
+                testID="school-name"
                 label={t('join.school.nameLabel')}
                 value={schoolName}
                 onChangeText={setSchoolName}
@@ -118,6 +119,7 @@ export default function JoinSchoolScreen() {
               </Card>
 
               <Button
+                testID="school-continue"
                 label={t('common.continue')}
                 size="lg"
                 fullWidth
@@ -127,6 +129,7 @@ export default function JoinSchoolScreen() {
           ) : (
             <View style={styles.form}>
               <TextField
+                testID="admin-name"
                 label={t('join.school.yourName')}
                 value={adminName}
                 onChangeText={setAdminName}
@@ -136,6 +139,7 @@ export default function JoinSchoolScreen() {
               />
 
               <TextField
+                testID="admin-email"
                 label={t('auth.email')}
                 value={adminEmail}
                 onChangeText={setAdminEmail}
@@ -148,6 +152,7 @@ export default function JoinSchoolScreen() {
               />
 
               <TextField
+                testID="admin-password"
                 label={t('auth.password')}
                 value={adminPassword}
                 onChangeText={setAdminPassword}
@@ -165,6 +170,7 @@ export default function JoinSchoolScreen() {
               />
 
               <Button
+                testID="school-create"
                 label={t('join.school.create')}
                 size="lg"
                 fullWidth

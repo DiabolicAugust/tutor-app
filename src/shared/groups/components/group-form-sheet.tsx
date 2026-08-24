@@ -123,6 +123,7 @@ export function GroupFormSheet({
       title={t(group ? 'groups.edit' : 'groups.create')}
       footer={
         <Button
+          testID="group-save"
           label={t(group ? 'common.save' : 'groups.createAction')}
           onPress={() => void submit()}
           loading={isSaving}
@@ -133,12 +134,14 @@ export function GroupFormSheet({
     >
       <View style={styles.form}>
         <TextField
+          testID="group-name"
           label={t('groups.name')}
           value={draft.name}
           onChangeText={(value) => set('name', value)}
           placeholder={t('groups.nameHint')}
         />
         <TextField
+          testID="group-subject"
           label={t('groups.subject')}
           value={draft.subject}
           onChangeText={(value) => set('subject', value)}
@@ -210,6 +213,7 @@ export function GroupFormSheet({
             )
           ) : (
             <Button
+              testID="group-add-member"
               label={t('groups.addMember')}
               variant="secondary"
               fullWidth

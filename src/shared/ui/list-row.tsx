@@ -17,6 +17,14 @@ export type ListRowProps = {
   selected?: boolean;
   /** Identity swatch, for rows that stand for a calendar or a category. */
   swatchColor?: string;
+  /**
+   * Stable handle for end-to-end tests.
+   *
+   * Preferred over matching visible text, which is translated and rewritten for
+   * clarity — a test that keys on copy fails for cosmetic edits and stops being
+   * believed.
+   */
+  testID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -49,6 +57,7 @@ export function ListRow({
   selected = false,
   swatchColor,
   style,
+  testID,
 }: ListRowProps) {
   const styles = useStyles();
 
@@ -81,11 +90,16 @@ export function ListRow({
   );
 
   if (!onPress) {
-    return <View style={[styles.row, style]}>{content}</View>;
+    return (
+      <View style={[styles.row, style]} testID={testID}>
+        {content}
+      </View>
+    );
   }
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       accessibilityRole={selectable ? 'checkbox' : 'button'}
       accessibilityState={selectable ? { checked: selected } : undefined}

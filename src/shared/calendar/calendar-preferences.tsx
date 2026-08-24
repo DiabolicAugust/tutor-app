@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
-import { ownCalendarId } from '@/shared/tutors';
+import { useOwnCalendarId } from '@/shared/tutors';
 
 import {
   CalendarPreferencesContext,
@@ -31,9 +31,21 @@ export function CalendarPreferencesProvider({ children }: { children: ReactNode 
   const [viewMode, setViewModeState] = useState<CalendarViewMode>(
     () => viewModeStore.read() ?? 'day',
   );
-  const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[]>(
-    () => visibleCalendarsStore.read() ?? [ownCalendarId],
-  );
+  const ownId = useOwnCalendarId();
+
+  /**
+   * Which calendars are overlaid.
+   *
+   * Reconciled against the signed-in user rather than trusted as stored. The
+   * list is persisted, so it outlives the account that wrote it: a build that
+   * ran on fixtures left the fixture id behind, and the filter went on counting
+   * calendars that no longer existed while hiding the one that did.
+   */
+  const [visibleCalendarIds, setVisibleCalendarIds] = useState<string[]>(() => {
+    const stored = visibleCalendarsStore.read();
+    // Own calendar always included: without it there is nothing to show.
+    return stored?.includes(ownId) ? stored : [ownId];
+  });
 
   const setViewMode = useCallback((mode: CalendarViewMode) => {
     setViewModeState(mode);

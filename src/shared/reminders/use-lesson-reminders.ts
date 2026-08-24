@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useFormat, useT } from '@/shared/i18n';
 import { lessonLabel, useLessons } from '@/shared/lessons';
 import { useStudents } from '@/shared/students';
+import { useOwnCalendarId } from '@/shared/tutors';
 import { useUserConfig } from '@/shared/user-config';
 
 import { ensureReminderChannel } from './reminder-channel';
@@ -40,6 +41,7 @@ export function useLessonReminders(): void {
   const format = useFormat();
   const { lessons, isLoading } = useLessons();
   const { nameOf } = useStudents();
+  const ownId = useOwnCalendarId();
   const { config } = useUserConfig();
 
   useEffect(() => {
@@ -62,13 +64,18 @@ export function useLessonReminders(): void {
       if (!(await hasReminderPermission())) return;
       if (cancelled) return;
 
-      const plans = planReminders(lessons, config.lessonReminderMinutes, (lesson, startsAt) => ({
-        title: t('reminders.title', { name: lessonLabel(lesson, nameOf) }),
-        body: t('reminders.body', {
-          time: format.time(startsAt),
-          subject: lesson.subject,
+      const plans = planReminders(
+        lessons,
+        config.lessonReminderMinutes,
+        (lesson, startsAt) => ({
+          title: t('reminders.title', { name: lessonLabel(lesson, nameOf) }),
+          body: t('reminders.body', {
+            time: format.time(startsAt),
+            subject: lesson.subject,
+          }),
         }),
-      }));
+        ownId,
+      );
 
       if (!cancelled) await syncReminders(plans);
     })();
@@ -76,5 +83,14 @@ export function useLessonReminders(): void {
     return () => {
       cancelled = true;
     };
-  }, [isLoading, lessons, config.lessonReminders, config.lessonReminderMinutes, nameOf, t, format]);
+  }, [
+    isLoading,
+    lessons,
+    config.lessonReminders,
+    config.lessonReminderMinutes,
+    nameOf,
+    ownId,
+    t,
+    format,
+  ]);
 }

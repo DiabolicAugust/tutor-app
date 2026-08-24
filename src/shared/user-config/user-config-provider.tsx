@@ -4,7 +4,11 @@ import { apiClients } from '@/shared/api';
 import { useSession } from '@/shared/auth';
 
 import type { UserConfigClient } from './user-config-client';
-import { withConfigDefaults, type UserConfig, type UserConfigPatch } from './user-config';
+import {
+  withConfigDefaults,
+  type UserConfig,
+  type UserConfigPatch,
+} from './user-config';
 
 export type UserConfigStore = {
   config: UserConfig;
@@ -36,30 +40,39 @@ export function UserConfigProvider({
   children: ReactNode;
   client?: UserConfigClient;
 }) {
-  const { user } = useSession();
-  const [override, setOverride] = useState<UserConfig | null>(null);
+  const { user, updateUser } = useSession();
   const [isSaving, setIsSaving] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const config = override ?? withConfigDefaults(user?.config);
+  const config = withConfigDefaults(user?.config);
 
+  /**
+   * Saves a change, and keeps the session as the only place the answer lives.
+   *
+   * Previously this held its own copy alongside the session's. The server stored
+   * the new value and the screen showed it, but the persisted session still held
+   * what was true at sign-in — so the setting reverted on the next launch and
+   * read as never having saved. One owner, written through.
+   */
   const update = useCallback(
     async (patch: UserConfigPatch) => {
       const previous = config;
-      setOverride({ ...previous, ...patch });
+      // Optimistic: a toggle that waits for a round trip feels broken.
+      updateUser({ config: { ...previous, ...patch } });
       setIsSaving(true);
       setHasError(false);
 
       try {
-        setOverride(await client.update(patch));
+        // The server is the authority, including on values it clamped.
+        updateUser({ config: await client.update(patch) });
       } catch {
-        setOverride(previous);
+        updateUser({ config: previous });
         setHasError(true);
       } finally {
         setIsSaving(false);
       }
     },
-    [client, config],
+    [client, config, updateUser],
   );
 
   const value = useMemo<UserConfigStore>(

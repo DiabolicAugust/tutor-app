@@ -1,6 +1,6 @@
 import { useT } from '@/shared/i18n';
 import { useTheme } from '@/shared/theme';
-import { calendarOwners } from '@/shared/tutors';
+import { useCalendarOwners } from '@/shared/tutors';
 import { ListRow, ModalSheet, Text } from '@/shared/ui';
 
 import { useCalendarPreferences } from '../use-calendar-preferences';
@@ -20,7 +20,10 @@ export function CalendarFiltersSheet({
 }) {
   const { t } = useT();
   const { eventColors } = useTheme();
-  const { isCalendarVisible, toggleCalendar, visibleCalendarIds } = useCalendarPreferences();
+  const { isCalendarVisible, toggleCalendar } = useCalendarPreferences();
+  const calendarOwners = useCalendarOwners();
+
+  const visibleCount = calendarOwners.filter((tutor) => isCalendarVisible(tutor.id)).length;
 
   return (
     <ModalSheet visible={visible} onClose={onClose} title={t('filters.title')}>
@@ -44,7 +47,11 @@ export function CalendarFiltersSheet({
       ))}
 
       <Text variant="caption" color="textMuted">
-        {t('filters.visibleCount', { count: visibleCalendarIds.length })}
+        {/* Counted against the calendars that exist, not the ids in storage.
+            The visible list is persisted, so it outlives the calendars it names
+            — a build that once had colleagues left their ids behind, and the
+            filter went on claiming two calendars where there was one. */}
+        {t('filters.visibleCount', { count: visibleCount })}
       </Text>
     </ModalSheet>
   );

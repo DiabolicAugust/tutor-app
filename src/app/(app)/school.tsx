@@ -117,6 +117,12 @@ export default function SchoolScreen() {
         <Card title={t('school.tutors')}>
           {isLoading ? (
             <Text color="textSecondary">{t('common.loading')}</Text>
+          ) : tutors.length === 0 ? (
+            // "Loading" for a school that simply has nobody in it yet is the
+            // app saying it is working when it has finished.
+            <Text variant="bodySm" color="textMuted">
+              {t('school.tutorsEmpty')}
+            </Text>
           ) : (
             tutors.map((tutor) => (
               <ListRow

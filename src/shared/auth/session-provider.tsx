@@ -96,6 +96,20 @@ export function SessionProvider({
     [client, apply],
   );
 
+  const updateUser = useCallback(
+    (patch: Partial<Session['user']>) => {
+      setSession((current) => {
+        if (!current) return current;
+        const next = { ...current, user: { ...current.user, ...patch } };
+        // Persisted, not just held: the point of this method is that the change
+        // survives a relaunch. The token is unchanged, so it is not republished.
+        sessionStore.write(next);
+        return next;
+      });
+    },
+    [],
+  );
+
   const adoptSession = useCallback(
     (next: Session) => {
       apply(next);
@@ -136,10 +150,11 @@ export function SessionProvider({
       errorKey,
       signIn,
       adoptSession,
+      updateUser,
       signOut,
       clearError: () => setErrorKey(null),
     }),
-    [session, isPending, errorKey, signIn, adoptSession, signOut],
+    [session, isPending, errorKey, signIn, adoptSession, updateUser, signOut],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

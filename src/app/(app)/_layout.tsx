@@ -1,10 +1,16 @@
 import { Stack } from 'expo-router';
 
 import { useT } from '@/shared/i18n';
+import { LessonsProvider } from '@/shared/lessons';
+import { TabPreferencesProvider } from '@/shared/navigation';
+import { NotificationsProvider } from '@/shared/notifications';
 import { usePushReceiver, usePushRegistration } from '@/shared/push';
 import { useLessonReminders } from '@/shared/reminders';
+import { SchoolProvider } from '@/shared/school';
+import { StudentsProvider } from '@/shared/students';
 import { useTheme } from '@/shared/theme';
 import { TutorialOverlay, TutorialProvider } from '@/shared/tutorial';
+import { UserConfigProvider } from '@/shared/user-config';
 
 /**
  * Everything behind authentication. Reachable only while the root layout's
@@ -17,12 +23,37 @@ import { TutorialOverlay, TutorialProvider } from '@/shared/tutorial';
  */
 export default function AppLayout() {
   return (
-    <TutorialProvider>
-      <AppStack />
-      {/* After the stack, not before: later siblings paint on top, and a tour
-          underneath the app it is explaining explains nothing. */}
-      <TutorialOverlay />
-    </TutorialProvider>
+    // The data providers live here rather than app-wide, because every one of
+    // them needs a session to fetch with. Mounted above the guard they ran on
+    // the sign-in screen, went out unauthenticated, and reported the 401s as
+    // toasts over a form nobody had filled in.
+    //
+    // Mounting here also means signing in gets a *fresh* fetch with the new
+    // token, instead of whatever an earlier anonymous attempt left behind — an
+    // empty roster that made the booking form claim there were no students.
+    //
+    // Order within: the notification feed derives half its items from the
+    // schedule, so it sits inside it; students sit outside both, because a
+    // lesson refers to a student and the feed needs their names.
+    <UserConfigProvider>
+      <SchoolProvider>
+        <StudentsProvider>
+          <LessonsProvider>
+            <NotificationsProvider>
+              <TabPreferencesProvider>
+                <TutorialProvider>
+                  <AppStack />
+                  {/* After the stack, not before: later siblings paint on top,
+                      and a tour underneath the app it explains explains
+                      nothing. */}
+                  <TutorialOverlay />
+                </TutorialProvider>
+              </TabPreferencesProvider>
+            </NotificationsProvider>
+          </LessonsProvider>
+        </StudentsProvider>
+      </SchoolProvider>
+    </UserConfigProvider>
   );
 }
 

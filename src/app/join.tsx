@@ -37,7 +37,7 @@ export default function JoinScreen() {
               {t('join.openBody')}
             </Text>
             <Link href="/join-school" asChild>
-              <Button label={t('join.openAction')} fullWidth />
+              <Button testID="join-open-school" label={t('join.openAction')} fullWidth />
             </Link>
           </Card>
 
@@ -50,7 +50,12 @@ export default function JoinScreen() {
               {t('join.existingBody')}
             </Text>
             <Link href="/join-existing" asChild>
-              <Button label={t('join.existingAction')} variant="secondary" fullWidth />
+              <Button
+                testID="join-existing"
+                label={t('join.existingAction')}
+                variant="secondary"
+                fullWidth
+              />
             </Link>
           </Card>
         </View>
@@ -60,7 +65,12 @@ export default function JoinScreen() {
             {t('join.haveAccount')}
           </Text>
           <Link href="/sign-in" asChild>
-            <Button label={t('auth.signIn')} variant="ghost" fullWidth />
+            <Button
+              testID="join-have-account"
+              label={t('auth.signIn')}
+              variant="ghost"
+              fullWidth
+            />
           </Link>
         </View>
       </View>

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { apiClients } from '@/shared/api';
+import { ApiError, apiClients } from '@/shared/api';
 import { useAsyncData } from '@/shared/lib/use-async-data';
 
 import type { FilesClient } from './files-client';
@@ -14,12 +14,24 @@ import { byNewestFile, type FileToUpload, type StoredFile } from './stored-file'
  */
 export type FileSource = { kind: 'student'; id: string } | { kind: 'library' };
 
+/**
+ * Why the last write failed, when the server said something specific.
+ *
+ * A single boolean was not enough: "could not add that file" is the same message
+ * for a type the server refuses, a file over the size limit, and a dead
+ * connection — and the person holding the phone is the only one who can tell
+ * them apart, if the app says which.
+ */
+export type FileFailure = 'type' | 'tooLarge' | 'offline' | 'unknown';
+
 export type FilesState = {
   files: StoredFile[];
   isLoading: boolean;
   isUploading: boolean;
   /** Set when the last upload or removal failed. */
   hasError: boolean;
+  /** Set alongside `hasError` when the reason is known. */
+  failure: FileFailure | null;
   upload: (file: FileToUpload) => Promise<void>;
   remove: (id: string) => Promise<void>;
 };
@@ -40,7 +52,7 @@ export function useFiles(
   client: FilesClient = apiClients.files,
 ): FilesState {
   const [isUploading, setIsUploading] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [failure, setFailure] = useState<FileFailure | null>(null);
 
   const { data, isLoading, setData } = useAsyncData(
     source ? (source.kind === 'student' ? `student:${source.id}` : 'library') : null,
@@ -59,15 +71,15 @@ export function useFiles(
       if (!source) return;
 
       setIsUploading(true);
-      setHasError(false);
+      setFailure(null);
       try {
         const created =
           source.kind === 'student'
             ? await client.uploadForStudent(source.id, file)
             : await client.uploadToLibrary(file);
         setData((current) => [created, ...(current ?? [])]);
-      } catch {
-        setHasError(true);
+      } catch (cause) {
+        setFailure(reasonFor(cause));
       } finally {
         setIsUploading(false);
       }
@@ -77,7 +89,7 @@ export function useFiles(
 
   const remove = useCallback(
     async (id: string) => {
-      setHasError(false);
+      setFailure(null);
       // Removed locally first: it is already gone as far as the person who asked
       // is concerned, and putting it back on failure is clearer than a list that
       // does not react to a tap.
@@ -86,13 +98,35 @@ export function useFiles(
 
       try {
         await client.remove(id);
-      } catch {
+      } catch (cause) {
         setData(previous);
-        setHasError(true);
+        setFailure(reasonFor(cause));
       }
     },
     [client, files, setData],
   );
 
-  return { files, isLoading, isUploading, hasError, upload, remove };
+  return {
+    files,
+    isLoading,
+    isUploading,
+    hasError: failure !== null,
+    failure,
+    upload,
+    remove,
+  };
+}
+
+/**
+ * Turns a rejection into something worth showing.
+ *
+ * The statuses are the server's own: 415 for a type outside its allow-list, 413
+ * for a file over `MAX_UPLOAD_MB`, and 0 for a request that never arrived.
+ */
+function reasonFor(cause: unknown): FileFailure {
+  if (!(cause instanceof ApiError)) return 'unknown';
+  if (cause.isNetworkFailure) return 'offline';
+  if (cause.status === 415) return 'type';
+  if (cause.status === 413) return 'tooLarge';
+  return 'unknown';
 }

@@ -10,7 +10,7 @@ import {
 
 import { apiClients } from '@/shared/api';
 import { useT } from '@/shared/i18n';
-import { ownCalendarId } from '@/shared/tutors';
+import { useOwnCalendarId } from '@/shared/tutors';
 import { useToast } from '@/shared/ui';
 
 import type { StudentPatch, StudentsClient } from './students-client';
@@ -60,6 +60,7 @@ export function StudentsProvider({
   const [isLoading, setIsLoading] = useState(true);
   const { t } = useT();
   const toast = useToast();
+  const ownId = useOwnCalendarId();
 
   useEffect(() => {
     let active = true;
@@ -113,7 +114,9 @@ export function StudentsProvider({
     const byId = new Map(students.map((student) => [student.id, student]));
     return {
       students,
-      ownStudents: students.filter((student) => student.tutorId === ownCalendarId),
+      // The signed-in tutor's real id. A fixture constant here meant a real
+      // school always looked like it had no students of its own.
+      ownStudents: students.filter((student) => student.tutorId === ownId),
       find: (id) => byId.get(id),
       nameOf: (id) => byId.get(id)?.name ?? id,
       addStudent,
@@ -121,7 +124,7 @@ export function StudentsProvider({
       removeStudent,
       isLoading,
     };
-  }, [students, addStudent, updateStudent, removeStudent, isLoading]);
+  }, [students, ownId, addStudent, updateStudent, removeStudent, isLoading]);
 
   return <StudentsContext.Provider value={value}>{children}</StudentsContext.Provider>;
 }

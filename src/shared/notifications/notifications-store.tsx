@@ -12,6 +12,7 @@ import {
 import { apiClients } from '@/shared/api';
 import { useLessons } from '@/shared/lessons';
 import { useStudents } from '@/shared/students';
+import { useOwnCalendarId } from '@/shared/tutors';
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
 
 import { deriveNotifications } from './derive';
@@ -65,6 +66,7 @@ export function NotificationsProvider({
 }) {
   const { lessons, setLessonStatus } = useLessons();
   const { nameOf } = useStudents();
+  const ownId = useOwnCalendarId();
   const [readIds, setReadIds] = useState<string[]>(() => readIdsStore.read() ?? []);
   const [sent, setSent] = useState<Notification[]>([]);
 
@@ -109,8 +111,8 @@ export function NotificationsProvider({
   }, [refresh]);
 
   const notifications = useMemo(
-    () => [...sent, ...deriveNotifications(lessons, new Date(), nameOf)].sort(byNewest),
-    [sent, lessons, nameOf],
+    () => [...sent, ...deriveNotifications(lessons, new Date(), nameOf, ownId)].sort(byNewest),
+    [sent, lessons, nameOf, ownId],
   );
 
   const persistRead = useCallback((next: string[]) => {

@@ -1,28 +1,24 @@
 import type { ReactNode } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import { SessionProvider } from '@/shared/auth';
 import { I18nProvider } from '@/shared/i18n';
-import { LessonsProvider } from '@/shared/lessons';
-import { TabPreferencesProvider } from '@/shared/navigation';
-import { NotificationsProvider } from '@/shared/notifications';
-import { SchoolProvider } from '@/shared/school';
-import { StudentsProvider } from '@/shared/students';
 import { ToastProvider } from '@/shared/ui';
-import { UserConfigProvider } from '@/shared/user-config';
 import { ThemeProvider } from '@/shared/theme';
 
 /**
- * Every app-wide singleton, composed in one place and mounted once in the root
- * layout. Add new providers here (auth session, query client, feature flags)
- * rather than nesting them into a route file.
+ * The singletons that exist before anybody has signed in.
+ *
+ * The **data** providers are deliberately not here — see `(app)/_layout.tsx`.
+ * Mounted app-wide they fetched on the sign-in screen with no token to fetch
+ * with, and the 401s arrived as toasts over a form nobody had filled in yet.
+ * There is no schedule before there is a session.
  *
  * Order matters: i18n sits outside the theme so themed components may translate
- * (a themed empty-state needs `t()`), while nothing in i18n needs the theme.
- * Order matters twice more: the session sits inside theme and i18n because it
- * may need both to render errors, and the notification feed sits inside the
- * schedule because it derives half its items from it. Students sit outside both:
- * a lesson refers to a student, and the feed needs their names.
+ * (a themed empty state needs `t()`), while nothing in i18n needs the theme. The
+ * session sits inside both because it may need either to report a failure.
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -32,24 +28,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <GestureHandlerRootView style={fill}>
       <I18nProvider>
         <ThemeProvider>
-          {/* Above the session and the data providers, because they are the ones
-              with failures nothing on screen can report. Rendered over the app,
-              which is why it wraps rather than sits beside. */}
-          <ToastProvider>
-            <SessionProvider>
-              <UserConfigProvider>
-                <SchoolProvider>
-                  <StudentsProvider>
-                    <LessonsProvider>
-                      <NotificationsProvider>
-                        <TabPreferencesProvider>{children}</TabPreferencesProvider>
-                      </NotificationsProvider>
-                    </LessonsProvider>
-                  </StudentsProvider>
-                </SchoolProvider>
-              </UserConfigProvider>
-            </SessionProvider>
-          </ToastProvider>
+          {/* Inside a `SafeAreaProvider`, or `useSafeAreaInsets` reports zero
+              and the toast layer renders under the status bar — half a message,
+              which is how a report of "cut-off toasts" begins.
+
+              Above the session, so a message about signing out survives the
+              screen that was showing when it happened. */}
+          <SafeAreaProvider>
+            <ToastProvider>
+              <SessionProvider>{children}</SessionProvider>
+            </ToastProvider>
+          </SafeAreaProvider>
         </ThemeProvider>
       </I18nProvider>
     </GestureHandlerRootView>

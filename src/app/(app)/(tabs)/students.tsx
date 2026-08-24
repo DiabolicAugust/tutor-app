@@ -74,6 +74,7 @@ export default function StudentsTab() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
         <ScreenHeader
+          testID="screen-students"
           title={t('tabs.students')}
           subtitle={
             user.role === 'admin' ? t('studentsAdmin.allHint') : t('studentsAdmin.ownHint')
@@ -158,6 +159,7 @@ export default function StudentsTab() {
 
       {canManage ? (
         <Fab
+          testID="students-add"
           name={icons.add}
           accessibilityLabel={t(showingGroups ? 'groups.create' : 'studentsAdmin.add')}
           onPress={() =>

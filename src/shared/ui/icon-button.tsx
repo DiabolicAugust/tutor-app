@@ -13,6 +13,14 @@ export type IconButtonProps = {
   /** Tinted variant, for a control that is currently active. */
   active?: boolean;
   size?: number;
+  /**
+   * Stable handle for end-to-end tests.
+   *
+   * Preferred over matching visible text, which is translated and rewritten for
+   * clarity — a test that keys on copy fails for cosmetic edits and stops being
+   * believed.
+   */
+  testID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -37,11 +45,13 @@ export function IconButton({
   active = false,
   size,
   style,
+  testID,
 }: IconButtonProps) {
   const styles = useStyles();
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected: active }}

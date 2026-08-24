@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 
 import { lessonStart, type Lesson } from '@/shared/lessons';
-import { ownCalendarId } from '@/shared/tutors';
 
 import { REMINDER_CHANNEL_ID, REMINDER_SOUND } from './reminder-channel';
 
@@ -43,10 +42,12 @@ export function planReminders(
   lessons: readonly Lesson[],
   leadMinutes: number,
   describe: (lesson: Lesson, startsAt: Date) => ReminderContent,
+  /** Whose lessons to remind about — the session's user, not a constant. */
+  ownId: string,
   now: Date = new Date(),
 ): ReminderPlan[] {
   return lessons
-    .filter((lesson) => lesson.tutorId === ownCalendarId && lesson.status === 'scheduled')
+    .filter((lesson) => lesson.tutorId === ownId && lesson.status === 'scheduled')
     .map((lesson) => {
       const startsAt = lessonStart(lesson);
       return {

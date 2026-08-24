@@ -3,7 +3,7 @@ import type { AttendanceStatus } from '@/shared/gradebook/attendance';
 import type { Lesson, LessonGroup } from '@/shared/lessons/lesson';
 
 import { fixtureGroups } from './groups';
-import { ownCalendarId } from '@/shared/tutors/tutor';
+import { fixtureOwnCalendarId } from '@/shared/tutors/tutor';
 
 /**
  * Test schedule. Generated relative to *now* on every launch, so a test build
@@ -117,7 +117,7 @@ function groupLesson(
 
   return {
     id: `fixture-${sequence}`,
-    tutorId: ownCalendarId,
+    tutorId: fixtureOwnCalendarId,
     studentId: null,
     group,
     subject,
@@ -132,24 +132,24 @@ function groupLesson(
 
 export const fixtureLessons: Lesson[] = [
   // Relative to now: these drive the news feed, so they must always exist.
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', hoursFromNow(-3), 60),
-  lesson(ownCalendarId, 'student-petro', 'Algebra', hoursFromNow(-1, -30), 45),
-  lesson(ownCalendarId, 'student-sofia', 'Geometry', hoursFromNow(1), 90),
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', hoursFromNow(-3), 60),
+  lesson(fixtureOwnCalendarId, 'student-petro', 'Algebra', hoursFromNow(-1, -30), 45),
+  lesson(fixtureOwnCalendarId, 'student-sofia', 'Geometry', hoursFromNow(1), 90),
 
   // Same slot as the one above, on a colleague's calendar: overlap + filters.
   lesson('tutor-2', 'student-daria', 'English', hoursFromNow(1), 60),
   lesson('tutor-3', 'student-ihor', 'Physics', hoursFromNow(4), 60),
 
   // Every status has a look.
-  lesson(ownCalendarId, 'student-maksym', 'Mathematics', hoursFromNow(7), 60, 'cancelled'),
-  lesson(ownCalendarId, 'student-mariia', 'Mathematics', onDay(-1, 13), 60, 'completed', {
+  lesson(fixtureOwnCalendarId, 'student-maksym', 'Mathematics', hoursFromNow(7), 60, 'cancelled'),
+  lesson(fixtureOwnCalendarId, 'student-mariia', 'Mathematics', onDay(-1, 13), 60, 'completed', {
     topic: 'Quadratic equations — completing the square',
     homework: 'Exercises 4.1–4.6',
     // Set but not yet reviewed, which is the state most lessons sit in.
     homeworkDone: null,
     attendance: 'present',
   }),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-2, 10), 60, 'completed', {
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(-2, 10), 60, 'completed', {
     topic: 'Fractions: common denominators',
     homework: 'Workbook p. 31',
     homeworkDone: true,
@@ -158,17 +158,17 @@ export const fixtureLessons: Lesson[] = [
 
   // Anna's history, so one student has a gradebook worth opening: a no-show that
   // was charged, an excused absence that was not, and a lesson still unwritten.
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-9, 10), 60, 'completed', {
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(-9, 10), 60, 'completed', {
     topic: 'Percentages in word problems',
     homework: null,
     attendance: 'absentUnexcused',
   }),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-16, 10), 60, 'cancelled', {
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(-16, 10), 60, 'cancelled', {
     topic: null,
     homework: null,
     attendance: 'absentExcused',
   }),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(-23, 10), 60, 'completed', {
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(-23, 10), 60, 'completed', {
     topic: 'Order of operations',
     homework: 'Sheet 2',
     homeworkDone: false,
@@ -176,17 +176,17 @@ export const fixtureLessons: Lesson[] = [
   }),
 
   // Fixed days, for the three-day and month views.
-  lesson(ownCalendarId, 'student-ivan', 'Mathematics', onDay(1, 9, 30), 60),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(1, 15), 60),
+  lesson(fixtureOwnCalendarId, 'student-ivan', 'Mathematics', onDay(1, 9, 30), 60),
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(1, 15), 60),
   lesson('tutor-2', 'student-kateryna', 'English', onDay(1, 10), 45),
   lesson('tutor-4', 'student-oleh', 'Chemistry', onDay(1, 13), 60),
-  lesson(ownCalendarId, 'student-sofia', 'Geometry', onDay(2, 11), 60),
+  lesson(fixtureOwnCalendarId, 'student-sofia', 'Geometry', onDay(2, 11), 60),
   lesson('tutor-3', 'student-ihor', 'Physics', onDay(2, 17), 90),
-  lesson(ownCalendarId, 'student-petro', 'Algebra', onDay(4, 12), 45),
-  lesson(ownCalendarId, 'student-anna', 'Mathematics', onDay(7, 9), 60),
+  lesson(fixtureOwnCalendarId, 'student-petro', 'Algebra', onDay(4, 12), 45),
+  lesson(fixtureOwnCalendarId, 'student-anna', 'Mathematics', onDay(7, 9), 60),
   lesson('tutor-2', 'student-daria', 'English', onDay(8, 14), 60),
-  lesson(ownCalendarId, 'student-sofia', 'Geometry', onDay(-6, 16), 60, 'completed'),
-  lesson(ownCalendarId, 'student-yaroslav', 'Mathematics', onDay(12, 10, 30), 60),
+  lesson(fixtureOwnCalendarId, 'student-sofia', 'Geometry', onDay(-6, 16), 60, 'completed'),
+  lesson(fixtureOwnCalendarId, 'student-yaroslav', 'Mathematics', onDay(12, 10, 30), 60),
 
   // Group lessons, so the calendar shows a group block in every view and the
   // register has somewhere with more than one line to be filled in.

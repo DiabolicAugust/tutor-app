@@ -11,8 +11,16 @@ import { Button, Card, Icon, IconButton, Text, icons, motion } from '@/shared/ui
 import { isPreviewable, openFileExternally, shareFile } from '../open-file';
 import { pickFile } from '../pick-file';
 import { formatFileSize, type StoredFile } from '../stored-file';
-import { useFiles, type FileSource } from '../use-files';
+import { useFiles, type FileFailure, type FileSource } from '../use-files';
 import { FilePreviewSheet } from './file-preview-sheet';
+
+/** A record, so a renamed reason fails to compile rather than render a key. */
+const failureKeys = {
+  type: 'files.failedType',
+  tooLarge: 'files.failedTooLarge',
+  offline: 'files.failedOffline',
+  unknown: 'files.failed',
+} as const satisfies Record<FileFailure, string>;
 
 export type FileSectionProps = {
   /** Whose files to show — a student's documents, or the caller's own shelf. */
@@ -36,7 +44,7 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
   const format = useFormat();
   const styles = useStyles();
   const user = useCurrentUser();
-  const { files, isLoading, isUploading, hasError, upload, remove } = useFiles(source);
+  const { files, isLoading, isUploading, hasError, failure, upload, remove } = useFiles(source);
 
   const [pickerFailed, setPickerFailed] = useState(false);
   const [preview, setPreview] = useState<StoredFile | null>(null);
@@ -162,8 +170,11 @@ export function FileSection({ source, title, emptyHint }: FileSectionProps) {
 
       {hasError || pickerFailed ? (
         <Animated.View entering={motion.messageEnter()}>
+          {/* Named rather than generic: the three common reasons need three
+              different responses, and one message for all of them tells nobody
+              what to do next. */}
           <Text variant="caption" color="danger">
-            {t('files.failed')}
+            {t(failureKeys[failure ?? 'unknown'])}
           </Text>
         </Animated.View>
       ) : null}

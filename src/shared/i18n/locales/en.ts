@@ -108,6 +108,7 @@ export const en = {
   school: {
     title: 'School management',
     tutors: 'Tutors',
+    tutorsEmpty: 'Nobody else yet. Invite a colleague and they appear here.',
     you: '{{name}} (you)',
     invitations: 'Invitations',
     invitationsHint: 'People who have been invited but have not joined yet.',
@@ -273,6 +274,9 @@ export const en = {
     remove: 'Remove file',
     meta: '{{size}} · {{when}}',
     failed: 'Could not add that file. Please try again.',
+    failedType: 'That kind of file is not accepted. Images, PDFs, Word and Excel documents are.',
+    failedTooLarge: 'That file is too large. The limit is 10 MB.',
+    failedOffline: 'Could not reach the server. Check your connection and try again.',
   },
   gradebookSettings: {
     title: 'Marking',

@@ -24,6 +24,14 @@ export type ScreenHeaderProps = {
   pinned?: boolean;
   /** Extra rows below the title — the calendar's date navigation. */
   children?: ReactNode;
+  /**
+   * Stable handle for end-to-end tests.
+   *
+   * Preferred over matching visible text, which is translated and rewritten for
+   * clarity — a test that keys on copy fails for cosmetic edits and stops being
+   * believed.
+   */
+  testID?: string;
 };
 
 /**
@@ -47,11 +55,12 @@ export function ScreenHeader({
   action,
   pinned = false,
   children,
+  testID,
 }: ScreenHeaderProps) {
   const styles = useStyles();
 
   return (
-    <View style={[styles.header, pinned && styles.pinned]}>
+    <View style={[styles.header, pinned && styles.pinned]} testID={testID}>
       {title ? (
         <View style={styles.titleRow}>
           <Text variant="titleLg" numberOfLines={1} style={styles.title}>
@@ -75,7 +84,6 @@ export function ScreenHeader({
 const useStyles = createStyles((t) => ({
   header: {
     gap: t.spacing.xs,
-    paddingHorizontal: t.spacing.lg,
     paddingTop: t.spacing.lg,
     // Aligned with the content below it, which is centred and capped on a wide
     // screen. A full-width header over centred cards is the misalignment this
@@ -84,7 +92,15 @@ const useStyles = createStyles((t) => ({
     width: '100%',
     maxWidth: t.layout.maxContentWidth,
   },
-  pinned: { paddingBottom: t.spacing.lg },
+  /**
+   * A pinned header pads itself horizontally; one inside a scroll view inherits
+   * that from the container and would otherwise double it — which is exactly
+   * how news and students ended up 16 apart.
+   */
+  pinned: {
+    paddingHorizontal: t.spacing.lg,
+    paddingBottom: t.spacing.lg,
+  },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',

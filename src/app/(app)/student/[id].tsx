@@ -19,7 +19,6 @@ import { useAsyncData } from '@/shared/lib/use-async-data';
 import { NoteSection } from '@/shared/notes';
 import { StudentFormSheet, useStudents, type Student } from '@/shared/students';
 import { createStyles } from '@/shared/theme';
-import { ownCalendarId } from '@/shared/tutors';
 import { Button, Card, ListRow, Text, motion } from '@/shared/ui';
 
 import { attendanceFor, type LessonStatus, type StudentLesson } from '@/shared/lessons';
@@ -98,7 +97,7 @@ export default function StudentScreen() {
   };
 
   const mayEdit =
-    has('MANAGE_STUDENTS') && (user.role === 'admin' || student.tutorId === ownCalendarId);
+    has('MANAGE_STUDENTS') && (user.role === 'admin' || student.tutorId === user.id);
 
   return (
     <>

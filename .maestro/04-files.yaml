@@ -1,0 +1,25 @@
+# The tutor's own file library opens and loads.
+#
+# Deliberately does not upload: picking a file opens the system document picker,
+# which is another app's UI and not something a flow should drive. What this
+# covers is the part that broke before — a screen that renders and a request that
+# is authenticated. An upload is covered by the backend's own suite.
+appId: com.foxacademy.app
+name: Open the file library
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: 'screen-calendar'
+    timeout: 90000
+
+- tapOn: 'More'
+- assertVisible:
+    id: 'screen-more'
+- tapOn:
+    id: 'more-files'
+
+- assertVisible: 'My files'
+# A failed load would toast instead, so asserting the empty state is asserting
+# that the request succeeded.
+- assertVisible: 'Files'

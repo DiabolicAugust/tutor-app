@@ -20,6 +20,15 @@ export type SessionValue = {
    * the guard sees a session and moves the user into the app.
    */
   adoptSession: (session: Session) => void;
+  /**
+   * Updates the signed-in user in place, persisting the change.
+   *
+   * For facts the server confirms after sign-in — an account preference, most
+   * of them. Without this the persisted session kept whatever was true at
+   * sign-in, so a saved setting reverted on the next launch and looked like it
+   * had never saved at all.
+   */
+  updateUser: (patch: Partial<AuthUser>) => void;
   signOut: () => Promise<void>;
   clearError: () => void;
 };

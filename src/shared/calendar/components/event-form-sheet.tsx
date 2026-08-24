@@ -8,7 +8,7 @@ import { useLessons, type NewLesson } from '@/shared/lessons';
 import { addDays, startOfDay } from '@/shared/lib/date';
 import { useStudents } from '@/shared/students';
 import { createStyles } from '@/shared/theme';
-import { ownCalendarId } from '@/shared/tutors';
+import { useOwnCalendarId } from '@/shared/tutors';
 import {
   Button,
   ChipGroup,
@@ -62,6 +62,7 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
   const { ownStudents, find, addStudent } = useStudents();
   const { groups } = useGroups();
   const { has } = useAddons();
+  const ownId = useOwnCalendarId();
 
   /** Whether this lesson is for one student or for a group. */
   const [taught, setTaught] = useState<'student' | 'group'>('student');
@@ -158,8 +159,10 @@ export function EventFormSheet({ visible, initialDay, onClose }: EventFormSheetP
     startsAt.setHours(Math.floor(Number(startMinutes) / 60), Number(startMinutes) % 60, 0, 0);
 
     const draft: NewLesson = {
-      // Always the tutor's own calendar — see the note above.
-      tutorId: ownCalendarId,
+      // Always the tutor's own calendar — see the note above. The session's real
+      // id: a fixture constant here put every new lesson on a calendar the grid
+      // then filtered out, so booking appeared to do nothing.
+      tutorId: ownId,
       studentId: resolvedId,
       group: group
         ? {

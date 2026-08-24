@@ -39,6 +39,7 @@ export default function SignInScreen() {
 
           <View style={styles.form}>
             <TextField
+              testID="signin-email"
               label={t('auth.email')}
               value={email}
               onChangeText={setEmail}
@@ -51,6 +52,7 @@ export default function SignInScreen() {
             />
 
             <TextField
+              testID="signin-password"
               label={t('auth.password')}
               value={password}
               onChangeText={setPassword}
@@ -69,6 +71,7 @@ export default function SignInScreen() {
             )}
 
             <Button
+              testID="signin-submit"
               label={isPending ? t('auth.signingIn') : t('auth.signIn')}
               onPress={handleSignIn}
               loading={isPending}
@@ -81,7 +84,12 @@ export default function SignInScreen() {
             {/* The only route into registration, so it is a button rather than a
                 line of small print. */}
             <Link href="/join" asChild>
-              <Button label={t('auth.createAccount')} variant="secondary" fullWidth />
+              <Button
+                testID="signin-create-account"
+                label={t('auth.createAccount')}
+                variant="secondary"
+                fullWidth
+              />
             </Link>
           </View>
 

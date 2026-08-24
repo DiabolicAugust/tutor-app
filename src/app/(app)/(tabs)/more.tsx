@@ -9,7 +9,7 @@ import { useT } from '@/shared/i18n';
 import { SupportSheet } from '@/shared/support';
 import { createStyles } from '@/shared/theme';
 import { useTutorialAnchor } from '@/shared/tutorial';
-import { Button, Card, ListRow, ScreenHeader, Text } from '@/shared/ui';
+import { Button, Card, ListRow, Text } from '@/shared/ui';
 
 /**
  * "More" tab: the account, and links to everything that is not a primary
@@ -29,8 +29,6 @@ export default function MoreScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content}>
-        <ScreenHeader title={t('more.title')} />
-
         <Card title={t('more.account')}>
           <Text variant="titleSm">{user.name}</Text>
           <Text variant="bodySm" color="textSecondary">
@@ -45,7 +43,11 @@ export default function MoreScreen() {
           {user.role === 'admin' || granted.length > 0 ? (
             <ListRow label={t('more.school')} onPress={() => router.push('/school')} />
           ) : null}
-          <ListRow label={t('more.files')} onPress={() => router.push('/files')} />
+          <ListRow
+            testID="more-files"
+            label={t('more.files')}
+            onPress={() => router.push('/files')}
+          />
           <View {...settingsAnchor}>
             <ListRow label={t('more.settings')} onPress={() => router.push('/settings')} />
           </View>
@@ -53,6 +55,7 @@ export default function MoreScreen() {
         </Card>
 
         <Button
+          testID="more-sign-out"
           label={t('auth.signOut')}
           variant="secondary"
           fullWidth
@@ -69,8 +72,9 @@ const useStyles = createStyles((t) => ({
   screen: { flex: 1, backgroundColor: t.colors.background },
   content: {
     gap: t.spacing.lg,
-    // No top padding: `ScreenHeader` supplies it, so this screen and the pinned
-    // ones start their titles at the same height.
+    // Pads itself, unlike the screens with a header: this one has no title to
+    // name what is already the tab's own label.
+    paddingTop: t.spacing.lg,
     paddingHorizontal: t.spacing.lg,
     paddingBottom: t.spacing.xl,
     alignSelf: 'center',

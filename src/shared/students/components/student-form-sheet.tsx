@@ -31,6 +31,15 @@ export type StudentFormSheetProps = {
  * destructive action in it is how the two versions end up disagreeing about what
  * removal warns you about.
  */
+/** The fields, as one value so reseeding them is one assignment. */
+type Draft = { name: string; subject: string; paidLessons: string };
+
+const draftFor = (student: Student | null): Draft => ({
+  name: student?.name ?? '',
+  subject: student?.subject ?? '',
+  paidLessons: String(student?.paidLessonsLeft ?? 0),
+});
+
 export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormSheetProps) {
   const { t } = useT();
   const styles = useStyles();
@@ -38,13 +47,29 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
 
   const student = editing?.student ?? null;
 
-  // Initialised from the student, never re-synced. Resetting the fields when the
-  // sheet opens on somebody else is the caller's `key`, not an effect here: an
-  // effect that writes state has to render once with the wrong values first,
-  // which is a visible flash of the previous student's name.
-  const [name, setName] = useState(student?.name ?? '');
-  const [subject, setSubject] = useState(student?.subject ?? '');
-  const [paidLessons, setPaidLessons] = useState(String(student?.paidLessonsLeft ?? 0));
+  /**
+   * Reseeded whenever the sheet is pointed at a different subject — including at
+   * "nobody", which is what adding a student is.
+   *
+   * A `key` on the caller was not enough: for a new student that key is the
+   * constant `'new'`, so React kept this component and its state across opens
+   * and the next "add student" arrived pre-filled with the last one's name.
+   *
+   * Adjusted during render rather than in an effect, so the stale values are
+   * never painted — an effect runs after a frame has already shown them.
+   */
+  const key = editing ? (student?.id ?? 'new') : null;
+  const [state, setState] = useState(() => ({ key, draft: draftFor(student) }));
+  const current = state.key === key ? state : { key, draft: draftFor(student) };
+  if (state.key !== key) setState(current);
+
+  const { name, subject, paidLessons } = current.draft;
+  const set = (field: keyof Draft, value: string) =>
+    setState((previous) => ({
+      ...previous,
+      draft: { ...previous.draft, [field]: value },
+    }));
+
   const [showNameError, setShowNameError] = useState(false);
   const [failed, setFailed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -98,6 +123,7 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
       title={student ? t('studentsAdmin.edit') : t('studentsAdmin.add')}
       footer={
         <Button
+          testID="student-save"
           label={t('studentsAdmin.save')}
           fullWidth
           size="lg"
@@ -107,10 +133,11 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
       }
     >
       <TextField
+        testID="student-name"
         label={t('studentsAdmin.name')}
         value={name}
         onChangeText={(value) => {
-          setName(value);
+          set('name', value);
           setShowNameError(false);
         }}
         placeholder={t('studentsAdmin.namePlaceholder')}
@@ -126,9 +153,10 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
       />
 
       <TextField
+        testID="student-subject"
         label={t('studentsAdmin.subject')}
         value={subject}
-        onChangeText={setSubject}
+        onChangeText={(value) => set('subject', value)}
         placeholder={t('studentsAdmin.subjectPlaceholder')}
       />
 
@@ -138,7 +166,7 @@ export function StudentFormSheet({ editing, onClose, onRemoved }: StudentFormShe
         <TextField
           label={t('studentsAdmin.paidLessons')}
           value={paidLessons}
-          onChangeText={setPaidLessons}
+          onChangeText={(value) => set('paidLessons', value)}
           keyboardType="number-pad"
         />
       ) : null}
