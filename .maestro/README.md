@@ -53,6 +53,16 @@ DATABASE_URL="postgresql://postgres:fox@localhost:55432/foxacademy_e2e?schema=pu
 PORT=3000 DATABASE_URL="postgresql://postgres:fox@localhost:55432/foxacademy_e2e?schema=public" JWT_SECRET="e2e-only-secret-at-least-thirty-two-chars-long" MAIL_TRANSPORT=log PUSH_TRANSPORT=log STORAGE_DRIVER=local UPLOADS_DIR=/tmp/foxacademy-e2e-uploads   npm start
 ```
 
+**The backend now rate limits, and the suite is a caller like any other.** Two of
+its limits are counted per address, which means per machine: registering a school
+is capped at ten an hour and signing in at forty. One run registers one school and
+signs in about five times, so ten runs an hour is the ceiling — comfortable, until
+an afternoon of manual `curl` against the same server has already spent it. A run
+that fails at flow 02 with a 429 has hit that, not a bug.
+
+Deliberately not relaxed for this environment: a suite that runs against limits
+nobody ships is a suite that stops testing the thing that ships.
+
 A database of its own rather than `foxacademy_test`: the backend's own suite
 truncates every table between cases, and sharing one would mean each project
 deleting the other's fixtures halfway through a run.
