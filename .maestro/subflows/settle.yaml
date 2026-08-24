@@ -1,0 +1,16 @@
+# Waits for the screen to stop moving.
+#
+# Its own file because the reason is always the same and always non-obvious: a
+# tap is two operations, finding the element and touching where it was, and a
+# list re-laying itself out between the two lands the touch on the neighbouring
+# row. Maestro only reports that much later, wherever the wrong record first
+# contradicts an assertion — twice now that was three steps on, reading like a
+# bug in the feature rather than a mis-tap.
+#
+# Waiting for the sheet's handle to leave the tree is not the same thing: it goes
+# when the modal unmounts, while the rows behind it are still sliding into the
+# space it gave back.
+appId: com.foxacademy.app
+---
+- waitForAnimationToEnd:
+    timeout: 5000

@@ -145,25 +145,31 @@ tags:
     timeout: 30000
 - tapOn:
     id: 'subject-add-sheet-close'
-# Waited out, not assumed. Tapping a row while a sheet is still animating away
-# resolves coordinates that belong to where a row *was*: the run that caught this
-# opened Mathematics instead of Latin and renamed it, and the flow only noticed
-# three steps later when retiring it was refused.
+# Waited out, not assumed. Tapping a row while the screen is still moving
+# resolves coordinates that belong to where a row *was*, and two runs have opened
+# Mathematics instead of Latin that way. The sheet's handle leaving the tree is
+# not the end of it — the rows behind it are still sliding into the space it gave
+# back — so the wait that matters is the one for the screen to go still.
 - extendedWaitUntil:
     notVisible:
       id: 'subject-add-sheet'
     timeout: 30000
+- runFlow: subflows/settle.yaml
 
 # Renaming corrects it everywhere at once, which is the reason this is a list and
 # not a word typed onto each record.
 - tapOn: 'Latin'
 - assertVisible:
     id: 'subject-edit-sheet'
+# Which subject is open, asserted rather than hoped for. The rename field is
+# identical whichever row was tapped, so the title is the only thing that says
+# — and without this a mis-tap surfaced three steps later as a refusal that read
+# like a bug in retiring.
+- assertVisible:
+    id: 'subject-edit-sheet-title'
+    text: 'Latin'
 # The field, before anything is typed into it: a sheet still animating open
-# swallows input the same way a closing one misplaces taps. This does not prove
-# the *right* subject was opened — nothing on this sheet distinguishes them by
-# handle — which is why the retire below asserts no refusal appeared, and that is
-# what catches a mis-tap.
+# swallows input the same way a closing one misplaces taps.
 - assertVisible:
     id: 'subject-rename-name'
 - tapOn:
@@ -180,12 +186,16 @@ tags:
     notVisible:
       id: 'subject-edit-sheet'
     timeout: 30000
+- runFlow: subflows/settle.yaml
 
 # Retiring one that nothing studies goes through, and it leaves the list without
 # being deleted — which the restore below is the proof of.
 - tapOn: 'Latin B'
 - assertVisible:
     id: 'subject-edit-sheet'
+- assertVisible:
+    id: 'subject-edit-sheet-title'
+    text: 'Latin B'
 - tapOn:
     id: 'subject-retire'
 # Gone from the sheet *and* from the list. Asserting only that the name has
@@ -199,6 +209,8 @@ tags:
     id: 'subject-in-use-sheet'
 - assertNotVisible: 'Latin B'
 
+# The toggle sits under the list, so retiring a subject moves it up the screen.
+- runFlow: subflows/settle.yaml
 - tapOn:
     id: 'subjects-toggle-retired'
 - assertVisible:
@@ -215,9 +227,13 @@ tags:
 - extendedWaitUntil:
     visible: 'Mathematics'
     timeout: 30000
+- runFlow: subflows/settle.yaml
 - tapOn: 'Mathematics'
 - assertVisible:
     id: 'subject-edit-sheet'
+- assertVisible:
+    id: 'subject-edit-sheet-title'
+    text: 'Mathematics'
 - tapOn:
     id: 'subject-retire'
 - extendedWaitUntil:

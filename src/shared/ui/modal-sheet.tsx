@@ -30,9 +30,10 @@ export type ModalSheetProps = {
   /** Pinned below the scrollable body — the place for confirm/cancel. */
   footer?: React.ReactNode;
   /**
-   * Test handle for the panel. The close control becomes `${testID}-close` and
-   * the backdrop `${testID}-backdrop` — both worth covering, since dismissing a
-   * sheet by tapping outside it is a different path from pressing its button.
+   * Test handle for the panel. The close control becomes `${testID}-close`, the
+   * backdrop `${testID}-backdrop` and the title `${testID}-title`. All three are
+   * worth covering: dismissing a sheet by tapping outside it is a different path
+   * from pressing its button, and the title is what says which record is open.
    */
   testID?: string;
   contentStyle?: StyleProp<ViewStyle>;
@@ -166,7 +167,12 @@ export function ModalSheet({
         >
           <Pressable style={styles.sheet} onPress={() => {}} testID={testID}>
             <View style={styles.header}>
-              <Text variant="titleSm">{title}</Text>
+              {/* The title carries a handle of its own because it is often the
+                  only thing on a sheet that says *which* record is open — a
+                  rename field looks identical whichever row was tapped. */}
+              <Text variant="titleSm" testID={testID ? `${testID}-title` : undefined}>
+                {title}
+              </Text>
               <IconButton
                 name={icons.close}
                 accessibilityLabel={t('common.close')}
