@@ -19,5 +19,6 @@ export {
 export { StepDots, type StepDotsProps } from './step-dots';
 export { SwipePager, type SwipePagerProps } from './swipe-pager';
 export { Text, type TextColor, type TextProps, type TextVariant } from './text';
+export { ToastProvider, useToast, type ToastTone, type ToastValue } from './toast';
 export { TextField, type TextFieldProps } from './text-field';
 export { ThemeModeSwitcher } from './theme-mode-switcher';

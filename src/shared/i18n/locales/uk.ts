@@ -180,6 +180,7 @@ export const uk = {
     emailPlaceholder: 'you@school.com',
     signingIn: 'Вхід…',
     signInFailed: 'Не вдалося увійти. Спробуйте ще раз.',
+    sessionExpired: 'Сесія завершилася. Увійдіть, будь ласка, знову.',
     createAccount: 'Створити акаунт',
     mockNotice: 'Бекенду ще немає — підійде будь-яка пошта й пароль.',
   },
@@ -314,6 +315,13 @@ export const uk = {
       many: '{{count}} учнів',
       other: '{{count}} учнів',
     },
+  },
+  errors: {
+    loadSchedule: 'Не вдалося завантажити розклад. Перевірте зʼєднання й потягніть, щоб оновити.',
+    bookLesson: 'Заняття не збереглося. Спробуйте забронювати ще раз.',
+    saveLesson: 'Не вдалося зберегти цю зміну на сервері.',
+    loadStudents: 'Не вдалося завантажити учнів.',
+    generic: 'Щось пішло не так. Спробуйте ще раз.',
   },
   gradebook: {
     attendance: {

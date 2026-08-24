@@ -1,13 +1,33 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { apiClients, setAccessToken, setUnauthorizedHandler } from '@/shared/api';
+import { useT } from '@/shared/i18n';
 import { StorageKeys, createPersistedValue } from '@/shared/lib/storage';
+import { useToast } from '@/shared/ui';
 
 import type { AuthClient, SignInCredentials } from './auth-client';
 import { SessionContext, type SessionValue } from './session-context';
 import { isSession, type Session } from './session';
 
 const sessionStore = createPersistedValue<Session>(StorageKeys.session, isSession);
+
+/**
+ * The persisted session, read at module load, with the token handed to the HTTP
+ * layer immediately.
+ *
+ * Not in an effect, and that is the whole point. Passive effects run
+ * **child-first**, so a `useEffect` in this provider runs *after* the providers
+ * beneath it have already fired their first requests. Those requests would go
+ * out with no `Authorization` header, come back 401, and the unauthorized
+ * handler would clear the session that had just been established — a successful
+ * sign-in bouncing straight back to the sign-in screen, and a returning user
+ * signed out on launch.
+ *
+ * Module scope runs before any component mounts, which is the only ordering that
+ * makes the token available to the first request.
+ */
+const restoredSession = sessionStore.read();
+setAccessToken(restoredSession?.token ?? null);
 
 export type SessionProviderProps = {
   children: ReactNode;
@@ -33,17 +53,30 @@ export function SessionProvider({
   client = apiClients.auth,
   initialSession,
 }: SessionProviderProps) {
-  const [session, setSession] = useState<Session | null>(
-    () => initialSession ?? sessionStore.read(),
-  );
+  const [session, setSession] = useState<Session | null>(() => {
+    const initial = initialSession ?? restoredSession;
+    // Only for an injected session; the persisted one was applied at module
+    // load. Synchronous for the same reason as above.
+    if (initialSession) setAccessToken(initial?.token ?? null);
+    return initial;
+  });
   const [isPending, setIsPending] = useState(false);
   const [errorKey, setErrorKey] = useState<SessionValue['errorKey']>(null);
+  const { t } = useT();
+  const toast = useToast();
 
-  // The HTTP layer reads the token from a module-level holder rather than from
-  // React, because every request needs it and requests are not components.
-  useEffect(() => {
-    setAccessToken(session?.token ?? null);
-  }, [session]);
+  /**
+   * Applies a session everywhere it has to be true at once.
+   *
+   * The token goes to the HTTP layer in the same tick as the state change, so
+   * the screens the flipped guard is about to mount can already authenticate.
+   */
+  const apply = useCallback((next: Session | null) => {
+    setAccessToken(next?.token ?? null);
+    if (next) sessionStore.write(next);
+    else sessionStore.clear();
+    setSession(next);
+  }, []);
 
   const signIn = useCallback(
     async (credentials: SignInCredentials) => {
@@ -51,8 +84,7 @@ export function SessionProvider({
       setErrorKey(null);
       try {
         const next = await client.signIn(credentials);
-        sessionStore.write(next);
-        setSession(next);
+        apply(next);
         return true;
       } catch {
         setErrorKey('auth.signInFailed');
@@ -61,14 +93,16 @@ export function SessionProvider({
         setIsPending(false);
       }
     },
-    [client],
+    [client, apply],
   );
 
-  const adoptSession = useCallback((next: Session) => {
-    sessionStore.write(next);
-    setSession(next);
-    setErrorKey(null);
-  }, []);
+  const adoptSession = useCallback(
+    (next: Session) => {
+      apply(next);
+      setErrorKey(null);
+    },
+    [apply],
+  );
 
   const signOut = useCallback(async () => {
     // Local state is cleared regardless of what the backend says: a user who
@@ -76,21 +110,22 @@ export function SessionProvider({
     try {
       await client.signOut();
     } finally {
-      sessionStore.clear();
-      setSession(null);
+      apply(null);
       setErrorKey(null);
     }
-  }, [client]);
+  }, [client, apply]);
 
   // A token the server will not accept is the same as no session; anything else
-  // leaves the app on screens it can no longer load.
+  // leaves the app on screens it can no longer load. Announced, because being
+  // returned to the sign-in screen with no explanation reads as the app losing
+  // the password rather than the session having expired.
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      sessionStore.clear();
-      setSession(null);
+      apply(null);
+      toast.show(t('auth.sessionExpired'));
     });
     return () => setUnauthorizedHandler(null);
-  }, []);
+  }, [apply, toast, t]);
 
   const value = useMemo<SessionValue>(
     () => ({

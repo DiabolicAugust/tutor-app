@@ -9,6 +9,8 @@ import {
 } from 'react';
 
 import { apiClients } from '@/shared/api';
+import { useT } from '@/shared/i18n';
+import { useToast } from '@/shared/ui';
 
 import type { Lesson, LessonStatus } from './lesson';
 import type { LessonsClient } from './lessons-client';
@@ -21,7 +23,11 @@ export type NewLesson = Omit<Lesson, 'id'>;
 export type LessonsStore = {
   lessons: readonly Lesson[];
   isLoading: boolean;
-  addLesson: (draft: NewLesson) => Promise<Lesson>;
+  /**
+   * Books a lesson. Resolves to `null` when the request failed, having already
+   * said so — callers do not await this, so a thrown error would be lost.
+   */
+  addLesson: (draft: NewLesson) => Promise<Lesson | null>;
   /**
    * Confirming or cancelling a lesson after the fact — driven from the news
    * feed, which is why the schedule lives above both tabs.
@@ -50,6 +56,8 @@ export function LessonsProvider({
 }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useT();
+  const toast = useToast();
 
   useEffect(() => {
     let active = true;
@@ -66,6 +74,10 @@ export function LessonsProvider({
           to: to.toISOString(),
         });
         if (active) setLessons(loaded);
+      } catch {
+        // Previously uncaught, which left an empty calendar and no way to tell
+        // an empty schedule from a failed request.
+        if (active) toast.show(t('errors.loadSchedule'));
       } finally {
         if (active) setIsLoading(false);
       }
@@ -74,9 +86,9 @@ export function LessonsProvider({
     return () => {
       active = false;
     };
-  }, [client]);
+  }, [client, toast, t]);
 
-  const addLesson = useCallback(
+  const create = useCallback(
     async (draft: NewLesson) => {
       const created = await client.create({
         // Exactly one of the two; the form only ever offers one, and the server
@@ -94,6 +106,21 @@ export function LessonsProvider({
     [client],
   );
 
+  const addLesson = useCallback(
+    async (draft: NewLesson) => {
+      try {
+        return await create(draft);
+      } catch {
+        // The sheet has already closed by now — it does not await this — so
+        // without a message a failed booking looked exactly like a successful
+        // one until somebody noticed the lesson was missing.
+        toast.show(t('errors.bookLesson'));
+        return null;
+      }
+    },
+    [create, toast, t],
+  );
+
   const setLessonStatus = useCallback(
     async (id: string, status: LessonStatus) => {
       // Applied locally first: confirming a lesson from the news feed should
@@ -109,11 +136,12 @@ export function LessonsProvider({
         );
       } catch {
         // The optimistic change stands rather than flickering back; the next
-        // load corrects it. Surfacing this needs an error channel the feed does
-        // not have yet.
+        // load corrects it. Now that there is somewhere to say so, the user
+        // hears that it did not stick.
+        toast.show(t('errors.saveLesson'));
       }
     },
-    [client],
+    [client, toast, t],
   );
 
   const value = useMemo<LessonsStore>(

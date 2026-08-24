@@ -177,6 +177,7 @@ export const en = {
     emailPlaceholder: 'you@school.com',
     signingIn: 'Signing in…',
     signInFailed: 'Could not sign in. Please try again.',
+    sessionExpired: 'Your session ended. Please sign in again.',
     createAccount: 'Create an account',
     mockNotice: 'No backend yet — any email and password will sign you in.',
   },
@@ -308,6 +309,13 @@ export const en = {
       one: '{{count}} student',
       other: '{{count}} students',
     },
+  },
+  errors: {
+    loadSchedule: 'Could not load your schedule. Check your connection and pull to refresh.',
+    bookLesson: 'That lesson was not saved. Please try booking it again.',
+    saveLesson: 'Could not save that change to the server.',
+    loadStudents: 'Could not load your students.',
+    generic: 'Something went wrong. Please try again.',
   },
   gradebook: {
     attendance: {

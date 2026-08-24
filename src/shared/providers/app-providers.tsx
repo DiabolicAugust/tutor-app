@@ -8,6 +8,7 @@ import { TabPreferencesProvider } from '@/shared/navigation';
 import { NotificationsProvider } from '@/shared/notifications';
 import { SchoolProvider } from '@/shared/school';
 import { StudentsProvider } from '@/shared/students';
+import { ToastProvider } from '@/shared/ui';
 import { UserConfigProvider } from '@/shared/user-config';
 import { ThemeProvider } from '@/shared/theme';
 
@@ -31,19 +32,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <GestureHandlerRootView style={fill}>
       <I18nProvider>
         <ThemeProvider>
-          <SessionProvider>
-            <UserConfigProvider>
-              <SchoolProvider>
-                <StudentsProvider>
-                  <LessonsProvider>
-                    <NotificationsProvider>
-                      <TabPreferencesProvider>{children}</TabPreferencesProvider>
-                    </NotificationsProvider>
-                  </LessonsProvider>
-                </StudentsProvider>
-              </SchoolProvider>
-            </UserConfigProvider>
-          </SessionProvider>
+          {/* Above the session and the data providers, because they are the ones
+              with failures nothing on screen can report. Rendered over the app,
+              which is why it wraps rather than sits beside. */}
+          <ToastProvider>
+            <SessionProvider>
+              <UserConfigProvider>
+                <SchoolProvider>
+                  <StudentsProvider>
+                    <LessonsProvider>
+                      <NotificationsProvider>
+                        <TabPreferencesProvider>{children}</TabPreferencesProvider>
+                      </NotificationsProvider>
+                    </LessonsProvider>
+                  </StudentsProvider>
+                </SchoolProvider>
+              </UserConfigProvider>
+            </SessionProvider>
+          </ToastProvider>
         </ThemeProvider>
       </I18nProvider>
     </GestureHandlerRootView>

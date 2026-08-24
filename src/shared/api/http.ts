@@ -68,10 +68,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   // parse — with no error until it tries.
   if (body !== undefined && !isMultipart) headers['Content-Type'] = 'application/json';
 
-  if (!anonymous) {
-    const token = getAccessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
+  const token = anonymous ? null : getAccessToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   let response: Response;
   try {
@@ -93,7 +91,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const parsed = raw ? safeJson(raw) : null;
 
   if (!response.ok) {
-    if (response.status === 401 && !anonymous) notifyUnauthorized();
+    // Only when a token was actually sent. A 401 on a request that carried none
+    // does not mean the session expired — it means the app asked for something
+    // before it was ready, and signing the user out in response destroys a
+    // perfectly good session while hiding the ordering bug that caused it.
+    if (response.status === 401 && token) notifyUnauthorized();
     throw new ApiError(response.status, messageFrom(response.status, parsed), parsed);
   }
 

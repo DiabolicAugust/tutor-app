@@ -9,7 +9,9 @@ import {
 } from 'react';
 
 import { apiClients } from '@/shared/api';
+import { useT } from '@/shared/i18n';
 import { ownCalendarId } from '@/shared/tutors';
+import { useToast } from '@/shared/ui';
 
 import type { StudentPatch, StudentsClient } from './students-client';
 
@@ -56,6 +58,8 @@ export function StudentsProvider({
 }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useT();
+  const toast = useToast();
 
   useEffect(() => {
     let active = true;
@@ -64,6 +68,10 @@ export function StudentsProvider({
       try {
         const loaded = await client.list();
         if (active) setStudents([...loaded].sort(byName));
+      } catch {
+        // Previously uncaught, so a failed roster looked identical to a school
+        // with no students — and every lesson then rendered a raw id for a name.
+        if (active) toast.show(t('errors.loadStudents'));
       } finally {
         if (active) setIsLoading(false);
       }
@@ -72,7 +80,7 @@ export function StudentsProvider({
     return () => {
       active = false;
     };
-  }, [client]);
+  }, [client, toast, t]);
 
   const addStudent = useCallback(
     async (name: string, subject: string) => {
