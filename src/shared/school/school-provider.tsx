@@ -45,14 +45,35 @@ export function SchoolProvider({
     let active = true;
 
     void (async () => {
-      const [nextTutors, nextInvitations] = await Promise.all([
+      /**
+       * Settled independently, and that is the whole point of this shape.
+       *
+       * These were one `Promise.all` with no `catch`, and the two requests do not
+       * need the same permission: listing colleagues is open to every member,
+       * while listing invitations needs `INVITE_TUTORS`. So for a tutor without
+       * that capability the second one answered 403, the `Promise.all` rejected,
+       * *neither* result was applied, and `isLoading` stayed true for the rest of
+       * the session — leaving the roster empty, the calendar with no colleague to
+       * overlay, and a lesson unable to say who teaches it. All of it invisible to
+       * anyone signed in as an admin, since an admin holds every capability.
+       */
+      const [roster, invited] = await Promise.allSettled([
         client.listTutors(),
         client.listInvitations(),
       ]);
+
       // Guard against a resolve after unmount, which would warn and leak.
       if (!active) return;
-      setTutors(nextTutors);
-      setInvitations(nextInvitations.sort(byNewestInvitation));
+
+      if (roster.status === 'fulfilled') setTutors(roster.value);
+      // A refusal here is the ordinary state of an account that may not invite
+      // anybody, not a failure to report: the screen that shows invitations is
+      // gated on the same capability, so nobody is looking at an empty list and
+      // wondering.
+      if (invited.status === 'fulfilled') {
+        setInvitations(invited.value.sort(byNewestInvitation));
+      }
+
       setIsLoading(false);
     })();
 
