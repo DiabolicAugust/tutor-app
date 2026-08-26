@@ -25,3 +25,4 @@ flows:
   - 14-refresh.yaml
   - 15-online-lessons.yaml
   - 16-reports.yaml
+  - 17-debtors.yaml

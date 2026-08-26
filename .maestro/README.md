@@ -1,6 +1,6 @@
 # End-to-end tests
 
-Sixteen flows that drive the real app on a real device against the real backend.
+Seventeen flows that drive the real app on a real device against the real backend.
 Written for [Maestro](https://docs.maestro.dev), which reads the accessibility
 tree and taps — the same thing a person does, with none of the app's own code in
 the loop.

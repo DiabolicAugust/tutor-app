@@ -46,6 +46,14 @@ export default function MoreScreen() {
             description={t('reports.subtitle')}
             onPress={() => router.push('/reports')}
           />
+          {/* Next to the reports, because it answers the same kind of question —
+              what is the state of things — rather than changing anything. */}
+          <ListRow
+            testID="more-debtors"
+            label={t('debtors.title')}
+            description={t('debtors.subtitle')}
+            onPress={() => router.push('/debtors')}
+          />
           {/* Admins manage the school; anyone holding a capability needs the
               screen too, or the grant would be unreachable. Both role and addons
               arrive with the session, so this costs no request. */}

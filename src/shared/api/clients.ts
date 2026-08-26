@@ -1,5 +1,9 @@
 import { httpAuthClient } from '@/shared/auth/http-auth-client';
 import { unavailableAuthClient, type AuthClient } from '@/shared/auth/auth-client';
+import {
+  httpDebtorsClient,
+  type DebtorsClient,
+} from '@/shared/debtors/debtors-client';
 import { httpFilesClient, type FilesClient } from '@/shared/files/files-client';
 import {
   httpGradebookClient,
@@ -47,6 +51,7 @@ export type ApiClients = {
   push: PushClient;
   meetings: MeetingsClient;
   reports: ReportsClient;
+  debtors: DebtorsClient;
   userConfig: UserConfigClient;
   support: SupportClient;
 };
@@ -81,6 +86,7 @@ export const apiClients: ApiClients = {
   push: httpPushClient,
   meetings: httpMeetingsClient,
   reports: httpReportsClient,
+  debtors: httpDebtorsClient,
   userConfig: httpUserConfigClient,
   support: httpSupportClient,
 };

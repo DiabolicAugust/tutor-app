@@ -102,6 +102,10 @@ function AppStack() {
         name="reports"
         options={{ headerShown: true, title: t('reports.title') }}
       />
+      <Stack.Screen
+        name="debtors"
+        options={{ headerShown: true, title: t('debtors.title') }}
+      />
       {/* One student, pushed over the tab bar. The roster itself is a tab now,
           so this is the only students route the stack owns. */}
       <Stack.Screen

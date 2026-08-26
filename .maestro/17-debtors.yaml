@@ -1,0 +1,84 @@
+# Who owes lessons.
+#
+# Runs after the register has been filled in, because that is what creates a
+# debtor: flow 10 marks a student present on a lesson beyond their package, and
+# the balance goes negative. Nothing here sets a balance directly — the point of
+# the screen is that it follows from the register, and a flow that seeded a
+# balance would prove the list can render rather than that it is true.
+#
+# Deliberately not asserting how many rows there are. The earlier flows book,
+# cancel and write up as they go, so a fixed count would break every time one of
+# them changes by a lesson — and would pin this screen to their bookkeeping
+# instead of its own behaviour. What is asserted is that the student who was
+# taught beyond their package is named, and that the one who was not is absent.
+appId: com.foxacademy.app
+name: See who owes lessons
+tags:
+  - reports
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+
+- assertVisible:
+    id: 'more-debtors'
+- tapOn:
+    id: 'more-debtors'
+- assertVisible:
+    id: 'screen-debtors'
+
+- extendedWaitUntil:
+    visible:
+      id: 'debtor-0'
+    timeout: 60000
+
+# Both students are here, and for different reasons — which is the distinction
+# this screen exists to draw. One was taught past the end of their package by
+# flow 10. The other is sitting at exactly zero with a group lesson still in the
+# schedule, which is the moment a top-up still avoids the awkward conversation
+# rather than following it.
+#
+# The first assertion this flow carried was that the second student was *absent*,
+# written on the assumption that a zero balance meant nothing to do. The run
+# disagreed, and the run was right: they had a lesson booked. The rule about who
+# is left off — a student never charged and with nothing booked — is proven in
+# `test/debtors.e2e-spec.ts`, where a student can be put in that state on purpose.
+- assertVisible: ${STUDENT}
+- assertVisible: ${STUDENT_TWO}
+
+# The order is the promise of the screen: it answers who to speak to first, so
+# the one already owing has to come before the one who merely will.
+- assertVisible:
+    id: 'debtor-0'
+- assertVisible: '1 lesson to pay for'
+- assertVisible: 'Nothing left on their package'
+# In words rather than as a bare number: "one lesson to pay for" is something to
+# act on, "-1" is something to work out.
+- assertVisible:
+    id: 'debtor-0-state'
+- assertVisible:
+    id: 'debtor-0-remind'
+
+# --- one lesson of warning ---
+#
+# A wider question, so the list can only grow. Asserted as "the first row is
+# still there" rather than as a count, for the reason in the header.
+- tapOn:
+    id: 'debtors-warn-early'
+- extendedWaitUntil:
+    visible:
+      id: 'debtor-0'
+    timeout: 60000
+
+- tapOn:
+    id: 'debtors-warn-early'
+- extendedWaitUntil:
+    visible:
+      id: 'debtor-0'
+    timeout: 60000
+
+- back
+- assertVisible:
+    id: 'screen-more'
