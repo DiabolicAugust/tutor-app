@@ -368,6 +368,45 @@ sign-in guard and honoured on the other, and everything in between unmounts. Set
 one person on the day they open a school, leaving it unverifiable and invisible to every
 tutor who joined by invitation.
 
+`shared/meetings` is teaching online. Two separate things live here and the difference
+matters: the **choice** of provider is a preference on the account, read when a lesson is
+booked; the **connection** is a credential the server holds and never sends back.
+
+Choosing Zoom or Google in Settings saves the choice and opens the consent screen in the
+same tap, through `WebBrowser.openAuthSessionAsync` — an auth session rather than
+`Linking.openURL`, so the tab closes itself on the way back and, on iOS, shares nothing with
+the ordinary browser: somebody signed into two Google accounts is asked which, instead of
+silently connecting whichever the phone happens to hold.
+
+The exchange happens on the server. The app never sees a client secret or a refresh token,
+and `MeetingConnection` — provider, a label, a date — is the whole of what it is allowed to
+know. The redirect (`foxacademy://settings`) has to match the server's
+`MEETING_CONNECTED_URL`, or the tab lands on a page saying "connected" with no way back into
+the app.
+
+The provider list is spelled **exactly as the server spells it** (`ZOOM`, `GOOGLE_MEET`,
+`JITSI`), which is a deliberate break from how `LessonStatus` is handled. Status crosses one
+boundary and is translated there. This setting crosses two — it arrives inside the sign-in
+payload *and* from the settings endpoint, through different clients — and a translation
+present in one and missing from the other fails silently: the picker would simply show
+nothing selected. One spelling instead of two vocabularies.
+
+`meetingRoomProblemKey` mirrors a rule the server also enforces, and that duplication is on
+purpose: this copy exists to answer while somebody is still typing. The server stays the
+authority, and where they disagree the server's message is what gets shown.
+
+A booked lesson carries its link and the provider that made it, and neither is ever
+rewritten — so a tutor who changes provider in March does not invalidate a link a student
+already has. `MeetingLink` offers opening and sharing, not copying: the system share sheet
+already offers the clipboard alongside every messenger on the phone, and a tutor sending a
+link to a parent is sending it *somewhere*.
+
+`shared/reports` is what was taught over a period, on its own screen and the first entry in
+More — the one destination there that is read rather than changed. Every figure comes from a
+single request and is computed on the server; the screen's only control is the period. Whose
+work it counts comes from the answer rather than from the reader's role, because a caption
+derived from anything else would eventually contradict the numbers under it.
+
 ## Talking to the API
 
 Every request goes through `src/shared/api`. One place owns the base URL, the auth header,

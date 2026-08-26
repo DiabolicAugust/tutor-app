@@ -23,3 +23,5 @@ flows:
   - 12-school-management.yaml
   - 13-files.yaml
   - 14-refresh.yaml
+  - 15-online-lessons.yaml
+  - 16-reports.yaml

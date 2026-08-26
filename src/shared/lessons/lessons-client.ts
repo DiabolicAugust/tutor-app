@@ -1,5 +1,6 @@
 import { http } from '@/shared/api/http';
 import { toDomainAttendance, type WireAttendance } from '@/shared/gradebook/attendance';
+import type { MeetingProvider } from '@/shared/meetings';
 import type { Subject } from '@/shared/subjects/subject';
 
 
@@ -78,6 +79,12 @@ type WireLesson = {
   /** The gradebook half. Absent from responses written before it existed. */
   topic?: string | null;
   homework?: string | null;
+  /**
+   * Where to join. Spelled the same on both sides — see `shared/meetings` for
+   * why this one list is not translated at the boundary the way status is.
+   */
+  meetingUrl?: string | null;
+  meetingProvider?: MeetingProvider | null;
   studentId: string | null;
   group?: WireLessonGroup | null;
   attendances?: {
@@ -106,6 +113,8 @@ function toDomain(lesson: WireLesson): Lesson {
     status: toDomainStatus(lesson.status),
     topic: lesson.topic ?? null,
     homework: lesson.homework ?? null,
+    meetingUrl: lesson.meetingUrl ?? null,
+    meetingProvider: lesson.meetingProvider ?? null,
     group: lesson.group ?? null,
     attendances: (lesson.attendances ?? []).map((entry) => ({
       studentId: entry.studentId,

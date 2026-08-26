@@ -13,6 +13,14 @@ import {
   type NotificationsClient,
 } from '@/shared/notifications/notifications-client';
 import { httpPushClient, type PushClient } from '@/shared/push/push-client';
+import {
+  httpMeetingsClient,
+  type MeetingsClient,
+} from '@/shared/meetings/meetings-client';
+import {
+  httpReportsClient,
+  type ReportsClient,
+} from '@/shared/reports/reports-client';
 import { httpSchoolClient } from '@/shared/school/http-school-client';
 import type { SchoolClient } from '@/shared/school/school-client';
 import { httpStudentsClient, type StudentsClient } from '@/shared/students/students-client';
@@ -37,6 +45,8 @@ export type ApiClients = {
   groups: GroupsClient;
   files: FilesClient;
   push: PushClient;
+  meetings: MeetingsClient;
+  reports: ReportsClient;
   userConfig: UserConfigClient;
   support: SupportClient;
 };
@@ -69,6 +79,8 @@ export const apiClients: ApiClients = {
   groups: httpGroupsClient,
   files: httpFilesClient,
   push: httpPushClient,
+  meetings: httpMeetingsClient,
+  reports: httpReportsClient,
   userConfig: httpUserConfigClient,
   support: httpSupportClient,
 };

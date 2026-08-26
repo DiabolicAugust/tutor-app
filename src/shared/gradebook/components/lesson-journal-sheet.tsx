@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { FileSection } from '@/shared/files';
 import { useT } from '@/shared/i18n';
 import { isGroupLesson, lessonStudentIds } from '@/shared/lessons';
+import { MeetingLink } from '@/shared/meetings';
 import { NoteSection } from '@/shared/notes';
 import { useStudents } from '@/shared/students';
 import { createStyles } from '@/shared/theme';
@@ -107,6 +108,17 @@ export function LessonJournalSheet({
           <Text testID="journal-teacher" variant="bodySm" color="textSecondary">
             {t('gradebook.journal.taughtBy', { name: teacher })}
           </Text>
+        ) : null}
+
+        {/* Above the register, because joining is what somebody opens this sheet
+            to do in the minute before a lesson — marking who came is what they
+            open it for afterwards. */}
+        {lesson?.meetingUrl ? (
+          <MeetingLink
+            url={lesson.meetingUrl}
+            provider={lesson.meetingProvider ?? null}
+            shareTitle={title}
+          />
         ) : null}
 
         <View style={styles.field}>

@@ -1,0 +1,190 @@
+# Teaching online: choosing a service, and the link that then appears on a lesson.
+#
+# The link is generated when the lesson is *booked*, from the setting as it stood
+# at that moment — so the only honest test is to change the setting, book
+# something afterwards, and open it. Asserting that a chip is selected would prove
+# nothing about the feature.
+#
+# Jitsi, because it is the one provider that needs no account at all. Zoom and
+# Google create a room per lesson only once the tutor has authorised them through
+# a browser, and a flow cannot consent on somebody's behalf — nor should it, since
+# doing so would need real credentials in a test run. What Zoom is used for here
+# is the half that *can* be tested: refusing an address belonging to a different
+# service.
+#
+# The local server has no provider credentials, so this run also covers the case
+# every self-hosted deployment starts in: the app says connecting is unavailable
+# and offers the paste-your-own-room path instead of opening a browser onto an
+# error page.
+appId: com.foxacademy.app
+name: Teach online, and share the link
+tags:
+  - settings
+  - calendar
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- assertVisible:
+    id: 'screen-settings'
+
+- scrollUntilVisible:
+    element:
+      id: 'settings-meeting-provider'
+    direction: DOWN
+
+# --- a service that needs an account this server cannot offer ---
+- tapOn:
+    id: 'settings-meeting-provider-ZOOM'
+# Said plainly rather than by a button that fails: with no credentials configured
+# there is nothing to connect to.
+#
+# Scrolled to, not asserted where it happens to sit. The card is near the bottom
+# of a long screen, and on a shorter phone this row starts below the fold — where
+# it is absent from the accessibility tree rather than merely out of sight.
+- scrollUntilVisible:
+    element:
+      id: 'settings-meeting-unavailable'
+    direction: DOWN
+    timeout: 30000
+- assertVisible:
+    id: 'settings-meeting-room'
+
+# --- an address on the wrong service is refused, and says so ---
+#
+# Not pedantry: a Meet link saved under Zoom would be attached to every lesson and
+# would work, so nothing would ever reveal the mix-up.
+- tapOn:
+    id: 'settings-meeting-room'
+- inputText: 'https://meet.google.com/abc-defg-hij'
+- runFlow: subflows/dismiss-keyboard.yaml
+- tapOn:
+    id: 'settings-meeting-save'
+- assertVisible:
+    id: 'settings-meeting-room'
+- assertVisible: 'That address is not on the service you chose.'
+
+# --- a service that needs nothing ---
+- tapOn:
+    id: 'settings-meeting-provider-JITSI'
+# The hint changes with the choice, so seeing Jitsi's is how this knows the
+# selection took — and it sits directly above where the address field would be,
+# which is what makes the two negative assertions below mean anything. Asserting
+# "not visible" on a region that is off screen would pass for the wrong reason.
+- extendedWaitUntil:
+    visible: 'Every lesson gets its own room.*'
+    timeout: 30000
+# No address to give, so no field and no save button: this provider makes a room
+# per lesson, and asking for an address would be asking for something ignored.
+# The choice itself is stored on selection.
+- assertNotVisible:
+    id: 'settings-meeting-room'
+- assertNotVisible:
+    id: 'settings-meeting-save'
+- runFlow: subflows/settle.yaml
+
+- back
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+
+# --- a lesson booked after the change carries a link ---
+#
+# Booked from the calendar, because that is where a lesson is created.
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+- extendedWaitUntil:
+    visible:
+      id: 'event-student-0'
+    timeout: 60000
+- tapOn: ${STUDENT}
+# Tomorrow, at whatever time the form offers. The date rather than the time,
+# because the time row is a horizontal scroller and picking a late slot means
+# swiping a container Maestro cannot reliably aim at — while every earlier flow
+# books today, so tomorrow is enough to make this the newest lesson this student
+# has, which is how it is found again below.
+- tapOn:
+    id: 'event-date-1'
+- tapOn:
+    id: 'event-create'
+- extendedWaitUntil:
+    notVisible:
+      id: 'event-sheet'
+    timeout: 30000
+
+# Opened from the student's page rather than from the grid, and that is not
+# arbitrary: by now this student has several lessons today, so a tap on their name
+# on the grid could land on any of them — and only the one just booked has a link.
+# Their own list is newest first, so the top row is this lesson.
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT}
+    timeout: 60000
+- tapOn: ${STUDENT}
+- assertVisible:
+    id: 'screen-student'
+- scrollUntilVisible:
+    element:
+      id: 'student-lesson-0'
+    direction: DOWN
+    timeout: 60000
+- tapOn:
+    id: 'student-lesson-0'
+- extendedWaitUntil:
+    visible:
+      id: 'journal-sheet'
+    timeout: 30000
+
+# The whole point: a room, on the service that was chosen, without anybody
+# entering an address.
+- scrollUntilVisible:
+    element:
+      id: 'lesson-meeting'
+    direction: DOWN
+    timeout: 30000
+- assertVisible:
+    id: 'lesson-meeting-url'
+- assertVisible: 'Jitsi'
+# Both actions a tutor has for a link. The share sheet itself belongs to the OS
+# and is not opened here — tapping it would hand the run to another app with no
+# reliable way back.
+- assertVisible:
+    id: 'lesson-meeting-join'
+- assertVisible:
+    id: 'lesson-meeting-share'
+- tapOn:
+    id: 'journal-sheet-close'
+- assertVisible:
+    id: 'screen-student'
+- back
+
+# --- and back to teaching in a room ---
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-settings'
+- scrollUntilVisible:
+    element:
+      id: 'settings-meeting-provider'
+    direction: DOWN
+- tapOn:
+    id: 'settings-meeting-provider-NONE'
+- extendedWaitUntil:
+    visible: 'Lessons are booked without a link.*'
+    timeout: 30000
+- assertNotVisible:
+    id: 'settings-meeting-room'
+- runFlow: subflows/settle.yaml
+- back

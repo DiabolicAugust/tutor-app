@@ -1,3 +1,5 @@
+import type { MeetingSettings } from '@/shared/meetings';
+
 /**
  * Per-account preferences, as stored on the server in `users.config`.
  *
@@ -21,6 +23,13 @@ export type UserConfig = {
    * conversation practice has nothing to mark, exam prep is mostly marking.
    */
   gradesEnabled: boolean;
+  /**
+   * Where this tutor teaches online, or null for a room.
+   *
+   * Read when a lesson is booked and then written onto the lesson, so changing
+   * it here never rewrites a link somebody has already been sent.
+   */
+  meeting: MeetingSettings | null;
 };
 
 /** What the app assumes before the server says otherwise. */
@@ -31,6 +40,9 @@ export const defaultUserConfig: UserConfig = {
   // On by default: the gradebook is the reason most schools want a system at
   // all, and a feature nobody can find is worse than one somebody switches off.
   gradesEnabled: true,
+  // Teaching in a room is still the ordinary case, and a tutor who has not been
+  // asked has not chosen a provider.
+  meeting: null,
 };
 
 /** Offered as chips in settings; the server accepts any value in range. */

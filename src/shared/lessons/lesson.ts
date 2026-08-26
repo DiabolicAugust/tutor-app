@@ -1,4 +1,5 @@
 import type { AttendanceStatus } from '@/shared/gradebook/attendance';
+import type { MeetingProvider } from '@/shared/meetings';
 import { addMinutes, isSameDay } from '@/shared/lib/date';
 import type { Subject } from '@/shared/subjects/subject';
 
@@ -41,6 +42,16 @@ export type Lesson = {
   topic?: string | null;
   /** What was set for next time. The student's half of the record. */
   homework?: string | null;
+  /**
+   * Where to join, for a lesson taught online. Null for one taught in a room.
+   *
+   * Written when the lesson was booked, from the tutor's settings at that
+   * moment, and never rewritten — so a tutor who changes provider does not
+   * silently invalidate a link a student already has.
+   */
+  meetingUrl?: string | null;
+  /** Which provider produced `meetingUrl`, stored beside it for the same reason. */
+  meetingProvider?: MeetingProvider | null;
   /**
    * Who turned up, one line per student — see `shared/gradebook`.
    *

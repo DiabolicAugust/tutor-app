@@ -4,11 +4,30 @@ export type AsyncData<T> = {
   /** `null` until the first load for the current key finishes. */
   data: T | null;
   isLoading: boolean;
+  /**
+   * Whether the last attempt for this key failed.
+   *
+   * For screens with something useful to say about it — "could not load, try
+   * again". A screen that has nothing to add can ignore this and show its empty
+   * state, which is what most of them do.
+   */
+  hasError: boolean;
   /** Replaces what is held, for a screen that has just written something. */
   setData: (next: T | ((current: T | null) => T)) => void;
   /** Fetches again for the same key. */
   reload: () => void;
 };
+
+/**
+ * What is held for the current key.
+ *
+ * A failure is recorded rather than left as "nothing yet", and that distinction
+ * is the whole reason this is a shape and not just the data. Storing `null` on
+ * failure made every screen using this hook spin forever whenever a request
+ * failed: with nothing loaded, "still loading" and "loaded nothing" are the same
+ * state, and the spinner is the one that wins.
+ */
+type Loaded<T> = { key: string; data: T | null; failed: boolean };
 
 /**
  * Data loaded for one key, reloaded when the key changes.
@@ -27,7 +46,7 @@ export type AsyncData<T> = {
  * dependency.
  */
 export function useAsyncData<T>(key: string | null, load: (key: string) => Promise<T>): AsyncData<T> {
-  const [loaded, setLoaded] = useState<{ key: string; data: T } | null>(null);
+  const [loaded, setLoaded] = useState<Loaded<T> | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -38,11 +57,13 @@ export function useAsyncData<T>(key: string | null, load: (key: string) => Promi
     void (async () => {
       try {
         const data = await load(key);
-        if (active) setLoaded({ key, data });
+        if (active) setLoaded({ key, data, failed: false });
       } catch {
-        // A failed load is an empty one as far as the screen is concerned; the
-        // caller shows its own message if it has something useful to say.
-        if (active) setLoaded(null);
+        // Recorded against the key rather than thrown away. A screen that has
+        // something useful to say reads `hasError`; one that has not shows its
+        // empty state — but neither goes on waiting for an answer that already
+        // came back.
+        if (active) setLoaded({ key, data: null, failed: true });
       }
     })();
 
@@ -65,6 +86,9 @@ export function useAsyncData<T>(key: string | null, load: (key: string) => Promi
           typeof next === 'function'
             ? (next as (value: T | null) => T)(current?.key === key ? current.data : null)
             : next,
+        // Writing over a failure clears it: whatever the screen just put here is
+        // the truth now.
+        failed: false,
       }));
     },
     [key],
@@ -77,6 +101,7 @@ export function useAsyncData<T>(key: string | null, load: (key: string) => Promi
   return {
     data: isCurrent ? loaded.data : null,
     isLoading: key !== null && !isCurrent,
+    hasError: isCurrent && loaded.failed,
     setData,
     reload,
   };

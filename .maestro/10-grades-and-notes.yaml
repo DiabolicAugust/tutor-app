@@ -81,8 +81,11 @@ tags:
     timeout: 60000
 
 # --- a note ---
-- assertVisible:
-    id: 'student-notes-empty'
+- scrollUntilVisible:
+    element:
+      id: 'student-notes-empty'
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'student-notes-draft'
 - inputText: 'Prefers worked examples before rules.'

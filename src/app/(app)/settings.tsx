@@ -1,6 +1,7 @@
 import { ScrollView, View } from 'react-native';
 
 import { useT } from '@/shared/i18n';
+import { MeetingSettingsCard } from '@/shared/meetings';
 import { TabSettings } from '@/shared/navigation';
 import { GradebookSettings, NotificationSettings } from '@/shared/user-config';
 import { createStyles } from '@/shared/theme';
@@ -54,6 +55,13 @@ export default function SettingsScreen() {
           {t('notificationSettings.announcementsHint')}
         </Text>
         <PushStatus />
+      </Card>
+
+      {/* Above marking rather than below: whether lessons are online is decided
+          once and then forgotten, while marking is a preference somebody
+          revisits. */}
+      <Card title={t('meetings.title')}>
+        <MeetingSettingsCard />
       </Card>
 
       <Card title={t('gradebookSettings.title')}>

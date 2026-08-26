@@ -1,0 +1,98 @@
+# Reports: the numbers, and where they come from.
+#
+# Runs last on purpose. Every figure is derived from what the earlier flows did —
+# lessons booked, a register marked, marks given — so this both checks the screen
+# and is the one place that would notice if those flows had stopped writing
+# anything at all.
+#
+# The counts themselves are not asserted against exact numbers. Earlier flows
+# cancel, reschedule and delete as they go, so a fixed expectation here would
+# break every time one of them changed by a lesson — and would be pinning this
+# screen to their bookkeeping rather than to its own behaviour. What is asserted
+# is that the figures are present, that the period changes them, and that the
+# breakdowns the account is entitled to are the ones shown.
+appId: com.foxacademy.app
+name: Read the reports
+tags:
+  - reports
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+
+# First in the list, and the only destination there that is read rather than
+# changed.
+- assertVisible:
+    id: 'more-reports'
+- tapOn:
+    id: 'more-reports'
+- assertVisible:
+    id: 'screen-reports'
+
+- extendedWaitUntil:
+    visible:
+      id: 'report-completed'
+    timeout: 60000
+- assertVisible:
+    id: 'report-hours'
+- assertVisible:
+    id: 'report-students'
+
+# The account these flows run as owns the school, so the report covers everybody
+# and says so. A tutor would see their own work and no per-tutor table at all.
+- assertVisible: 'The whole school'
+
+# What was taught, grouped. The earlier flows book against named subjects, so
+# there is at least one row of each.
+#
+# Scrolled to rather than asserted in place: these cards are at the bottom of the
+# screen and on a shorter phone they start below the fold, where they are absent
+# from the accessibility tree rather than merely out of sight.
+- scrollUntilVisible:
+    element:
+      id: 'report-subject-0'
+    direction: DOWN
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: 'report-tutor-0'
+    direction: DOWN
+    timeout: 30000
+
+# Attendance comes from the register flow 10 filled in, which marked one student
+# present and one absent — so there is a rate rather than the empty state.
+- scrollUntilVisible:
+    element:
+      id: 'report-attendance-rate'
+    direction: DOWN
+    timeout: 30000
+
+# --- the period is the one control on the screen ---
+#
+# A week back still contains everything these flows booked, since they all book
+# within a few days of today. What this proves is that changing it re-asks and
+# comes back with a report rather than an error or a stuck spinner.
+- scrollUntilVisible:
+    element:
+      id: 'report-period'
+    direction: UP
+    timeout: 30000
+- tapOn:
+    id: 'report-period-7'
+- extendedWaitUntil:
+    visible:
+      id: 'report-completed'
+    timeout: 60000
+
+- tapOn:
+    id: 'report-period-365'
+- extendedWaitUntil:
+    visible:
+      id: 'report-completed'
+    timeout: 60000
+
+- back
+- assertVisible:
+    id: 'screen-more'

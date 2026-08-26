@@ -22,9 +22,19 @@ tags:
     id: 'screen-student'
 
 # The lesson booked in flow 07 is the only one this student has.
+#
+# Waited for first, then scrolled to. The wait is for the request; the scroll is
+# because the list sits under the progress card, the marks and the notes, and on
+# a shorter phone that puts it off screen — where it is absent from the
+# accessibility tree rather than merely out of sight.
 - extendedWaitUntil:
     visible:
+      id: 'screen-student'
+    timeout: 60000
+- scrollUntilVisible:
+    element:
       id: 'student-lesson-0'
+    direction: DOWN
     timeout: 60000
 - tapOn:
     id: 'student-lesson-0'

@@ -146,10 +146,19 @@ tags:
 # Material belongs to the hour, not to each student who was in it. Uploading here
 # is the whole path: before this the files table had no lesson to point at, so a
 # worksheet could only be filed against one person.
+#
+# Scrolled to rather than asserted where it happens to be: the sheet is a
+# scrolling column and material is the last thing in it, so on a shorter phone it
+# starts below the fold. An element that is not on screen is not in the
+# accessibility tree at all, which makes a plain assertion here a test of the
+# device's height.
+- scrollUntilVisible:
+    element:
+      id: 'journal-files-empty'
+    direction: DOWN
+    timeout: 30000
 - assertVisible:
     id: 'journal-files'
-- assertVisible:
-    id: 'journal-files-empty'
 - tapOn:
     id: 'journal-files-add'
 - runFlow: subflows/pick-a-file-for-lesson.yaml

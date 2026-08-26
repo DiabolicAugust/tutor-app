@@ -37,6 +37,15 @@ export default function MoreScreen() {
         </Card>
 
         <Card>
+          {/* First, and the reason this tab is worth opening on its own: the
+              others are places to change something, this is the one somebody
+              comes here to read. */}
+          <ListRow
+            testID="more-reports"
+            label={t('reports.title')}
+            description={t('reports.subtitle')}
+            onPress={() => router.push('/reports')}
+          />
           {/* Admins manage the school; anyone holding a capability needs the
               screen too, or the grant would be unreachable. Both role and addons
               arrive with the session, so this costs no request. */}
