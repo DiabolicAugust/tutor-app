@@ -17,6 +17,51 @@ tags:
   - reports
 ---
 - runFlow: subflows/wait-for-app.yaml
+
+# --- the second student's lesson, booked here on purpose ---
+#
+# This flow used to rely on the group lesson that flow 07 books, which is at 08:00
+# *today*. Whether that lesson was still ahead depended on what time of day the
+# suite ran: before eight, the second student had something booked and appeared on
+# this list; after eight, they did not, and the flow failed on an assertion that
+# had been true every time it was checked by hand. Booked for tomorrow here, so the
+# state this flow asserts is state this flow made.
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+- extendedWaitUntil:
+    visible:
+      id: 'event-student-0'
+    timeout: 60000
+- tapOn: ${STUDENT_TWO}
+- tapOn:
+    id: 'event-date-1'
+# Scrolled to, not tapped where it should be. By the time this flow runs the
+# school has three students, and three rows of roster push the time strip off the
+# bottom of the sheet — where it is absent from the accessibility tree rather than
+# merely out of sight. Flow 07 taps the same chip without scrolling and is right
+# to: it runs when there are two.
+#
+# An early slot, because the times are one long horizontal strip and a chip far
+# along it is unreachable for the same reason. Tomorrow at half seven is in the
+# future whatever the clock says, which is the only property this flow needs.
+- scrollUntilVisible:
+    element:
+      id: 'event-time-450'
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: 'event-time-450'
+- tapOn:
+    id: 'event-create'
+- assertNotVisible:
+    id: 'event-sheet'
+
 - runFlow:
     file: subflows/open-tab.yaml
     env:
@@ -36,9 +81,9 @@ tags:
 
 # Both students are here, and for different reasons — which is the distinction
 # this screen exists to draw. One was taught past the end of their package by
-# flow 10. The other is sitting at exactly zero with a group lesson still in the
-# schedule, which is the moment a top-up still avoids the awkward conversation
-# rather than following it.
+# flow 10. The other is sitting at exactly zero with the lesson booked above still
+# in the schedule, which is the moment a top-up still avoids the awkward
+# conversation rather than following it.
 #
 # The first assertion this flow carried was that the second student was *absent*,
 # written on the assumption that a zero balance meant nothing to do. The run

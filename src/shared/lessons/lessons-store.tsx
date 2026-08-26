@@ -12,6 +12,8 @@ import { apiClients } from '@/shared/api';
 import { useT } from '@/shared/i18n';
 import { useToast } from '@/shared/ui';
 
+import type { GradebookClient } from '@/shared/gradebook/gradebook-client';
+
 import type { Lesson, LessonStatus } from './lesson';
 import type { LessonsClient } from './lessons-client';
 
@@ -41,6 +43,26 @@ export type LessonsStore = {
    * feed, which is why the schedule lives above both tabs.
    */
   setLessonStatus: (id: string, status: LessonStatus) => Promise<void>;
+  /**
+   * Records that a lesson happened, register and all.
+   *
+   * Separate from `setLessonStatus`, and the difference is the whole point.
+   * Moving a lesson to `completed` deliberately touches nothing else — see the
+   * server's `updateStatus` — because charging follows *attendance*, which is per
+   * student. Confirming from the news feed used to do only that, so a tutor who
+   * worked through the feed left every register empty: the attendance rate on the
+   * reports screen was computed over the few lessons they had written up by hand,
+   * and the paid lessons they had actually taught were never deducted.
+   *
+   * Takes the lesson rather than an id, because it needs to know who was taught
+   * and the caller already has the row.
+   *
+   * Only marks a lesson that names **one** student, because only then is there a
+   * single honest answer to "who was there". A group is asked, not assumed —
+   * see the news screen — since marking everybody present would charge whoever
+   * had cancelled in time.
+   */
+  markHeld: (lesson: Lesson) => Promise<void>;
 };
 
 const LessonsContext = createContext<LessonsStore | null>(null);
@@ -58,9 +80,15 @@ const WINDOW_DAYS = 45;
 export function LessonsProvider({
   children,
   client = apiClients.lessons,
+  gradebook = apiClients.gradebook,
 }: {
   children: ReactNode;
   client?: LessonsClient;
+  /**
+   * Injected for the same reason as `client`: marking a lesson held writes a
+   * register, and that is the gradebook's endpoint rather than the calendar's.
+   */
+  gradebook?: GradebookClient;
 }) {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -173,9 +201,41 @@ export function LessonsProvider({
     [client, toast, t],
   );
 
+  const markHeld = useCallback(
+    async (lesson: Lesson) => {
+      const { studentId } = lesson;
+      if (!studentId) return;
+
+      // Applied locally first, as with `setLessonStatus`: the notification that
+      // prompted this is derived from the lesson's status, so it should leave the
+      // feed on the tap rather than after a round trip.
+      setLessons((current) =>
+        current.map((row) =>
+          row.id === lesson.id ? { ...row, status: 'completed' } : row,
+        ),
+      );
+
+      try {
+        // The status is left to the server, which derives it from the register —
+        // one place decides that anybody charged means the lesson happened.
+        const updated = await gradebook.writeJournal(lesson.id, {
+          attendance: [{ studentId, status: 'present' }],
+        });
+        setLessons((current) =>
+          current.map((row) => (row.id === lesson.id ? updated : row)),
+        );
+      } catch {
+        // The optimistic change stands and the next load corrects it, but this
+        // one is worth saying out loud: it moves a paid lesson.
+        toast.show(t('errors.saveLesson'));
+      }
+    },
+    [gradebook, toast, t],
+  );
+
   const value = useMemo<LessonsStore>(
-    () => ({ lessons, isLoading, addLesson, setLessonStatus, reload }),
-    [lessons, isLoading, addLesson, setLessonStatus, reload],
+    () => ({ lessons, isLoading, addLesson, setLessonStatus, markHeld, reload }),
+    [lessons, isLoading, addLesson, setLessonStatus, markHeld, reload],
   );
 
   return <LessonsContext.Provider value={value}>{children}</LessonsContext.Provider>;

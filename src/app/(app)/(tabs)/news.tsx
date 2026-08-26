@@ -107,17 +107,25 @@ export default function NewsScreen() {
               read={isRead(notification.id)}
               onPress={() => markRead(notification.id)}
               onAction={(item, action) => {
-                // One action needs a screen rather than a mutation, so it is
-                // handled here; every other intent still belongs to the store.
-                if (action.id === 'writeUp') {
-                  const lesson = lessons.find(
-                    (candidate) => candidate.id === item.lessonId,
-                  );
-                  if (lesson) {
-                    setWritingUp(lesson);
-                    markRead(item.id);
-                    return;
-                  }
+                // Some intents need a screen rather than a mutation, so they are
+                // handled here; every other one still belongs to the store.
+                const lesson = lessons.find(
+                  (candidate) => candidate.id === item.lessonId,
+                );
+
+                // Two ways to arrive at the write-up. `writeUp` asks for it
+                // outright. "Took place" needs it for a *group* lesson: the tap
+                // says the hour happened, and nothing more — marking everybody
+                // present would charge whoever cancelled in time, and one extra
+                // tap is cheaper than taking a student's money by assumption. An
+                // individual lesson has one attendee and needs no asking.
+                const mustAskWhoCame =
+                  action.id === 'markHeld' && lesson !== undefined && !lesson.studentId;
+
+                if (lesson && (action.id === 'writeUp' || mustAskWhoCame)) {
+                  setWritingUp(lesson);
+                  markRead(item.id);
+                  return;
                 }
                 runAction(item, action);
               }}

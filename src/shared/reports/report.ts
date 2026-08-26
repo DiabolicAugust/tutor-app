@@ -51,6 +51,15 @@ export type Report = {
     completed: number;
     cancelled: number;
     scheduled: number;
+    /**
+     * Lessons that happened with nobody marked in the register.
+     *
+     * The answer to the question the attendance card otherwise raises. A rate
+     * computed over three written-up lessons out of twenty is not wrong, but it
+     * is not what the reader assumes either — so the screen says how many are
+     * missing rather than leaving them to wonder whether it is broken.
+     */
+    unwritten: number;
   };
   /** Completed lessons only — the number somebody bills from. */
   minutesTaught: number;

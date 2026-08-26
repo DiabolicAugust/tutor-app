@@ -273,6 +273,10 @@ function suiteEnv(stamp) {
     SCHOOL: `Maestro-School-${stamp}`,
     STUDENT: 'Maestro-Alpha',
     STUDENT_TWO: 'Maestro-Bravo',
+    // Only flow 18 uses this one, and it is the point of it: a student whose
+    // whole history is the lesson that flow confirms, so its assertions cannot
+    // be satisfied by something an earlier flow wrote.
+    STUDENT_THREE: 'Maestro-Charlie',
     GROUP: 'Maestro-Group',
     INVITEE: `maestro-invitee-${stamp}@example.test`,
     UPLOAD: UPLOAD_NAME,

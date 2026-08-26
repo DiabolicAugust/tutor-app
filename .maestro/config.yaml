@@ -26,3 +26,4 @@ flows:
   - 15-online-lessons.yaml
   - 16-reports.yaml
   - 17-debtors.yaml
+  - 18-confirm-from-the-feed.yaml

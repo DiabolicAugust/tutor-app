@@ -356,6 +356,14 @@ export const en = {
       absentUnexcused: 'No-show',
       none: 'Nothing has been marked in this period.',
       hint: 'Late counts as attended — they were taught.',
+      unwritten: {
+        one: '{{count}} lesson has no register, so it is not in the rate.',
+        other: '{{count}} lessons have no register, so they are not in the rate.',
+      },
+      noneButTaught: {
+        one: '{{count}} lesson was taught but nobody was marked, so there is no rate yet.',
+        other: '{{count}} lessons were taught but nobody was marked, so there is no rate yet.',
+      },
     },
     grades: {
       title: 'Marks',

@@ -93,8 +93,15 @@ tags:
     element:
       id: 'settings-grades'
     direction: DOWN
-- assertVisible:
-    id: 'settings-grades-off'
+# Waited for rather than asserted outright. This setting lives on the server, so
+# after a restart the screen renders the default and corrects itself when the
+# config arrives — a bare assertion here is a race, and it is one this flow lost
+# on a slower run. Losing it also meant the steps that put the tab bar back never
+# ran, so four later flows failed looking for a tab this one had hidden.
+- extendedWaitUntil:
+    visible:
+      id: 'settings-grades-off'
+    timeout: 30000
 - scrollUntilVisible:
     element:
       id: 'settings-reminder-lead'

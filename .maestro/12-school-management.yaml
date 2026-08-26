@@ -145,19 +145,24 @@ tags:
     timeout: 30000
 - tapOn:
     id: 'subject-add-sheet-close'
-# Waited out, not assumed. Tapping a row while the screen is still moving
-# resolves coordinates that belong to where a row *was*, and two runs have opened
-# Mathematics instead of Latin that way. The sheet's handle leaving the tree is
-# not the end of it — the rows behind it are still sliding into the space it gave
-# back — so the wait that matters is the one for the screen to go still.
 - extendedWaitUntil:
     notVisible:
       id: 'subject-add-sheet'
     timeout: 30000
-- runFlow: subflows/settle.yaml
+# Reopened rather than waited out. Waiting was the earlier answer and it kept
+# failing: the rows are still reflowing into the space the sheet gave back, *and*
+# the list re-sorts when the server's copy lands, so a row can move between
+# Maestro resolving where it is and the tap arriving. Three runs have opened
+# Mathematics having asked for Latin. See the subflow.
+- runFlow: subflows/reopen-school.yaml
 
 # Renaming corrects it everywhere at once, which is the reason this is a list and
 # not a word typed onto each record.
+- scrollUntilVisible:
+    element:
+      text: 'Latin'
+    direction: DOWN
+    timeout: 30000
 - tapOn: 'Latin'
 - assertVisible:
     id: 'subject-edit-sheet'
@@ -186,10 +191,16 @@ tags:
     notVisible:
       id: 'subject-edit-sheet'
     timeout: 30000
-- runFlow: subflows/settle.yaml
+# The same reopen, for the same reason: a rename re-sorts the list too.
+- runFlow: subflows/reopen-school.yaml
 
 # Retiring one that nothing studies goes through, and it leaves the list without
 # being deleted — which the restore below is the proof of.
+- scrollUntilVisible:
+    element:
+      text: 'Latin B'
+    direction: DOWN
+    timeout: 30000
 - tapOn: 'Latin B'
 - assertVisible:
     id: 'subject-edit-sheet'
@@ -224,10 +235,15 @@ tags:
 
 # And the rule the whole model exists for: a subject somebody is studying cannot
 # be taken off the list, and the refusal says who has to be moved first.
-- extendedWaitUntil:
-    visible: 'Mathematics'
+# Reopened here as well. Restoring a subject puts a row back and moves everything
+# below it, which is the same hazard as the two above — and the mis-tap it caused
+# surfaced as a refusal that read like a bug in retiring rather than a bad tap.
+- runFlow: subflows/reopen-school.yaml
+- scrollUntilVisible:
+    element:
+      text: 'Mathematics'
+    direction: DOWN
     timeout: 30000
-- runFlow: subflows/settle.yaml
 - tapOn: 'Mathematics'
 - assertVisible:
     id: 'subject-edit-sheet'

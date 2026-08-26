@@ -1,0 +1,19 @@
+# Leaves the school screen and comes back, so the subject list is rendered once.
+#
+# Not a wait. Waiting was the first answer and it is the wrong one: closing a sheet
+# starts a reflow *and* the list re-sorts when the server's copy arrives, so a row
+# can move after Maestro has resolved where it is but before the tap lands. Two
+# separate runs opened Mathematics having asked for Latin — the row that took
+# Latin's place. "Wait for the screen to go still" cannot see the second of those
+# two movements coming.
+#
+# A fresh mount has no reflow to run and no re-sort to wait for: the list arrives
+# in its final order or not at all. Expects to be *on* the school screen, and
+# leaves you there.
+appId: com.foxacademy.app
+---
+- back
+- tapOn:
+    id: 'more-school'
+- assertVisible:
+    id: 'screen-school'

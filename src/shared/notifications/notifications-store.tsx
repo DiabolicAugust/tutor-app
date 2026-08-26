@@ -64,7 +64,7 @@ export function NotificationsProvider({
   children: ReactNode;
   client?: NotificationsClient;
 }) {
-  const { lessons, setLessonStatus } = useLessons();
+  const { lessons, setLessonStatus, markHeld } = useLessons();
   const { nameOf } = useStudents();
   const ownId = useOwnCalendarId();
   const [readIds, setReadIds] = useState<string[]>(() => readIdsStore.read() ?? []);
@@ -146,12 +146,22 @@ export function NotificationsProvider({
       // Actions name an intent; this is the one place that decides what the
       // intent does. With a backend, these become mutations.
       if (notification.lessonId) {
-        if (action.id === 'markHeld') void setLessonStatus(notification.lessonId, 'completed');
+        // "It happened" has to mean the register too, not only the schedule —
+        // otherwise the lesson is never charged and nobody is recorded as having
+        // been there. `markHeld` owns that rule; a group lesson never reaches
+        // here, because the feed opens the write-up for one instead of guessing
+        // who came.
+        if (action.id === 'markHeld') {
+          const lesson = lessons.find(
+            (candidate) => candidate.id === notification.lessonId,
+          );
+          if (lesson) void markHeld(lesson);
+        }
         if (action.id === 'markMissed') void setLessonStatus(notification.lessonId, 'cancelled');
       }
       markRead(notification.id);
     },
-    [markRead, setLessonStatus],
+    [markRead, setLessonStatus, markHeld, lessons],
   );
 
   const value = useMemo<NotificationsStore>(() => {

@@ -62,6 +62,14 @@ tags:
     id: 'settings-meeting-room'
 - inputText: 'https://meet.google.com/abc-defg-hij'
 - runFlow: subflows/dismiss-keyboard.yaml
+# Scrolled to first. It sits under the address field, and dismissing the keyboard
+# leaves the screen wherever it lands — often with this row just past the bottom,
+# where it is absent from the accessibility tree rather than merely out of sight.
+- scrollUntilVisible:
+    element:
+      id: 'settings-meeting-save'
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'settings-meeting-save'
 - assertVisible:

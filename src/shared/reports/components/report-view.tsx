@@ -53,8 +53,17 @@ export function ReportView({ report }: { report: Report }) {
 
       <Card title={t('reports.attendance.title')}>
         {report.attendance.rate === null ? (
+          // Two different facts, and they need different sentences. With lessons
+          // taught but nothing marked, the reason there is no percentage is that
+          // the registers are empty — saying only "nothing marked" leaves the
+          // reader deciding whether the screen is broken. With no lessons either,
+          // there is simply nothing to report.
           <Text testID="report-attendance-empty" variant="bodySm" color="textMuted">
-            {t('reports.attendance.none')}
+            {report.lessons.unwritten > 0
+              ? t('reports.attendance.noneButTaught', {
+                  count: report.lessons.unwritten,
+                })
+              : t('reports.attendance.none')}
           </Text>
         ) : (
           <>
@@ -86,6 +95,15 @@ export function ReportView({ report }: { report: Report }) {
             </Text>
           </>
         )}
+
+        {/* The caveat on the number just read: the rate covers the lessons that
+            were written up and no others. Only alongside a rate — the empty state
+            above says it in its own words. */}
+        {report.attendance.rate !== null && report.lessons.unwritten > 0 ? (
+          <Text testID="report-attendance-unwritten" variant="bodySm" color="warning">
+            {t('reports.attendance.unwritten', { count: report.lessons.unwritten })}
+          </Text>
+        ) : null}
       </Card>
 
       {/* Marks are hidden entirely when there are none, rather than shown as

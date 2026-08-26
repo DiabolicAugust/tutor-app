@@ -1,0 +1,195 @@
+# Confirming a lesson from the news feed, and what that has to mean.
+#
+# The flow that was missing. "Took place" used to move the lesson in the schedule
+# and nothing else, so a tutor working through the feed left every register empty:
+# the attendance rate on the reports screen was computed over the handful of
+# lessons they had written up by hand, and the paid lessons they had actually
+# taught were never deducted from anybody's balance. Every unit of that was
+# correct on its own — the report counted its rows exactly right, and there were
+# no rows.
+#
+# Runs last and against a student of its own, so the assertions are about this
+# lesson rather than about whatever the earlier flows left behind. That student's
+# page then has exactly one row, which is what makes "what does it say" a
+# question with one answer.
+#
+# The lesson is booked **yesterday**, because the feed only carries a lesson once
+# it has ended. Yesterday rather than an early hour today, so it does not depend
+# on what time of day the suite happens to run.
+appId: com.foxacademy.app
+name: Confirm a lesson from the news feed
+tags:
+  - gradebook
+  - reports
+---
+- runFlow: subflows/wait-for-app.yaml
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Calendar'
+
+# Day view first, and explicitly. Paging steps by whatever is on screen — a day,
+# three days, or a whole month — so without this, "previous" means whatever the
+# last flow to touch the settings left behind, and a month back can fall outside
+# the window the app keeps loaded.
+- tapOn:
+    id: 'calendar-settings'
+- tapOn:
+    id: 'calendar-view-day'
+- tapOn:
+    id: 'calendar-settings-sheet-close'
+- tapOn:
+    id: 'calendar-today'
+- tapOn:
+    id: 'calendar-previous'
+
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+
+# A student created here rather than reused: this flow needs one whose history is
+# a single lesson.
+- tapOn:
+    id: 'event-toggle-new-student'
+- tapOn:
+    id: 'event-new-student-name'
+- inputText: ${STUDENT_THREE}
+- runFlow: subflows/dismiss-keyboard.yaml
+- runFlow:
+    file: subflows/pick-subject.yaml
+    env:
+      PICKER: 'event-subject'
+      SUBJECT: 'Mathematics'
+
+# 07:00 on the day the sheet was opened for, which is yesterday — over by now
+# whenever "now" is.
+- tapOn:
+    id: 'event-time-420'
+- tapOn:
+    id: 'event-duration-45'
+- tapOn:
+    id: 'event-create'
+- assertNotVisible:
+    id: 'event-sheet'
+
+# --- and a group lesson, for the other half of the rule ---
+#
+# The calendar has not moved, so this is yesterday too. 08:00 rather than 07:00
+# because the first lesson runs to 07:45 and one tutor cannot be in two places.
+- tapOn:
+    id: 'calendar-add'
+- assertVisible:
+    id: 'event-sheet'
+- tapOn:
+    id: 'event-taught-group'
+- extendedWaitUntil:
+    visible:
+      id: 'event-group-0'
+    timeout: 30000
+- tapOn:
+    id: 'event-group-0'
+- tapOn:
+    id: 'event-time-480'
+- tapOn:
+    id: 'event-duration-45'
+- tapOn:
+    id: 'event-create'
+- assertNotVisible:
+    id: 'event-sheet'
+
+# --- the feed asks, and the tap answers ---
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'News'
+- extendedWaitUntil:
+    visible:
+      id: 'notification-lessonNeedsConfirmation'
+    timeout: 60000
+# Matched as a fragment on purpose: the card names its lesson inside a sentence,
+# and Maestro matches a whole string, so a bare name finds nothing here.
+- assertVisible: '.*${STUDENT_THREE}.*'
+- assertVisible: '.*${GROUP}.*'
+
+# --- a group is asked, not assumed ---
+#
+# "Took place" says the hour happened and nothing about who came, so for a group
+# it opens the register instead of marking everybody present — which would charge
+# whoever had cancelled in time. Checked first, because it is the branch that
+# guesses nothing.
+- tapOn:
+    id: 'notification-action-markHeld'
+    childOf:
+      id: 'notification-lessonNeedsConfirmation'
+      containsDescendants:
+        - text: '.*${GROUP}.*'
+- assertVisible:
+    id: 'journal-sheet'
+- tapOn:
+    id: 'journal-sheet-close'
+
+# --- one student needs no asking ---
+#
+# Reached through its own card rather than by the first button on the screen. The
+# feed is one list of identical handles, and the first run of this flow tapped the
+# group's button instead — which passed every step until the sheet it opened was in
+# the way of the next tab.
+- tapOn:
+    id: 'notification-action-markHeld'
+    childOf:
+      id: 'notification-lessonNeedsConfirmation'
+      containsDescendants:
+        - text: '.*${STUDENT_THREE}.*'
+
+# The card goes as soon as the lesson stops being unconfirmed. Asserted because
+# it is also the signal that the tap was received at all.
+- extendedWaitUntil:
+    notVisible: '.*${STUDENT_THREE}.*'
+    timeout: 60000
+
+# --- what the tap has to have written ---
+#
+# The student's own page reports their line in the register for each lesson, and
+# says "Not written up" for one that happened with nobody marked. That is the
+# distinction the whole change turns on: before it, this row said exactly that
+# after the lesson had been confirmed, which is the report's missing attendance
+# in one line of text.
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'Students'
+- extendedWaitUntil:
+    visible: ${STUDENT_THREE}
+    timeout: 60000
+- tapOn: ${STUDENT_THREE}
+- assertVisible:
+    id: 'screen-student'
+- scrollUntilVisible:
+    element:
+      id: 'student-lesson-0'
+    direction: DOWN
+    timeout: 60000
+- assertVisible: 'Was here'
+- assertNotVisible: 'Not written up'
+- back
+- assertVisible:
+    id: 'screen-students'
+
+# And the money followed the register. A confirmed lesson is a lesson spent, so a
+# student who has paid for none is now one behind — which is the other half of
+# what the old behaviour quietly got wrong, and the half nobody would have
+# noticed until they were owed for it.
+- runFlow:
+    file: subflows/open-tab.yaml
+    env:
+      TAB: 'More'
+- tapOn:
+    id: 'more-debtors'
+- assertVisible:
+    id: 'screen-debtors'
+- extendedWaitUntil:
+    visible:
+      id: 'debtor-0'
+    timeout: 60000
+- assertVisible: ${STUDENT_THREE}
