@@ -28,7 +28,13 @@ export type SchoolClient = {
   /** Calendar owners, caller first — also what the calendar filters list. */
   listTutors: () => Promise<SchoolMember[]>;
   listInvitations: () => Promise<Invitation[]>;
-  /** Sends the email. Resending to the same address replaces the invitation. */
+  /**
+   * Creates the invitation and tries to email it.
+   *
+   * Resending to the same address replaces the invitation, and therefore
+   * invalidates any link already sent for it. The returned row carries
+   * `acceptUrl` so the admin can deliver it themselves — see `Invitation`.
+   */
   inviteTutor: (email: string) => Promise<Invitation>;
   revokeInvitation: (id: string) => Promise<void>;
 

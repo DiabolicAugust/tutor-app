@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { apiClients } from '@/shared/api';
 import { useSession } from '@/shared/auth';
@@ -43,6 +51,14 @@ export function UserConfigProvider({
   const { user, updateUser } = useSession();
   const [isSaving, setIsSaving] = useState(false);
   const [hasError, setHasError] = useState(false);
+  /**
+   * Which save is the current one.
+   *
+   * A counter rather than a queue: settings are independent fields, so there is
+   * nothing to gain by making the second wait for the first — only by making the
+   * first stop speaking once the second exists.
+   */
+  const latest = useRef(0);
 
   const config = withConfigDefaults(user?.config);
 
@@ -56,6 +72,7 @@ export function UserConfigProvider({
    */
   const update = useCallback(
     async (patch: UserConfigPatch) => {
+      const ticket = (latest.current += 1);
       const previous = config;
       // Optimistic: a toggle that waits for a round trip feels broken.
       updateUser({ config: { ...previous, ...patch } });
@@ -64,12 +81,26 @@ export function UserConfigProvider({
 
       try {
         // The server is the authority, including on values it clamped.
-        updateUser({ config: await client.update(patch) });
+        const stored = await client.update(patch);
+        // But only about the change it was answering. Two settings changed in
+        // quick succession and the *first* reply arrived last: it carried the
+        // config as it stood before the second change, and applying it turned
+        // marking back on a moment after somebody switched it off. A whole-config
+        // reply is only the truth while it is the newest one.
+        if (ticket === latest.current) updateUser({ config: stored });
       } catch {
-        updateUser({ config: previous });
-        setHasError(true);
+        // Reverted only while nothing newer is in flight, since `previous` is
+        // this call's idea of "before" and undoing to it would take a later
+        // change with it. The newer reply carries the real stored state and
+        // corrects this one on arrival — which is also why a stale failure says
+        // nothing: an error beside a change that is about to succeed is worse
+        // than silence.
+        if (ticket === latest.current) {
+          updateUser({ config: previous });
+          setHasError(true);
+        }
       } finally {
-        setIsSaving(false);
+        if (ticket === latest.current) setIsSaving(false);
       }
     },
     [client, config, updateUser],

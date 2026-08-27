@@ -12,7 +12,14 @@ export type SchoolStore = {
   isLoading: boolean;
   /** Translation key of the last failure, or `null`. */
   errorKey: 'school.inviteFailed' | 'announcement.failed' | null;
-  inviteTutor: (email: string) => Promise<boolean>;
+  /**
+   * Resolves with the invitation, or `null` if it failed.
+   *
+   * The row rather than a boolean, because the caller needs the link that came
+   * back with it: an invitation now travels by email *and* by whatever the admin
+   * sends it through, and only the caller can open a share sheet.
+   */
+  inviteTutor: (email: string) => Promise<Invitation | null>;
   revokeInvitation: (id: string) => Promise<void>;
   /** Replaces a member's capabilities with exactly this set. */
   setMemberAddons: (userId: string, addons: readonly AddonKey[]) => Promise<void>;
@@ -88,10 +95,10 @@ export function SchoolProvider({
       try {
         const invitation = await client.inviteTutor(email);
         setInvitations((current) => [invitation, ...current.filter((i) => i.email !== invitation.email)]);
-        return true;
+        return invitation;
       } catch {
         setErrorKey('school.inviteFailed');
-        return false;
+        return null;
       }
     },
     [client],

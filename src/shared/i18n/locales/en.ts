@@ -114,7 +114,13 @@ export const en = {
     noInvitations: 'No invitations sent',
     inviteTutor: 'Invite a tutor',
     sendInvite: 'Send invitation',
-    inviteExplanation: 'We will email a link. Opening it on their phone starts registration into this school.',
+    inviteExplanation: 'We will email a link, and give you the same link to send yourself. Opening it on their phone starts registration into this school.',
+    inviteCreated: 'Invitation ready for {{text}}.',
+    inviteShareHint: 'Emailed as well — send the link yourself if it does not arrive.',
+    inviteShare: 'Send the link',
+    inviteMessage: 'Join our school on Fox Academy: {{text}}',
+    cannotShare: 'Could not open the share sheet.',
+    inviteResendHint: 'Tap a pending invitation to send its link again.',
     invalidEmail: 'Enter a valid email address.',
     inviteFailed: 'Could not send the invitation. Please try again.',
     status: {
@@ -654,7 +660,10 @@ export const en = {
       },
       tutorJoined: {
         title: 'New tutor joined',
-        body: '{{personName}} joined the school as a {{text}} tutor.',
+        // No subject: the registration form asks for a name and a password, so
+        // what they teach is not known yet and a guess would go to the whole
+        // school.
+        body: '{{personName}} has joined the school.',
       },
       paymentRunningOut: {
         title: 'Paid lessons running out',

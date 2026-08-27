@@ -51,6 +51,15 @@ tags:
       id: 'settings-meeting-unavailable'
     direction: DOWN
     timeout: 30000
+# Scrolled to in its own right, and centred. It sits *below* the notice above, so
+# arriving at that one says nothing about this one — and a row resting on the
+# bottom edge is a row whose centre is off screen, which is where taps disappear.
+- scrollUntilVisible:
+    element:
+      id: 'settings-meeting-room'
+    direction: DOWN
+    centerElement: true
+    timeout: 30000
 - assertVisible:
     id: 'settings-meeting-room'
 

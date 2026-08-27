@@ -34,6 +34,19 @@ export type Invitation = {
   /** ISO instant. */
   expiresAt: string;
   createdAt: string;
+  /**
+   * The link that opens the app on the registration form.
+   *
+   * Present only while the invitation is **pending**: an accepted or expired one
+   * has nothing left to send, and a dead token is only something to paste by
+   * mistake. So the presence of this is what says "there is still something to
+   * share here", and the share control follows it rather than re-deriving the
+   * rule.
+   *
+   * The email carries the same link. This is the other channel — the admin's own
+   * messenger — because email is the one that fails quietly.
+   */
+  acceptUrl?: string;
 };
 
 /**

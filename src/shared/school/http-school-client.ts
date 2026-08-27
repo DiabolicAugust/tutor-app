@@ -24,6 +24,10 @@ type WireInvitation = {
   status: Invitation['status'];
   expiresAt: string;
   createdAt: string;
+  /** Only on pending ones — see `Invitation`. */
+  acceptUrl?: string;
+  /** Only on the response to creating one: whether the email actually went. */
+  mailed?: boolean;
 };
 
 const toMember = (member: WireMember): SchoolMember => ({
@@ -47,7 +51,7 @@ export const httpSchoolClient: SchoolClient = {
 
   listInvitations: () => http.get<WireInvitation[]>('/invitations'),
 
-  inviteTutor: (email) => http.post<Invitation>('/invitations', { email }),
+  inviteTutor: (email) => http.post<WireInvitation>('/invitations', { email }),
 
   revokeInvitation: async (id) => {
     await http.delete<void>(`/invitations/${id}`);

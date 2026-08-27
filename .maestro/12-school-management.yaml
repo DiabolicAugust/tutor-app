@@ -70,6 +70,40 @@ tags:
 - assertVisible: ${INVITEE}
 - assertVisible: 'Pending'
 
+# --- the other way the invitation can travel ---
+#
+# The email goes to an address nobody reads, and on a machine with no mail
+# provider it goes nowhere at all. So the link the admin can send themselves is
+# the half of this feature that a run can actually see — and it is the half that
+# works when the mail does not.
+#
+# The share sheet itself belongs to the OS and is not opened here, for the reason
+# flow 15 gives: tapping it hands the run to another app with no reliable way
+# back. What is asserted is that the control is offered.
+- scrollUntilVisible:
+    element:
+      id: 'invitation-sent'
+    direction: UP
+    timeout: 30000
+- assertVisible:
+    id: 'invitation-sent-share'
+- tapOn:
+    id: 'invitation-sent-dismiss'
+- assertNotVisible:
+    id: 'invitation-sent'
+
+# The link stays reachable after the card is gone, which is the point of putting
+# it on the row as well: an admin who dismissed this and then found the message
+# never arrived has somewhere to go. Offered only while something is still
+# pending, so the hint appears exactly when a row would do anything.
+- scrollUntilVisible:
+    element:
+      id: 'school-invitation-0-row'
+    direction: DOWN
+    timeout: 30000
+- assertVisible:
+    id: 'school-invite-resend-hint'
+
 # --- an announcement ---
 - scrollUntilVisible:
     element:

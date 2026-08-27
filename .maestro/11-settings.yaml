@@ -43,14 +43,36 @@ tags:
     id: 'settings-reminder-lead-60'
 
 # Marking off, which is the one a tutor without marks notices most.
+#
+# This assertion earned its keep. It failed for two separate reasons and only the
+# second was interesting.
+#
+# The hint is scrolled to, not asserted where it should be. It renders *below* the
+# row that was just tapped, at the bottom of a long screen, and content below the
+# fold is absent from the accessibility tree rather than merely out of sight — so
+# waiting for it in place waits forever.
+#
+# Three wrong answers went in here before that one. A settle, a reopen, and
+# `centerElement` on the scroll — the last actively made it worse, leaving the
+# screen back at the top. What settled it was the database: `gradesEnabled` was
+# already `false`, so the tap had always worked and only the assertion could not
+# see its effect.
+#
+# Worth the trouble, because failing here also skipped the steps at the end that
+# put the hidden tab back, and that failed four later flows for reasons of their
+# own.
 - scrollUntilVisible:
     element:
       id: 'settings-grades'
     direction: DOWN
+    timeout: 30000
 - tapOn:
     id: 'settings-grades'
-- assertVisible:
-    id: 'settings-grades-off'
+- scrollUntilVisible:
+    element:
+      id: 'settings-grades-off'
+    direction: DOWN
+    timeout: 30000
 
 # Hiding a tab, and the one tab that may never be hidden — hiding "More" would
 # lock the user out of the screen that could bring it back.
@@ -89,18 +111,14 @@ tags:
       TAB: 'More'
 - tapOn:
     id: 'more-settings'
+# Scrolled to, for the same reason as above: the hint sits below the row and below
+# the fold. The scroll doubles as the wait, which this needs too — the setting
+# lives on the server, so after a restart the screen renders what it has and
+# corrects itself when the config arrives.
 - scrollUntilVisible:
     element:
-      id: 'settings-grades'
-    direction: DOWN
-# Waited for rather than asserted outright. This setting lives on the server, so
-# after a restart the screen renders the default and corrects itself when the
-# config arrives — a bare assertion here is a race, and it is one this flow lost
-# on a slower run. Losing it also meant the steps that put the tab bar back never
-# ran, so four later flows failed looking for a tab this one had hidden.
-- extendedWaitUntil:
-    visible:
       id: 'settings-grades-off'
+    direction: DOWN
     timeout: 30000
 - scrollUntilVisible:
     element:
